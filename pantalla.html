@@ -35,20 +35,20 @@
         /* Top HUD Bar */
         .hud-header {
             position: fixed;
-            top: 14px;
+            top: 16px;
             left: 20px;
             right: 20px;
             z-index: 100;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(24, 24, 37, 0.88);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
+            background: rgba(20, 20, 31, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(203, 166, 247, 0.22);
             border-radius: 14px;
-            padding: 10px 24px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            padding: 10px 22px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.65);
             transition: opacity 0.3s ease;
         }
 
@@ -63,11 +63,18 @@
         }
 
         .hud-indicator {
-            width: 10px;
-            height: 10px;
+            width: 9px;
+            height: 9px;
             border-radius: 50%;
             background: var(--ctp-mauve);
             box-shadow: 0 0 10px var(--ctp-mauve);
+            animation: pulseSlow 2s infinite ease-in-out;
+        }
+
+        @keyframes pulseSlow {
+            0% { transform: scale(0.9); opacity: 0.7; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.7; }
         }
 
         .hud-title-text h1 {
@@ -76,12 +83,12 @@
             background: linear-gradient(90deg, var(--ctp-mauve), var(--ctp-pink));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            letter-spacing: 0.03em;
+            letter-spacing: 0.04em;
             text-transform: uppercase;
         }
 
         .hud-title-text p {
-            font-size: 0.78rem;
+            font-size: 0.76rem;
             color: var(--ctp-subtext0);
             letter-spacing: 0.02em;
         }
@@ -90,13 +97,13 @@
         .hud-progress-section {
             display: flex;
             align-items: center;
-            gap: 16px;
-            flex: 0 1 450px;
+            gap: 14px;
+            flex: 0 1 440px;
         }
 
         .hud-progress-bar {
             flex: 1;
-            height: 10px;
+            height: 8px;
             background: var(--ctp-surface0);
             border-radius: 999px;
             overflow: hidden;
@@ -108,16 +115,16 @@
             height: 100%;
             width: 0%;
             background: linear-gradient(90deg, var(--ctp-mauve), var(--ctp-sapphire), var(--ctp-green));
-            box-shadow: 0 0 14px var(--ctp-green);
+            box-shadow: 0 0 12px var(--ctp-green);
             transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .hud-counter {
             font-family: var(--font-mono);
             font-weight: 700;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             color: var(--ctp-text);
-            min-width: 150px;
+            min-width: 145px;
             text-align: right;
         }
 
@@ -133,7 +140,7 @@
             color: var(--ctp-text);
             border-radius: 10px;
             padding: 8px 12px;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             font-weight: 700;
             cursor: pointer;
             display: flex;
@@ -153,7 +160,7 @@
             color: var(--ctp-mauve);
         }
 
-        /* Dynamic Grid Layout */
+        /* Dynamic Grid Layout (Full Viewport Flex) */
         #grid {
             display: flex;
             flex-direction: column;
@@ -164,6 +171,7 @@
             left: 0;
             z-index: 10;
             overflow: hidden;
+            transition: all 0.8s ease;
         }
 
         .grid-fila {
@@ -177,17 +185,16 @@
             flex: 1;
             min-width: 0;
             height: 100%;
-            /* Estado no revelado */
-            background-color: #181825;
-            border: 1px solid rgba(69, 71, 90, 0.45);
+            /* Estado no revelado: superficie oscura elegante */
+            background-color: #12121c;
+            border: 1px solid rgba(69, 71, 90, 0.38);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 6px;
+            padding: 8px;
             color: var(--ctp-subtext0);
             font-family: var(--font-main);
-            font-size: 0.9rem;
             position: relative;
             cursor: default;
             user-select: none;
@@ -200,20 +207,25 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle at center, rgba(49, 50, 68, 0.3) 0%, transparent 70%);
+            background: radial-gradient(circle at center, rgba(49, 50, 68, 0.25) 0%, transparent 70%);
             pointer-events: none;
         }
 
         .bloque .bloque-num {
             font-family: var(--font-mono);
-            font-size: 0.78rem;
-            color: rgba(108, 112, 134, 0.45);
+            font-size: clamp(0.72rem, 1.2vw, 1rem);
+            color: rgba(147, 153, 178, 0.45);
             font-weight: 600;
+            letter-spacing: 0.06em;
+            background: rgba(30, 30, 46, 0.4);
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(69, 71, 90, 0.25);
         }
 
-        /* Estado Revelado */
+        /* Estado Revelado: se vuelve traslúcido para revelar el fondo secreto */
         .bloque.revelado {
-            background-color: rgba(24, 24, 37, 0.28);
+            background-color: rgba(17, 17, 27, 0.28);
             backdrop-filter: blur(0.5px);
             -webkit-backdrop-filter: blur(0.5px);
             border: 1px solid rgba(203, 166, 247, 0.35);
@@ -221,35 +233,36 @@
         }
 
         .bloque.revelado:hover {
-            background-color: rgba(24, 24, 37, 0.08);
+            background-color: rgba(17, 17, 27, 0.08);
             border-color: var(--ctp-mauve);
         }
 
         .bloque-avatar-badge {
-            width: 44px;
-            height: 44px;
+            width: clamp(38px, 4.5vw, 60px);
+            height: clamp(38px, 4.5vw, 60px);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.05rem;
+            font-size: clamp(0.95rem, 1.6vw, 1.4rem);
             font-weight: 800;
             color: #11111b;
-            margin-bottom: 4px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            margin-bottom: 6px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.65);
             flex-shrink: 0;
+            border: 2px solid rgba(255, 255, 255, 0.25);
         }
 
         .bloque.revelado .bloque-nombre {
             color: #ffffff;
-            font-size: 0.95rem;
+            font-size: clamp(0.85rem, 1.4vw, 1.25rem);
             font-weight: 800;
             text-align: center;
             max-width: 95%;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 0, 0, 0.9);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95), 0 0 16px rgba(0, 0, 0, 0.9);
             letter-spacing: 0.02em;
         }
 
@@ -261,7 +274,7 @@
                 z-index: 20;
             }
             60% {
-                transform: scale(1.05) rotate(1deg);
+                transform: scale(1.04) rotate(1deg);
                 box-shadow: 0 0 20px var(--ctp-sapphire);
                 z-index: 20;
             }
@@ -346,6 +359,7 @@
             z-index: 250;
         }
 
+        /* Grid Completed: todo el mosaico se vuelve transparente para ver la foto 100% limpia */
         .grid-completed .bloque {
             border: none;
             background-color: transparent !important;
@@ -767,7 +781,7 @@
                     y: -20 - Math.random() * 50,
                     vx: (Math.random() - 0.5) * 6,
                     vy: Math.random() * 4 + 3,
-                    size: Math.random() * 8 + 4,
+                    size: Math.random() * 10 + 5,
                     color: colors[Math.floor(Math.random() * colors.length)],
                     rot: Math.random() * 360,
                     rotSpeed: (Math.random() - 0.5) * 8,

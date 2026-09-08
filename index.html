@@ -19,6 +19,7 @@
             align-items: center;
             justify-content: center;
             padding: 16px;
+            padding-top: 70px; /* Espacio para el header unificado */
             user-select: none;
             -webkit-user-select: none;
             touch-action: manipulation;
@@ -26,27 +27,92 @@
             font-family: var(--font-main);
         }
 
-        /* Status header */
-        .top-nav {
+        /* ==========================================
+           HEADER UNIFICADO (Sin superposiciones)
+           ========================================== */
+        .app-header {
             position: fixed;
-            top: 12px;
+            top: 0;
             left: 0;
             right: 0;
-            padding: 0 16px;
+            z-index: 100;
+            background: rgba(24, 24, 37, 0.88);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(203, 166, 247, 0.18);
+        }
+
+        .header-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            z-index: 100;
+            padding: 10px 16px;
+            max-width: 900px;
+            margin: 0 auto;
+            gap: 12px;
+        }
+
+        .header-left, .header-right {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .header-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .hud-pill {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 6px;
+            background: var(--ctp-surface0);
+            border: 1px solid var(--ctp-surface2);
+            padding: 5px 12px;
+            border-radius: 999px;
+        }
+
+        .hud-pill-label {
+            color: var(--ctp-subtext0);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        .hud-pill-val {
+            font-family: var(--font-mono);
+            font-weight: 800;
+            color: var(--ctp-mauve);
+            font-size: 0.95rem;
+        }
+
+        .header-progress {
+            width: 100%;
+            height: 4px;
+            background: rgba(49, 50, 68, 0.45);
+            overflow: hidden;
+        }
+
+        .header-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--ctp-mauve), var(--ctp-sapphire), var(--ctp-green));
+            transition: width 0.15s ease-out;
+            box-shadow: 0 0 10px var(--ctp-green);
         }
 
         .icon-btn {
-            background: rgba(49, 50, 68, 0.7);
-            backdrop-filter: blur(8px);
+            background: var(--ctp-surface0);
             border: 1px solid var(--ctp-surface2);
             color: var(--ctp-text);
             border-radius: 50%;
-            width: 38px;
-            height: 38px;
+            width: 36px;
+            height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -59,8 +125,8 @@
         }
 
         .icon-btn svg {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
         }
 
         /* Monogram Avatar */
@@ -76,7 +142,7 @@
             margin: 0 auto 14px auto;
             color: #11111b;
             background: var(--ctp-mauve);
-            box-shadow: 0 4px 18px rgba(203, 166, 247, 0.35);
+            box-shadow: 0 4px 20px rgba(203, 166, 247, 0.35);
             transition: all 0.25s ease;
         }
 
@@ -84,7 +150,7 @@
         .color-row {
             display: flex;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
             margin: 14px 0 20px 0;
         }
 
@@ -94,7 +160,7 @@
             border-radius: 50%;
             cursor: pointer;
             border: 2px solid transparent;
-            transition: transform 0.2s ease, border-color 0.2s ease;
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         .color-dot:hover {
@@ -104,7 +170,7 @@
         .color-dot.selected {
             border-color: #ffffff;
             transform: scale(1.2);
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.45);
         }
 
         /* Main Container Views */
@@ -148,7 +214,7 @@
             100% { width: 120px; height: 120px; opacity: 0; }
         }
 
-        /* Arena */
+        /* Arena Full Screen */
         #juego {
             position: fixed;
             top: 0;
@@ -158,75 +224,33 @@
             background: radial-gradient(circle at 50% 50%, var(--ctp-surface0) 0%, var(--ctp-base) 70%, var(--ctp-crust) 100%);
             display: none;
             overflow: hidden;
-        }
-
-        .game-hud {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 16px 20px;
-            background: linear-gradient(180deg, rgba(17, 17, 27, 0.85) 0%, transparent 100%);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            z-index: 50;
-            pointer-events: none;
-        }
-
-        .hud-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .hud-stat {
-            font-family: var(--font-mono);
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: var(--ctp-text);
-            background: rgba(30, 30, 46, 0.85);
-            backdrop-filter: blur(8px);
-            padding: 6px 14px;
-            border-radius: 20px;
-            border: 1px solid var(--ctp-surface2);
-        }
-
-        .progress-bar-bg {
-            width: 100%;
-            height: 6px;
-            background: var(--ctp-surface0);
-            border-radius: 999px;
-            overflow: hidden;
-            border: 1px solid var(--ctp-surface1);
-        }
-
-        .progress-bar-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, var(--ctp-mauve), var(--ctp-green));
-            transition: width 0.15s ease-out;
-            box-shadow: 0 0 10px var(--ctp-green);
+            z-index: 40;
         }
 
         /* Floating Circles */
         .circulo {
-            width: 82px;
-            height: 82px;
+            width: 86px;
+            height: 86px;
             border-radius: 50%;
             position: absolute;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             font-weight: 800;
             font-family: var(--font-mono);
             cursor: pointer;
             transform: translate(-50%, -50%) scale(0.2);
-            animation: spawnPop 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            animation: spawnPop 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, floatGentle 2.5s ease-in-out infinite alternate;
             user-select: none;
             touch-action: manipulation;
-            border: 3px solid rgba(255, 255, 255, 0.35);
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), inset 0 2px 10px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes floatGentle {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            100% { transform: translate(-50%, -54%) scale(1.04); }
         }
 
         @keyframes spawnPop {
@@ -244,7 +268,7 @@
 
         @keyframes ripEffect {
             0% { width: 30px; height: 30px; opacity: 0.9; }
-            100% { width: 150px; height: 150px; opacity: 0; }
+            100% { width: 160px; height: 160px; opacity: 0; }
         }
 
         #confettiCanvas {
@@ -281,22 +305,50 @@
 </head>
 <body>
 
-    <!-- Confetti canvas for celebrations -->
+    <!-- Canvas de confeti para victoria -->
     <canvas id="confettiCanvas"></canvas>
 
-    <!-- Top Navigation with connection status -->
-    <div class="top-nav">
-        <div id="connStatus" class="ctp-badge ctp-badge-yellow">
-            <span class="status-dot connecting" id="statusDot"></span>
-            <span id="statusText">Conectando</span>
+    <!-- ==========================================
+         BARRA SUPERIOR UNIFICADA (Zero superposición)
+         ========================================== -->
+    <header class="app-header">
+        <div class="header-content">
+            <!-- Izquierda: Estado de conexión -->
+            <div class="header-left">
+                <div id="connStatus" class="ctp-badge ctp-badge-yellow">
+                    <span class="status-dot connecting" id="statusDot"></span>
+                    <span id="statusText">Conectando</span>
+                </div>
+            </div>
+
+            <!-- Centro: Métricas en juego (solo activas durante la ronda) -->
+            <div id="gameStatsGroup" class="header-center" style="display: none;">
+                <div class="hud-pill">
+                    <span class="hud-pill-label">Restantes</span>
+                    <span class="hud-pill-val" id="contador">15</span>
+                </div>
+                <div class="hud-pill">
+                    <span class="hud-pill-label">Tiempo</span>
+                    <span class="hud-pill-val" id="cronometro">0.0s</span>
+                </div>
+            </div>
+
+            <!-- Derecha: Control de sonido -->
+            <div class="header-right">
+                <button class="icon-btn" id="audioToggle" onclick="toggleAudio()" title="Alternar sonido">
+                    <svg id="audioIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    </svg>
+                </button>
+            </div>
         </div>
-        <button class="icon-btn" id="audioToggle" onclick="toggleAudio()" title="Alternar sonido">
-            <svg id="audioIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-            </svg>
-        </button>
-    </div>
+
+        <!-- Barra de progreso adherida a la base del header -->
+        <div class="header-progress" id="headerProgress" style="display: none;">
+            <div class="header-progress-fill" id="progresoJuego"></div>
+        </div>
+    </header>
 
     <!-- ==========================================
          FASE 1: REGISTRO DE PARTICIPANTE
@@ -392,20 +444,7 @@
          FASE 3: EL JUEGO ACTIVO (ARENA)
          ========================================== -->
     <div id="juego">
-        <div class="game-hud">
-            <div class="hud-row">
-                <div class="hud-stat">
-                    Taps restantes: <span id="contador" style="color: var(--ctp-mauve);">15</span>
-                </div>
-                <div class="hud-stat">
-                    Tiempo: <span id="cronometro" style="color: var(--ctp-teal);">0.0s</span>
-                </div>
-            </div>
-            <div class="progress-bar-bg">
-                <div class="progress-bar-fill" id="progresoJuego"></div>
-            </div>
-        </div>
-        <!-- Dynamic tap circles -->
+        <!-- Los círculos interactivos flotarán libremente en toda el área de pantalla -->
     </div>
 
     <!-- ==========================================
@@ -549,7 +588,7 @@
             document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
             el.classList.add('selected');
             document.getElementById('avatarPreview').style.background = hex;
-            document.getElementById('avatarPreview').style.boxShadow = `0 4px 18px ${hex}66`;
+            document.getElementById('avatarPreview').style.boxShadow = `0 4px 20px ${hex}66`;
             sound.playClick();
         }
 
@@ -660,6 +699,8 @@
                     document.getElementById('espera').style.display = 'none';
                     document.getElementById('victoria').style.display = 'none';
                     document.getElementById('registro').style.display = 'block';
+                    document.getElementById('gameStatsGroup').style.display = 'none';
+                    document.getElementById('headerProgress').style.display = 'none';
                     document.querySelectorAll('.circulo').forEach(c => c.remove());
                     sound.playClick();
                 }
@@ -680,9 +721,13 @@
             const juegoDiv = document.getElementById('juego');
             juegoDiv.style.display = 'block';
 
-            document.querySelectorAll('.circulo').forEach(c => c.remove());
+            // Activar HUD en el header unificado (cero superposición)
+            document.getElementById('gameStatsGroup').style.display = 'flex';
+            document.getElementById('headerProgress').style.display = 'block';
             document.getElementById('contador').textContent = tapsRestantes;
             actualizarProgreso();
+
+            document.querySelectorAll('.circulo').forEach(c => c.remove());
 
             tiempoInicio = Date.now();
             if (timerInterval) clearInterval(timerInterval);
@@ -695,7 +740,7 @@
             generarCirculo();
         }
 
-        // Generar un orbe interactivo
+        // Generar un orbe interactivo en zona segura
         function generarCirculo() {
             if (!juegoActivo || tapsRestantes <= 0) return;
 
@@ -708,10 +753,11 @@
             const color = catppuccinColors[Math.floor(Math.random() * catppuccinColors.length)];
             circulo.style.backgroundColor = color.bg;
             circulo.style.color = color.text;
-            circulo.style.boxShadow = `0 0 25px ${color.shadow}, inset 0 0 10px rgba(255,255,255,0.4)`;
+            circulo.style.boxShadow = `0 10px 30px ${color.shadow}, inset 0 2px 10px rgba(255,255,255,0.6)`;
 
-            const posX = Math.floor(Math.random() * 74 + 13);
-            const posY = Math.floor(Math.random() * 62 + 20);
+            // Coordenadas seguras para no acercarse al header ni a los bordes
+            const posX = Math.floor(Math.random() * 68 + 16); // 16% a 84%
+            const posY = Math.floor(Math.random() * 58 + 22); // 22% a 80% (espacio seguro bajo el header)
             circulo.style.left = posX + '%';
             circulo.style.top = posY + '%';
 
@@ -755,7 +801,7 @@
             ripple.className = 'tap-ripple';
             ripple.style.left = x + 'px';
             ripple.style.top = y + 'px';
-            ripple.style.border = `2.5px solid ${colorHex}`;
+            ripple.style.border = `3px solid ${colorHex}`;
             document.getElementById('juego').appendChild(ripple);
             setTimeout(() => ripple.remove(), 420);
         }
@@ -768,6 +814,10 @@
         function finalizarJuego() {
             juegoActivo = false;
             if (timerInterval) clearInterval(timerInterval);
+
+            // Ocultar métricas del header durante la vista de victoria
+            document.getElementById('gameStatsGroup').style.display = 'none';
+            document.getElementById('headerProgress').style.display = 'none';
 
             const tiempoTotal = ((Date.now() - tiempoInicio) / 1000).toFixed(2);
             const velocidad = (totalTaps / tiempoTotal).toFixed(1);
@@ -794,6 +844,8 @@
         function reiniciarEstadoJugador() {
             juegoActivo = false;
             if (timerInterval) clearInterval(timerInterval);
+            document.getElementById('gameStatsGroup').style.display = 'none';
+            document.getElementById('headerProgress').style.display = 'none';
             document.getElementById('juego').style.display = 'none';
             document.getElementById('victoria').style.display = 'none';
             document.getElementById('espera').style.display = 'block';
