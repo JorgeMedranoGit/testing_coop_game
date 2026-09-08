@@ -2,21 +2,529 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración | Revela el Secreto</title>
+    <!-- Catppuccin Design System -->
+    <link rel="stylesheet" href="catppuccin.css">
+    <!-- MQTT Broker Client -->
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <!-- Procedural Sound Effects -->
+    <script src="sound.js"></script>
+    <style>
+        body {
+            background: var(--ctp-crust);
+            padding: 30px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .admin-layout {
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Top Header */
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-left h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--ctp-mauve), var(--ctp-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-left p {
+            color: var(--ctp-subtext0);
+            font-size: 0.95rem;
+        }
+
+        .header-links {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* Stats Cards Row */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .stat-box {
+            background: var(--ctp-surface0);
+            border: 1px solid var(--ctp-surface1);
+            border-radius: 14px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .stat-box:hover {
+            border-color: var(--ctp-mauve);
+            transform: translateY(-2px);
+        }
+
+        .stat-num {
+            font-size: 1.9rem;
+            font-weight: 800;
+            font-family: var(--font-mono);
+            color: var(--ctp-mauve);
+        }
+
+        .stat-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--ctp-subtext0);
+            font-weight: 700;
+        }
+
+        /* Controls Grid */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Action Buttons */
+        .big-action-btn {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.25rem;
+            font-weight: 800;
+            border-radius: 14px;
+            margin-bottom: 12px;
+        }
+
+        /* Console / Activity Log */
+        .log-container {
+            background: var(--ctp-mantle);
+            border: 1px solid var(--ctp-surface1);
+            border-radius: 12px;
+            padding: 16px;
+            height: 260px;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            font-size: 0.88rem;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .log-entry {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            line-height: 1.4;
+        }
+
+        .log-time {
+            color: var(--ctp-overlay1);
+            font-size: 0.78rem;
+            white-space: nowrap;
+        }
+
+        .log-tag {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .log-tag.start { background: rgba(166, 227, 161, 0.2); color: var(--ctp-green); }
+        .log-tag.join { background: rgba(116, 199, 236, 0.2); color: var(--ctp-sapphire); }
+        .log-tag.finish { background: rgba(203, 166, 247, 0.2); color: var(--ctp-mauve); }
+        .log-tag.reset { background: rgba(250, 179, 135, 0.2); color: var(--ctp-peach); }
+        .log-tag.mqtt { background: rgba(249, 226, 175, 0.2); color: var(--ctp-yellow); }
+
+        /* Sliders / selects */
+        .setting-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--ctp-surface1);
+        }
+        .setting-group:last-child {
+            border-bottom: none;
+        }
+    </style>
 </head>
 <body>
-    <button onclick="iniciarJuego()" style="padding: 20px; font-size: 20px;">INICIAR JUEGO</button>
 
+    <div class="admin-layout">
+
+        <!-- Header -->
+        <div class="admin-header">
+            <div class="header-left">
+                <h1>🛡️ Centro de Control Anfitrión</h1>
+                <p>Modo Dinámico: La cuadrícula de la pantalla se adapta automáticamente al número de jugadores</p>
+            </div>
+            <div class="header-links">
+                <div id="connStatus" class="ctp-badge ctp-badge-yellow">
+                    <span class="status-dot connecting" id="statusDot"></span>
+                    <span id="statusText">Conectando...</span>
+                </div>
+                <a href="index.html" target="_blank" class="ctp-btn ctp-btn-outline ctp-btn-sm">
+                    📱 Abrir Jugador
+                </a>
+                <a href="pantalla.html" target="_blank" class="ctp-btn ctp-btn-outline ctp-btn-sm">
+                    🖥️ Abrir Proyector
+                </a>
+            </div>
+        </div>
+
+        <!-- Metrics Cards -->
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-title">Estado de Partida</div>
+                <div class="stat-num" id="estadoPartida" style="font-size: 1.4rem; color: var(--ctp-yellow);">
+                    En Espera
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">Jugadores Conectados</div>
+                <div class="stat-num" id="statJugadores" style="color: var(--ctp-sapphire);">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">Bloques Revelados</div>
+                <div class="stat-num" id="statBloques" style="color: var(--ctp-green);">0 <span id="statTotalBloques" style="font-size:1rem; color:var(--ctp-subtext0)">/ 6</span></div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">Taps Requeridos</div>
+                <div class="stat-num" id="statTaps" style="color: var(--ctp-peach);">15</div>
+            </div>
+        </div>
+
+        <!-- Controls and Configuration -->
+        <div class="controls-grid">
+
+            <!-- Primary Actions Card -->
+            <div class="ctp-card">
+                <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--ctp-mauve); margin-bottom: 16px;">
+                    🎮 Comandos del Juego
+                </h2>
+
+                <button class="ctp-btn ctp-btn-green big-action-btn" onclick="iniciarJuego()">
+                    🚀 INICIAR JUEGO (Lanza ronda)
+                </button>
+
+                <div style="display: flex; gap: 10px;">
+                    <button class="ctp-btn ctp-btn-peach" style="flex: 1;" onclick="reiniciarJuego()">
+                        🔄 Reiniciar Mural
+                    </button>
+                    <button class="ctp-btn ctp-btn-sapphire" style="flex: 1;" onclick="revelarTodo()">
+                        ✨ Revelar Todo
+                    </button>
+                </div>
+
+                <!-- Game Settings -->
+                <div style="margin-top: 24px;">
+                    <h3 style="font-size: 1rem; font-weight: 700; color: var(--ctp-subtext1); margin-bottom: 8px;">
+                        ⚙️ Configuración de Ronda
+                    </h3>
+                    <div class="setting-group">
+                        <label style="font-size: 0.95rem; color: var(--ctp-text);">Cantidad de Taps por Jugador:</label>
+                        <select id="selectTaps" class="ctp-input" style="width: 100px; padding: 8px 12px; font-weight: 700;" onchange="cambiarTaps(this.value)">
+                            <option value="5">5 taps</option>
+                            <option value="10">10 taps</option>
+                            <option value="15" selected>15 taps</option>
+                            <option value="20">20 taps</option>
+                            <option value="30">30 taps</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Testing & Simulators Card -->
+            <div class="ctp-card">
+                <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--ctp-sapphire); margin-bottom: 16px;">
+                    🧪 Simuladores de Prueba
+                </h2>
+                <p style="font-size: 0.9rem; color: var(--ctp-subtext0); margin-bottom: 16px;">
+                    Simula jugadores para ver cómo la pantalla crea los bloques dinámicamente y los revela:
+                </p>
+
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button class="ctp-btn ctp-btn-outline" onclick="simularJugador()">
+                        👤 Simular 1 Jugador (+1 bloque dinámico)
+                    </button>
+                    <button class="ctp-btn ctp-btn-outline" onclick="simularRáfaga(5)">
+                        👥 Simular Ráfaga de 5 Jugadores
+                    </button>
+                    <button class="ctp-btn ctp-btn-outline" onclick="simularRáfaga(15)">
+                        ⚡ Simular Ráfaga de 15 Jugadores
+                    </button>
+                </div>
+
+                <div style="margin-top: 18px; padding: 12px; background: rgba(180, 190, 254, 0.1); border: 1px solid rgba(180, 190, 254, 0.2); border-radius: 10px;">
+                    <div style="font-size: 0.82rem; color: var(--ctp-lavender);">
+                        💡 <strong>Modo Activo:</strong> 1 bloque por cada jugador en sala.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Live Activity Console -->
+        <div class="ctp-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--ctp-text);">
+                    📜 Consola de Eventos en Tiempo Real
+                </h2>
+                <button class="ctp-btn ctp-btn-outline ctp-btn-sm" onclick="limpiarLog()">
+                    Limpiar Log
+                </button>
+            </div>
+            <div class="log-container" id="logConsole">
+                <div class="log-entry">
+                    <span class="log-time">[00:00:00]</span>
+                    <span class="log-tag mqtt">MQTT</span>
+                    <span style="color: var(--ctp-subtext0);">Iniciando cliente administrador...</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Script de Lógica del Administrador -->
     <script>
-        const cliente = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
         const topicoSecreto = 'proyecto_ar_evento_juego_1a2b3c_lpz';
+        let configuracionTaps = 15;
+        let jugadoresMap = new Map(); // id -> { id, nombre, avatar }
+        let bloquesRevelados = 0;
+        let totalBloquesDinámicos = 6;
 
+        // Conectar al broker EMQX
+        const cliente = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
+            keepalive: 60,
+            reconnectPeriod: 2000,
+            clean: true
+        });
+
+        cliente.on('connect', () => {
+            console.log('Admin conectado al servidor MQTT');
+            setConnectionStatus('online', 'En Línea');
+            agregarLog('mqtt', 'Conectado exitosamente al broker EMQX');
+            cliente.subscribe(topicoSecreto, (err) => {
+                if (err) {
+                    agregarLog('mqtt', 'Error en suscripción: ' + err.message);
+                } else {
+                    agregarLog('mqtt', 'Suscrito al canal: ' + topicoSecreto);
+                    // Preguntar a los clientes conectados quién está presente
+                    cliente.publish(topicoSecreto, JSON.stringify({ accion: 'ping_jugadores' }));
+                }
+            });
+        });
+
+        cliente.on('reconnect', () => {
+            setConnectionStatus('connecting', 'Reconectando...');
+        });
+
+        cliente.on('offline', () => {
+            setConnectionStatus('offline', 'Desconectado');
+            agregarLog('mqtt', 'Conexión perdida con el broker');
+        });
+
+        cliente.on('error', (err) => {
+            setConnectionStatus('offline', 'Error');
+            agregarLog('mqtt', 'Error MQTT: ' + err.message);
+        });
+
+        function setConnectionStatus(state, label) {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const connStatus = document.getElementById('connStatus');
+
+            statusDot.className = 'status-dot ' + state;
+            statusText.textContent = label;
+
+            connStatus.className = 'ctp-badge ' + (
+                state === 'online' ? 'ctp-badge-green' :
+                state === 'connecting' ? 'ctp-badge-yellow' : 'ctp-badge-red'
+            );
+        }
+
+        // Procesar mensajes entrantes
+        cliente.on('message', (topic, mensaje) => {
+            try {
+                const datos = JSON.parse(mensaje.toString());
+
+                if (datos.accion === 'jugador_unido') {
+                    const id = datos.id || (datos.nombre + '_' + (datos.avatar || ''));
+                    const esNuevo = !jugadoresMap.has(id);
+                    jugadoresMap.set(id, { id, nombre: datos.nombre, avatar: datos.avatar || '👤' });
+
+                    document.getElementById('statJugadores').textContent = jugadoresMap.size;
+                    totalBloquesDinámicos = Math.max(jugadoresMap.size, 4);
+                    actualizarStatsBloques();
+
+                    if (esNuevo) {
+                        agregarLog('join', `Jugador unido: ${datos.avatar || '👤'} ${datos.nombre} (Total: ${jugadoresMap.size})`);
+                    }
+                } else if (datos.accion === 'juego_terminado') {
+                    bloquesRevelados++;
+                    actualizarStatsBloques();
+                    const tiempoInfo = datos.tiempo ? ` (${datos.tiempo}s)` : '';
+                    agregarLog('finish', `🏆 ${datos.avatar || '🚀'} ${datos.nombre} completó el desafío${tiempoInfo}`);
+                } else if (datos.accion === 'iniciar_juego') {
+                    document.getElementById('estadoPartida').textContent = 'En Curso';
+                    document.getElementById('estadoPartida').style.color = 'var(--ctp-green)';
+                    bloquesRevelados = 0;
+                    totalBloquesDinámicos = datos.totalJugadores || Math.max(jugadoresMap.size, 4);
+                    actualizarStatsBloques();
+                } else if (datos.accion === 'reiniciar_juego') {
+                    bloquesRevelados = 0;
+                    document.getElementById('estadoPartida').textContent = 'En Espera';
+                    document.getElementById('estadoPartida').style.color = 'var(--ctp-yellow)';
+                    totalBloquesDinámicos = Math.max(jugadoresMap.size, 4);
+                    actualizarStatsBloques();
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        });
+
+        function actualizarStatsBloques() {
+            document.getElementById('statBloques').innerHTML = `${bloquesRevelados} <span id="statTotalBloques" style="font-size:1rem; color:var(--ctp-subtext0)">/ ${totalBloquesDinámicos}</span>`;
+        }
+
+        // 1. Iniciar Juego
         function iniciarJuego() {
-            // Publicar el evento para que los teléfonos lo escuchen
-            const payload = JSON.stringify({ accion: 'iniciar_juego' });
+            sound.init();
+            sound.playStart();
+
+            const cantJugadores = Math.max(jugadoresMap.size, 4);
+            const payload = JSON.stringify({
+                accion: 'iniciar_juego',
+                taps: configuracionTaps,
+                totalJugadores: cantJugadores
+            });
+
             cliente.publish(topicoSecreto, payload);
-            alert('Señal de inicio enviada a todos los teléfonos.');
+            document.getElementById('estadoPartida').textContent = 'En Curso';
+            document.getElementById('estadoPartida').style.color = 'var(--ctp-green)';
+            agregarLog('start', `Señal INICIAR enviada a todos (${cantJugadores} bloques adaptativos, ${configuracionTaps} taps)`);
+        }
+
+        // 2. Reiniciar Juego
+        function reiniciarJuego() {
+            if (!confirm('¿Deseas reiniciar la pantalla y devolver a los jugadores al lobby?')) return;
+            sound.init();
+            sound.playClick();
+
+            const payload = JSON.stringify({ accion: 'reiniciar_juego' });
+            cliente.publish(topicoSecreto, payload);
+
+            bloquesRevelados = 0;
+            document.getElementById('estadoPartida').textContent = 'En Espera';
+            document.getElementById('estadoPartida').style.color = 'var(--ctp-yellow)';
+            actualizarStatsBloques();
+            agregarLog('reset', 'Señal de REINICIO emitida a todos los clientes');
+        }
+
+        // 3. Revelar Todo
+        function revelarTodo() {
+            if (!confirm('¿Estás seguro de revelar toda la imagen en el proyector inmediatamente?')) return;
+            sound.init();
+            sound.playVictory();
+
+            const payload = JSON.stringify({ accion: 'revelar_todo' });
+            cliente.publish(topicoSecreto, payload);
+            agregarLog('start', 'Comando REVELAR TODO enviado al proyector');
+        }
+
+        // 4. Cambiar taps
+        function cambiarTaps(val) {
+            configuracionTaps = parseInt(val, 10);
+            document.getElementById('statTaps').textContent = configuracionTaps;
+            agregarLog('mqtt', `Dificultad actualizada a ${configuracionTaps} taps`);
+        }
+
+        // 5. Simuladores
+        const nombresMock = ['Mateo', 'Valentina', 'Santiago', 'Sofia', 'Lucas', 'Camila', 'Sebastian', 'Mariana', 'Alejandro', 'Lucia', 'Daniel', 'Paula', 'Diego', 'Elena', 'Gabriel', 'Andres', 'Victoria', 'Felipe'];
+        const avataresMock = ['🚀', '⚡', '🦊', '🐱', '💎', '👾', '🎯', '🔥'];
+
+        function simularJugador() {
+            sound.init();
+            sound.playClick();
+
+            const simId = 'sim_' + Date.now() + '_' + Math.floor(Math.random() * 9999);
+            const nombre = nombresMock[Math.floor(Math.random() * nombresMock.length)] + ' (Sim)';
+            const avatar = avataresMock[Math.floor(Math.random() * avataresMock.length)];
+            const tiempo = (Math.random() * 4 + 2.5).toFixed(2);
+
+            // Primero anunciar que se unió
+            cliente.publish(topicoSecreto, JSON.stringify({
+                accion: 'jugador_unido',
+                id: simId,
+                nombre: nombre,
+                avatar: avatar
+            }));
+
+            // Luego de 350ms simular que terminó
+            setTimeout(() => {
+                cliente.publish(topicoSecreto, JSON.stringify({
+                    accion: 'juego_terminado',
+                    id: simId,
+                    nombre: nombre,
+                    avatar: avatar,
+                    tiempo: parseFloat(tiempo)
+                }));
+            }, 350);
+        }
+
+        function simularRáfaga(cantidad) {
+            sound.init();
+            sound.playClick();
+            let count = 0;
+            const intervalo = setInterval(() => {
+                simularJugador();
+                count++;
+                if (count >= cantidad) clearInterval(intervalo);
+            }, 180);
+        }
+
+        // 6. Consola de Log
+        function agregarLog(tipo, texto) {
+            const consoleEl = document.getElementById('logConsole');
+            const now = new Date();
+            const timeStr = `[${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}]`;
+
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `
+                <span class="log-time">${timeStr}</span>
+                <span class="log-tag ${tipo}">${tipo}</span>
+                <span>${texto}</span>
+            `;
+
+            consoleEl.appendChild(entry);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        function limpiarLog() {
+            document.getElementById('logConsole').innerHTML = '';
         }
     </script>
 </body>
