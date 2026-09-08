@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pantalla Proyector | Revela el Secreto</title>
+    <title>Mural Colectivo | Proyección</title>
     <!-- Catppuccin Design System -->
     <link rel="stylesheet" href="catppuccin.css">
     <!-- MQTT Broker Client -->
@@ -42,18 +42,18 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(24, 24, 37, 0.85);
+            background: rgba(24, 24, 37, 0.88);
             backdrop-filter: blur(14px);
             -webkit-backdrop-filter: blur(14px);
-            border: 1px solid rgba(203, 166, 247, 0.25);
-            border-radius: 16px;
+            border: 1px solid rgba(203, 166, 247, 0.22);
+            border-radius: 14px;
             padding: 10px 24px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
             transition: opacity 0.3s ease;
         }
 
         .hud-header:hover {
-            border-color: rgba(203, 166, 247, 0.5);
+            border-color: rgba(203, 166, 247, 0.45);
         }
 
         .hud-title {
@@ -62,9 +62,12 @@
             gap: 12px;
         }
 
-        .hud-title-icon {
-            font-size: 1.8rem;
-            animation: pulse 2s infinite;
+        .hud-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--ctp-mauve);
+            box-shadow: 0 0 10px var(--ctp-mauve);
         }
 
         .hud-title-text h1 {
@@ -73,13 +76,14 @@
             background: linear-gradient(90deg, var(--ctp-mauve), var(--ctp-pink));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.03em;
             text-transform: uppercase;
         }
 
         .hud-title-text p {
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             color: var(--ctp-subtext0);
+            letter-spacing: 0.02em;
         }
 
         /* Progress Bar in HUD */
@@ -92,7 +96,7 @@
 
         .hud-progress-bar {
             flex: 1;
-            height: 12px;
+            height: 10px;
             background: var(--ctp-surface0);
             border-radius: 999px;
             overflow: hidden;
@@ -110,17 +114,17 @@
 
         .hud-counter {
             font-family: var(--font-mono);
-            font-weight: 800;
-            font-size: 1rem;
+            font-weight: 700;
+            font-size: 0.95rem;
             color: var(--ctp-text);
-            min-width: 140px;
+            min-width: 150px;
             text-align: right;
         }
 
         .hud-actions {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
         .hud-btn {
@@ -128,8 +132,8 @@
             border: 1px solid var(--ctp-surface2);
             color: var(--ctp-text);
             border-radius: 10px;
-            padding: 8px 14px;
-            font-size: 0.9rem;
+            padding: 8px 12px;
+            font-size: 0.85rem;
             font-weight: 700;
             cursor: pointer;
             display: flex;
@@ -138,13 +142,18 @@
             transition: all 0.2s ease;
         }
 
+        .hud-btn svg {
+            width: 15px;
+            height: 15px;
+        }
+
         .hud-btn:hover {
             background: var(--ctp-surface1);
             border-color: var(--ctp-mauve);
             color: var(--ctp-mauve);
         }
 
-        /* Dynamic Grid Layout (Flex Rows & Columns) */
+        /* Dynamic Grid Layout */
         #grid {
             display: flex;
             flex-direction: column;
@@ -168,14 +177,14 @@
             flex: 1;
             min-width: 0;
             height: 100%;
-            /* Estado no revelado: tapa completamente la imagen */
-            background-color: #181825; /* Catppuccin Mantle */
+            /* Estado no revelado */
+            background-color: #181825;
             border: 1px solid rgba(69, 71, 90, 0.45);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 4px;
+            padding: 6px;
             color: var(--ctp-subtext0);
             font-family: var(--font-main);
             font-size: 0.9rem;
@@ -186,7 +195,6 @@
             transition: background-color 0.6s ease, border-color 0.4s ease, opacity 0.8s ease, transform 0.4s ease;
         }
 
-        /* Micro texture on unrevealed blocks */
         .bloque::before {
             content: '';
             position: absolute;
@@ -199,11 +207,11 @@
         .bloque .bloque-num {
             font-family: var(--font-mono);
             font-size: 0.78rem;
-            color: rgba(108, 112, 134, 0.5);
+            color: rgba(108, 112, 134, 0.45);
             font-weight: 600;
         }
 
-        /* Estado Revelado: se vuelve traslúcido para revelar el fondo secreto */
+        /* Estado Revelado */
         .bloque.revelado {
             background-color: rgba(24, 24, 37, 0.28);
             backdrop-filter: blur(0.5px);
@@ -217,10 +225,19 @@
             border-color: var(--ctp-mauve);
         }
 
-        .bloque.revelado .bloque-avatar {
-            font-size: 1.7rem;
-            filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.9));
-            margin-bottom: 2px;
+        .bloque-avatar-badge {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #11111b;
+            margin-bottom: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            flex-shrink: 0;
         }
 
         .bloque.revelado .bloque-nombre {
@@ -238,14 +255,14 @@
 
         @keyframes revealPop {
             0% {
-                transform: scale(0.6) rotate(-4deg);
-                box-shadow: 0 0 40px var(--ctp-mauve);
+                transform: scale(0.6) rotate(-2deg);
+                box-shadow: 0 0 35px var(--ctp-mauve);
                 border-color: var(--ctp-mauve);
                 z-index: 20;
             }
             60% {
-                transform: scale(1.08) rotate(1deg);
-                box-shadow: 0 0 25px var(--ctp-sapphire);
+                transform: scale(1.05) rotate(1deg);
+                box-shadow: 0 0 20px var(--ctp-sapphire);
                 z-index: 20;
             }
             100% {
@@ -271,17 +288,30 @@
         .toast-item {
             background: rgba(30, 30, 46, 0.92);
             backdrop-filter: blur(12px);
-            border-left: 4px solid var(--ctp-green);
+            border-left: 3px solid var(--ctp-green);
             border-top: 1px solid var(--ctp-surface2);
             border-right: 1px solid var(--ctp-surface2);
             border-bottom: 1px solid var(--ctp-surface2);
             border-radius: 12px;
-            padding: 12px 18px;
+            padding: 10px 16px;
             display: flex;
             align-items: center;
             gap: 12px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
             animation: slideInToast 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .toast-badge {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #11111b;
+            flex-shrink: 0;
         }
 
         @keyframes slideInToast {
@@ -296,7 +326,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(17, 17, 27, 0.65);
+            background: rgba(17, 17, 27, 0.7);
             backdrop-filter: blur(4px);
             z-index: 200;
             display: none;
@@ -316,7 +346,6 @@
             z-index: 250;
         }
 
-        /* Hide grid completely when victory ceremony triggered */
         .grid-completed .bloque {
             border: none;
             background-color: transparent !important;
@@ -335,10 +364,10 @@
     <!-- Top HUD Navigation Bar -->
     <div class="hud-header" id="hudHeader">
         <div class="hud-title">
-            <div class="hud-title-icon">✨</div>
+            <div class="hud-indicator"></div>
             <div class="hud-title-text">
-                <h1>Mural Cooperativo</h1>
-                <p id="modoCuadriculaTxt">Cuadrícula Adaptativa (1 bloque por jugador)</p>
+                <h1>Mural Colectivo</h1>
+                <p id="modoCuadriculaTxt">Proyección colaborativa en vivo</p>
             </div>
         </div>
 
@@ -347,23 +376,29 @@
                 <div class="hud-progress-fill" id="progressFill"></div>
             </div>
             <div class="hud-counter">
-                <span id="revealedCount" style="color: var(--ctp-mauve);">0</span> / <span id="totalCount">6</span> (<span id="percentage">0%</span>)
+                <span id="revealedCount" style="color: var(--ctp-mauve);">0</span> / <span id="totalCount">1</span> (<span id="percentage">0%</span>)
             </div>
         </div>
 
         <div class="hud-actions">
             <div class="ctp-badge ctp-badge-mauve" id="playerCountBadge">
-                👥 <span id="playerCount">0</span> Jugadores
+                <span id="playerCount">0</span> Participantes
             </div>
             <div id="connStatus" class="ctp-badge ctp-badge-yellow">
                 <span class="status-dot connecting" id="statusDot"></span>
-                <span id="statusText">Conectando...</span>
+                <span id="statusText">Conectando</span>
             </div>
-            <button class="hud-btn" onclick="toggleFullscreen()" title="Pantalla Completa">
-                ⛶ <span style="font-size: 0.8rem;">F11</span>
+            <button class="hud-btn" onclick="toggleFullscreen()" title="Pantalla completa">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                </svg>
+                <span>F11</span>
             </button>
-            <button class="hud-btn" id="audioBtn" onclick="toggleAudio()" title="Alternar Sonido">
-                🔊
+            <button class="hud-btn" id="audioBtn" onclick="toggleAudio()" title="Alternar sonido">
+                <svg id="audioIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                </svg>
             </button>
         </div>
     </div>
@@ -376,41 +411,48 @@
 
     <!-- Grand Finale Banner -->
     <div id="finaleBanner">
-        <div class="ctp-card" style="text-align: center; max-width: 600px; padding: 40px; border: 2px solid var(--ctp-green); box-shadow: 0 0 50px rgba(166, 227, 161, 0.4);">
-            <div style="font-size: 4rem; margin-bottom: 12px; animation: pulse 1s infinite;">🎉</div>
-            <h1 style="font-size: 2.4rem; font-weight: 900; color: var(--ctp-green); margin-bottom: 10px;">
-                ¡MURAL COMPLETADO!
+        <div class="ctp-card" style="text-align: center; max-width: 580px; padding: 36px; border: 1.5px solid var(--ctp-green); box-shadow: 0 0 50px rgba(166, 227, 161, 0.35);">
+            <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(166, 227, 161, 0.15); border: 2px solid var(--ctp-green); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; color: var(--ctp-green);">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+            <h1 style="font-size: 2rem; font-weight: 900; color: var(--ctp-green); margin-bottom: 8px;">
+                Mural Completado
             </h1>
-            <p style="font-size: 1.2rem; color: var(--ctp-subtext0); margin-bottom: 24px;">
-                ¡Todos los jugadores han desbloqueado su parte del secreto!
+            <p style="font-size: 1.05rem; color: var(--ctp-subtext0); margin-bottom: 24px; line-height: 1.5;">
+                Todos los participantes han descubierto su fragmento de la imagen.
             </p>
             <button class="ctp-btn ctp-btn-green" onclick="cerrarBanner()">
-                Ver Imagen Completa ✨
+                Apreciar imagen completa
             </button>
         </div>
     </div>
 
     <script>
         // Estado de la pantalla
-        let totalBloques = 1; // 1 jugador = 1 bloque exacto
+        let totalBloques = 1;
         let bloques = [];
         let revelados = 0;
-        let jugadoresConectados = new Map(); // id -> { id, nombre, avatar }
+        let jugadoresConectados = new Map(); // id -> { id, nombre, color }
         let juegoEnCurso = false;
         let audioActivo = true;
 
-        // 1. Algoritmo para calcular distribución de filas y columnas exactamente para N bloques
+        function obtenerIniciales(texto) {
+            if (!texto) return 'P';
+            const partes = texto.trim().split(/\s+/);
+            if (partes.length === 1) {
+                return partes[0].substring(0, 2).toUpperCase();
+            }
+            return (partes[0][0] + partes[1][0]).toUpperCase();
+        }
+
+        // 1. Distribución 1:1 exacta para N bloques
         function calcularDistribucion(N) {
             const total = Math.max(N, 1);
-            if (total === 1) {
-                return { total: 1, rows: 1, filas: [1] }; // 1 jugador = 1 bloque en pantalla completa
-            }
-            if (total === 2) {
-                return { total: 2, rows: 1, filas: [2] }; // 2 jugadores = 2 bloques (50% cada uno)
-            }
-            if (total === 3) {
-                return { total: 3, rows: 1, filas: [3] }; // 3 jugadores = 3 bloques (33% cada uno)
-            }
+            if (total === 1) return { total: 1, rows: 1, filas: [1] };
+            if (total === 2) return { total: 2, rows: 1, filas: [2] };
+            if (total === 3) return { total: 3, rows: 1, filas: [3] };
 
             let rows = Math.round(Math.sqrt(total / 1.77));
             if (rows < 1) rows = 1;
@@ -448,7 +490,7 @@
 
                     const numSpan = document.createElement('span');
                     numSpan.className = 'bloque-num';
-                    numSpan.textContent = '#' + idx;
+                    numSpan.textContent = String(idx).padStart(2, '0');
                     div.appendChild(numSpan);
 
                     filaDiv.appendChild(div);
@@ -473,30 +515,17 @@
         });
 
         cliente.on('connect', () => {
-            console.log('Pantalla conectada al servidor MQTT');
-            setConnectionStatus('online', 'En Línea');
+            setConnectionStatus('online', 'En línea');
             cliente.subscribe(topicoSecreto, (err) => {
-                if (err) {
-                    console.error('Error suscribiendo al tópico:', err);
-                } else {
-                    // Solicitar a todos los teléfonos activos que anuncien su presencia
+                if (!err) {
                     cliente.publish(topicoSecreto, JSON.stringify({ accion: 'ping_jugadores' }));
                 }
             });
         });
 
-        cliente.on('reconnect', () => {
-            setConnectionStatus('connecting', 'Reconectando...');
-        });
-
-        cliente.on('offline', () => {
-            setConnectionStatus('offline', 'Desconectado');
-        });
-
-        cliente.on('error', (err) => {
-            console.error('Error MQTT:', err);
-            setConnectionStatus('offline', 'Error');
-        });
+        cliente.on('reconnect', () => setConnectionStatus('connecting', 'Reconectando'));
+        cliente.on('offline', () => setConnectionStatus('offline', 'Sin conexión'));
+        cliente.on('error', () => setConnectionStatus('offline', 'Error'));
 
         function setConnectionStatus(state, label) {
             const statusDot = document.getElementById('statusDot');
@@ -518,19 +547,18 @@
                 const datos = JSON.parse(mensaje.toString());
 
                 if (datos.accion === 'jugador_unido') {
-                    const pId = datos.id || (datos.nombre + '_' + (datos.avatar || ''));
+                    const pId = datos.id || datos.nombre;
                     const esNuevo = !jugadoresConectados.has(pId);
                     jugadoresConectados.set(pId, {
                         id: pId,
                         nombre: datos.nombre,
-                        avatar: datos.avatar || '🚀'
+                        color: datos.color || '#cba6f7'
                     });
 
                     document.getElementById('playerCount').textContent = jugadoresConectados.size;
 
                     if (esNuevo) {
-                        mostrarToast(datos.avatar || '👤', `¡${datos.nombre} se unió! (${jugadoresConectados.size} en sala)`);
-                        // Si el juego todavía está en lobby/espera, adaptar cuadrícula exacta al número de jugadores
+                        mostrarToast(datos.color || '#cba6f7', obtenerIniciales(datos.nombre), `${datos.nombre} se ha unido a la sala`);
                         if (!juegoEnCurso) {
                             reconstruirCuadricula(Math.max(jugadoresConectados.size, 1));
                         }
@@ -540,7 +568,7 @@
                         const j = jugadoresConectados.get(datos.id);
                         jugadoresConectados.delete(datos.id);
                         document.getElementById('playerCount').textContent = jugadoresConectados.size;
-                        mostrarToast(j.avatar || '👋', `${j.nombre} se ha desconectado`);
+                        mostrarToast(j.color || '#fab387', obtenerIniciales(j.nombre), `${j.nombre} se ha retirado`);
                         if (!juegoEnCurso) {
                             reconstruirCuadricula(Math.max(jugadoresConectados.size, 1));
                         }
@@ -553,19 +581,18 @@
                     reconstruirCuadricula(1);
                     document.getElementById('grid').classList.remove('grid-completed');
                     document.getElementById('finaleBanner').style.display = 'none';
-                    mostrarToast('🚪', 'Todos los jugadores han sido desconectados.');
+                    mostrarToast('#fab387', '·', 'Todos los participantes han sido desconectados');
                 } else if (datos.accion === 'iniciar_juego') {
                     juegoEnCurso = true;
-                    // Fijar cuadrícula al número exacto de jugadores registrados
                     const cantFinal = datos.totalJugadores || Math.max(jugadoresConectados.size, 1);
                     reconstruirCuadricula(cantFinal);
                     document.getElementById('grid').classList.remove('grid-completed');
                     document.getElementById('finaleBanner').style.display = 'none';
 
-                    mostrarToast('🚀', `¡Partida iniciada! Cuadrícula de ${cantFinal} bloque${cantFinal > 1 ? 's' : ''}.`);
+                    mostrarToast('#a6e3a1', 'OK', `Ronda iniciada con ${cantFinal} bloque${cantFinal > 1 ? 's' : ''}`);
                     sound.playStart();
                 } else if (datos.accion === 'juego_terminado') {
-                    revelarBloque(datos.nombre, datos.avatar, datos.tiempo);
+                    revelarBloque(datos.nombre, datos.color, datos.tiempo);
                 } else if (datos.accion === 'reiniciar_juego') {
                     reiniciarPantalla();
                 } else if (datos.accion === 'revelar_todo') {
@@ -577,37 +604,34 @@
         });
 
         // 5. Lógica de revelación de un bloque
-        function revelarBloque(nombre, avatar = '🚀', tiempo = null) {
+        function revelarBloque(nombre, color = '#cba6f7', tiempo = null) {
             const disponibles = bloques.filter(b => !b.classList.contains('revelado'));
             if (disponibles.length === 0) return;
 
-            // Elegir un bloque aleatorio aún cubierto
             const bloque = disponibles[Math.floor(Math.random() * disponibles.length)];
-            bloque.innerHTML = ''; // Limpiar número
+            bloque.innerHTML = '';
 
-            const avatarSpan = document.createElement('div');
-            avatarSpan.className = 'bloque-avatar';
-            avatarSpan.textContent = avatar;
+            const badge = document.createElement('div');
+            badge.className = 'bloque-avatar-badge';
+            badge.style.background = color || '#cba6f7';
+            badge.textContent = obtenerIniciales(nombre);
 
             const nombreSpan = document.createElement('div');
             nombreSpan.className = 'bloque-nombre';
             nombreSpan.textContent = nombre;
 
-            bloque.appendChild(avatarSpan);
+            bloque.appendChild(badge);
             bloque.appendChild(nombreSpan);
             bloque.classList.add('revelado');
 
             revelados++;
             actualizarHUD();
 
-            // Sonido de revelación
             sound.playReveal();
 
-            // Toast feed
             const txtTiempo = tiempo ? ` en ${tiempo}s` : '';
-            mostrarToast(avatar, `<strong>${nombre}</strong> reveló su bloque${txtTiempo}!`);
+            mostrarToast(color || '#cba6f7', obtenerIniciales(nombre), `<strong>${nombre}</strong> completó su bloque${txtTiempo}`);
 
-            // Verificar si se completaron todos los bloques de la cuadrícula
             if (revelados >= totalBloques) {
                 dispararGranFinal();
             }
@@ -628,16 +652,17 @@
             if (disponibles.length === 0) return;
 
             let delay = 0;
-            const avatars = ['🌟', '🚀', '⚡', '💎', '🔥', '🦊', '🐱', '🎮'];
-            const nombres = ['Comunidad', 'Equipo', 'Gamer', 'Master', 'Player', 'VIP', 'Heroe'];
+            const colores = ['#cba6f7', '#74c7ec', '#a6e3a1', '#fab387', '#f5c2e7', '#b4befe'];
+            const nombres = ['Comunidad', 'Equipo', 'Diseño', 'Sistemas', 'Participante', 'Colaborador'];
 
             disponibles.forEach((bloque) => {
                 setTimeout(() => {
                     if (!bloque.classList.contains('revelado')) {
-                        const rAvatar = avatars[Math.floor(Math.random() * avatars.length)];
+                        const rColor = colores[Math.floor(Math.random() * colores.length)];
                         const rNombre = nombres[Math.floor(Math.random() * nombres.length)];
+
                         bloque.innerHTML = `
-                            <div class="bloque-avatar">${rAvatar}</div>
+                            <div class="bloque-avatar-badge" style="background: ${rColor}">${obtenerIniciales(rNombre)}</div>
                             <div class="bloque-nombre">${rNombre}</div>
                         `;
                         bloque.classList.add('revelado');
@@ -650,7 +675,7 @@
                         }
                     }
                 }, delay);
-                delay += 30; // Cascada rápida
+                delay += 30;
             });
         }
 
@@ -661,20 +686,17 @@
             document.getElementById('grid').classList.remove('grid-completed');
             document.getElementById('finaleBanner').style.display = 'none';
 
-            // Limpiamos la lista para volver a verificar quién está REALMENTE en línea
             jugadoresConectados.clear();
             document.getElementById('playerCount').textContent = '0';
 
-            // Pedir a los teléfonos activos que respondan
             cliente.publish(topicoSecreto, JSON.stringify({ accion: 'ping_jugadores' }));
 
-            // Reajustar cuadrícula a los jugadores que realmente respondan
             setTimeout(() => {
                 const cant = Math.max(jugadoresConectados.size, 1);
                 reconstruirCuadricula(cant);
             }, 400);
 
-            mostrarToast('🔄', 'El juego ha sido reiniciado. Comprobando jugadores en línea...');
+            mostrarToast('#74c7ec', '·', 'Mural reiniciado. Re-verificando participantes...');
         }
 
         // 9. Gran final
@@ -690,13 +712,13 @@
         }
 
         // 10. Toast notification
-        function mostrarToast(avatar, textoHtml) {
+        function mostrarToast(color, iniciales, textoHtml) {
             const toastFeed = document.getElementById('toastFeed');
             const toast = document.createElement('div');
             toast.className = 'toast-item';
             toast.innerHTML = `
-                <div style="font-size: 1.6rem;">${avatar}</div>
-                <div style="font-size: 0.92rem; color: var(--ctp-text);">${textoHtml}</div>
+                <div class="toast-badge" style="background: ${color}">${iniciales}</div>
+                <div style="font-size: 0.88rem; color: var(--ctp-text); line-height: 1.4;">${textoHtml}</div>
             `;
 
             toastFeed.appendChild(toast);
@@ -705,7 +727,7 @@
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateY(20px)';
                 setTimeout(() => toast.remove(), 400);
-            }, 4500);
+            }, 4000);
         }
 
         // 11. Pantalla completa y audio
@@ -721,9 +743,12 @@
 
         function toggleAudio() {
             audioActivo = sound.toggle();
-            const btn = document.getElementById('audioBtn');
-            btn.textContent = audioActivo ? '🔊' : '🔇';
-            btn.style.opacity = audioActivo ? '1' : '0.6';
+            const icon = document.getElementById('audioIcon');
+            if (audioActivo) {
+                icon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>';
+            } else {
+                icon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line>';
+            }
         }
 
         // 12. Confetti Canvas
@@ -742,7 +767,7 @@
                     y: -20 - Math.random() * 50,
                     vx: (Math.random() - 0.5) * 6,
                     vy: Math.random() * 4 + 3,
-                    size: Math.random() * 10 + 5,
+                    size: Math.random() * 8 + 4,
                     color: colors[Math.floor(Math.random() * colors.length)],
                     rot: Math.random() * 360,
                     rotSpeed: (Math.random() - 0.5) * 8,

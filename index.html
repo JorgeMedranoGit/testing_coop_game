@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Desafío Catppuccin | Juego</title>
+    <title>Mural Colectivo | Participante</title>
     <!-- Catppuccin Design System -->
     <link rel="stylesheet" href="catppuccin.css">
     <!-- MQTT Broker Client -->
@@ -23,6 +23,7 @@
             -webkit-user-select: none;
             touch-action: manipulation;
             overflow: hidden;
+            font-family: var(--font-main);
         }
 
         /* Status header */
@@ -38,7 +39,7 @@
             z-index: 100;
         }
 
-        .audio-btn {
+        .icon-btn {
             background: rgba(49, 50, 68, 0.7);
             backdrop-filter: blur(8px);
             border: 1px solid var(--ctp-surface2);
@@ -50,72 +51,84 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 1.1rem;
             transition: all 0.2s ease;
         }
 
-        .audio-btn:active {
-            transform: scale(0.9);
+        .icon-btn:active {
+            transform: scale(0.92);
         }
 
-        /* Avatar Selector */
-        .avatar-grid {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            margin: 16px 0;
-            flex-wrap: wrap;
+        .icon-btn svg {
+            width: 18px;
+            height: 18px;
         }
 
-        .avatar-opt {
-            width: 44px;
-            height: 44px;
-            font-size: 1.4rem;
+        /* Monogram Avatar */
+        .monogram-avatar {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 12px;
-            border: 2px solid var(--ctp-surface1);
-            background: var(--ctp-surface0);
-            cursor: pointer;
-            transition: all 0.2s ease;
+            font-size: 1.7rem;
+            font-weight: 800;
+            margin: 0 auto 14px auto;
+            color: #11111b;
+            background: var(--ctp-mauve);
+            box-shadow: 0 4px 18px rgba(203, 166, 247, 0.35);
+            transition: all 0.25s ease;
         }
 
-        .avatar-opt.selected {
-            border-color: var(--ctp-mauve);
-            background: rgba(203, 166, 247, 0.2);
-            transform: scale(1.12);
-            box-shadow: 0 0 12px rgba(203, 166, 247, 0.5);
+        /* Color Picker Row */
+        .color-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 14px 0 20px 0;
+        }
+
+        .color-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .color-dot:hover {
+            transform: scale(1.15);
+        }
+
+        .color-dot.selected {
+            border-color: #ffffff;
+            transform: scale(1.2);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
         }
 
         /* Main Container Views */
         .view-container {
             width: 100%;
-            max-width: 440px;
+            max-width: 420px;
             z-index: 10;
         }
 
-        /* Waiting Screen Radar */
+        /* Waiting Radar */
         .radar-box {
             position: relative;
-            width: 120px;
-            height: 120px;
-            margin: 24px auto;
+            width: 110px;
+            height: 110px;
+            margin: 18px auto;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .radar-center {
-            font-size: 3rem;
-            z-index: 2;
-            animation: pulse 2s infinite ease-in-out;
-        }
-
         .radar-ring {
             position: absolute;
             border-radius: 50%;
-            border: 2px solid var(--ctp-mauve);
+            border: 1.5px solid var(--ctp-mauve);
             opacity: 0.8;
             animation: radarPing 2.4s infinite cubic-bezier(0, 0.2, 0.8, 1);
         }
@@ -131,19 +144,11 @@
         }
 
         @keyframes radarPing {
-            0% {
-                width: 30px;
-                height: 30px;
-                opacity: 0.9;
-            }
-            100% {
-                width: 130px;
-                height: 130px;
-                opacity: 0;
-            }
+            0% { width: 30px; height: 30px; opacity: 0.9; }
+            100% { width: 120px; height: 120px; opacity: 0; }
         }
 
-        /* Interactive Game Arena */
+        /* Arena */
         #juego {
             position: fixed;
             top: 0;
@@ -177,10 +182,10 @@
 
         .hud-stat {
             font-family: var(--font-mono);
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             font-weight: 700;
             color: var(--ctp-text);
-            background: rgba(30, 30, 46, 0.8);
+            background: rgba(30, 30, 46, 0.85);
             backdrop-filter: blur(8px);
             padding: 6px 14px;
             border-radius: 20px;
@@ -189,7 +194,7 @@
 
         .progress-bar-bg {
             width: 100%;
-            height: 8px;
+            height: 6px;
             background: var(--ctp-surface0);
             border-radius: 999px;
             overflow: hidden;
@@ -204,7 +209,7 @@
             box-shadow: 0 0 10px var(--ctp-green);
         }
 
-        /* Floating Tap Circles */
+        /* Floating Circles */
         .circulo {
             width: 82px;
             height: 82px;
@@ -213,8 +218,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.6rem;
-            font-weight: 900;
+            font-size: 1.5rem;
+            font-weight: 800;
             font-family: var(--font-mono);
             cursor: pointer;
             transform: translate(-50%, -50%) scale(0.2);
@@ -225,17 +230,10 @@
         }
 
         @keyframes spawnPop {
-            0% {
-                transform: translate(-50%, -50%) scale(0.2);
-                opacity: 0.2;
-            }
-            100% {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 1;
-            }
+            0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0.2; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         }
 
-        /* Particle effect for tap feedback */
         .tap-ripple {
             position: absolute;
             border-radius: 50%;
@@ -245,19 +243,10 @@
         }
 
         @keyframes ripEffect {
-            0% {
-                width: 30px;
-                height: 30px;
-                opacity: 0.9;
-            }
-            100% {
-                width: 160px;
-                height: 160px;
-                opacity: 0;
-            }
+            0% { width: 30px; height: 30px; opacity: 0.9; }
+            100% { width: 150px; height: 150px; opacity: 0; }
         }
 
-        /* Confetti Canvas for Victory */
         #confettiCanvas {
             position: fixed;
             top: 0;
@@ -271,21 +260,22 @@
         .stat-card {
             background: var(--ctp-surface0);
             border-radius: 12px;
-            padding: 14px;
+            padding: 12px;
             border: 1px solid var(--ctp-surface2);
             text-align: center;
             flex: 1;
         }
         .stat-val {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 800;
             color: var(--ctp-mauve);
             font-family: var(--font-mono);
         }
         .stat-lbl {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: var(--ctp-subtext0);
             text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
     </style>
 </head>
@@ -298,49 +288,53 @@
     <div class="top-nav">
         <div id="connStatus" class="ctp-badge ctp-badge-yellow">
             <span class="status-dot connecting" id="statusDot"></span>
-            <span id="statusText">Conectando...</span>
+            <span id="statusText">Conectando</span>
         </div>
-        <button class="audio-btn" id="audioToggle" onclick="toggleAudio()" title="Alternar Sonido">🔊</button>
+        <button class="icon-btn" id="audioToggle" onclick="toggleAudio()" title="Alternar sonido">
+            <svg id="audioIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+        </button>
     </div>
 
     <!-- ==========================================
-         FASE 1: REGISTRO DE JUGADOR
+         FASE 1: REGISTRO DE PARTICIPANTE
          ========================================== -->
     <div id="registro" class="view-container">
         <div class="ctp-card" style="text-align: center;">
-            <div style="font-size: 2.8rem; margin-bottom: 8px;">🎮</div>
-            <h1 style="font-size: 1.8rem; font-weight: 800; color: var(--ctp-mauve); margin-bottom: 4px;">
-                Revela el Secreto
+            <div class="monogram-avatar" id="avatarPreview">P</div>
+
+            <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--ctp-text); margin-bottom: 6px;">
+                Mural Colectivo
             </h1>
-            <p style="color: var(--ctp-subtext0); font-size: 0.95rem; margin-bottom: 18px;">
-                Elige tu avatar, ingresa tu nombre y prepárate para jugar en vivo.
+            <p style="color: var(--ctp-subtext0); font-size: 0.92rem; margin-bottom: 18px; line-height: 1.5;">
+                Ingresa tu nombre para reclamar tu espacio en la pantalla comunitaria.
             </p>
 
-            <!-- Selector de Avatar -->
-            <label style="font-size: 0.85rem; font-weight: 700; color: var(--ctp-subtext1); text-transform: uppercase; letter-spacing: 0.05em;">
-                Tu Avatar
+            <!-- Selector de Color de Distintivo -->
+            <label style="font-size: 0.8rem; font-weight: 700; color: var(--ctp-subtext1); text-transform: uppercase; letter-spacing: 0.05em;">
+                Color de tu distintivo
             </label>
-            <div class="avatar-grid" id="avatarGrid">
-                <div class="avatar-opt selected" onclick="selectAvatar('🚀', this)">🚀</div>
-                <div class="avatar-opt" onclick="selectAvatar('⚡', this)">⚡</div>
-                <div class="avatar-opt" onclick="selectAvatar('🦊', this)">🦊</div>
-                <div class="avatar-opt" onclick="selectAvatar('🐱', this)">🐱</div>
-                <div class="avatar-opt" onclick="selectAvatar('💎', this)">💎</div>
-                <div class="avatar-opt" onclick="selectAvatar('👾', this)">👾</div>
-                <div class="avatar-opt" onclick="selectAvatar('🎯', this)">🎯</div>
-                <div class="avatar-opt" onclick="selectAvatar('🔥', this)">🔥</div>
+            <div class="color-row">
+                <div class="color-dot selected" style="background: #cba6f7;" onclick="elegirColor('#cba6f7', this)" title="Malva"></div>
+                <div class="color-dot" style="background: #74c7ec;" onclick="elegirColor('#74c7ec', this)" title="Zafiro"></div>
+                <div class="color-dot" style="background: #a6e3a1;" onclick="elegirColor('#a6e3a1', this)" title="Verde"></div>
+                <div class="color-dot" style="background: #fab387;" onclick="elegirColor('#fab387', this)" title="Melocotón"></div>
+                <div class="color-dot" style="background: #f5c2e7;" onclick="elegirColor('#f5c2e7', this)" title="Rosa"></div>
+                <div class="color-dot" style="background: #b4befe;" onclick="elegirColor('#b4befe', this)" title="Lavanda"></div>
             </div>
 
             <!-- Entrada de Nombre -->
             <div style="margin-bottom: 20px; text-align: left;">
-                <label for="nombre" style="font-size: 0.85rem; font-weight: 700; color: var(--ctp-subtext1); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">
-                    Tu Nombre o Apodo
+                <label for="nombre" style="font-size: 0.8rem; font-weight: 700; color: var(--ctp-subtext1); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">
+                    Nombre o alias
                 </label>
-                <input type="text" id="nombre" class="ctp-input" placeholder="Ej. Jorge, Alex, Dani..." maxlength="18" autocomplete="off">
+                <input type="text" id="nombre" class="ctp-input" placeholder="Escribe tu nombre..." maxlength="18" autocomplete="off" oninput="actualizarIniciales(this.value)">
             </div>
 
             <button class="ctp-btn ctp-btn-mauve" style="width: 100%;" onclick="registrarse()">
-                <span>¡Entrar a la Partida!</span> ➔
+                Unirme a la sala
             </button>
         </div>
     </div>
@@ -354,43 +348,42 @@
                 <div class="radar-ring"></div>
                 <div class="radar-ring"></div>
                 <div class="radar-ring"></div>
-                <div class="radar-center" id="esperaAvatar">🚀</div>
+                <div class="monogram-avatar" id="esperaAvatar" style="margin: 0; width: 68px; height: 68px; font-size: 1.4rem;">P</div>
             </div>
 
-            <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--ctp-text); margin-bottom: 6px;">
-                ¡Listo, <span id="esperaNombre" style="color: var(--ctp-mauve);">Jugador</span>!
+            <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--ctp-text); margin-bottom: 4px;">
+                Todo listo, <span id="esperaNombre" style="color: var(--ctp-mauve);">Participante</span>
             </h2>
-            <div class="ctp-badge ctp-badge-green" style="margin-bottom: 18px;">
-                ✓ Registrado con éxito
+            <div class="ctp-badge ctp-badge-green" style="margin-bottom: 16px;">
+                Conectado a la sala
             </div>
 
-            <p style="color: var(--ctp-subtext0); font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">
-                Esperando la señal de inicio del administrador...<br>
-                <strong>¡Mantén tu pantalla activa y prepárate para tocar los orbes rápido!</strong>
+            <p style="color: var(--ctp-subtext0); font-size: 0.92rem; line-height: 1.5; margin-bottom: 20px;">
+                Esperando la señal de inicio del anfitrión.<br>
+                Mantén la pantalla abierta y prepárate para tocar los círculos.
             </p>
 
-            <!-- Botón de inicio directo o esperar al admin -->
-            <div style="margin-bottom: 18px;">
-                <button class="ctp-btn ctp-btn-green" style="width: 100%; margin-bottom: 10px;" onclick="iniciarRonda(totalTaps)">
-                    ⚡ ¡Comenzar a Jugar Ahora!
+            <div style="margin-bottom: 16px;">
+                <button class="ctp-btn ctp-btn-green" style="width: 100%; margin-bottom: 8px;" onclick="iniciarRonda(totalTaps)">
+                    Comenzar ahora (modo individual)
                 </button>
-                <div style="font-size: 0.8rem; color: var(--ctp-overlay1);">
-                    O espera a que el administrador dé la señal global
+                <div style="font-size: 0.78rem; color: var(--ctp-overlay1);">
+                    O espera a que el anfitrión inicie a todos simultáneamente
                 </div>
             </div>
 
-            <!-- Warm-up mini pad to test tapping and audio -->
-            <div style="background: var(--ctp-surface0); border-radius: 12px; padding: 14px; border: 1px dashed var(--ctp-surface2);">
-                <div style="font-size: 0.85rem; color: var(--ctp-subtext1); margin-bottom: 8px;">
-                    🎯 Zona de calentamiento (Prueba el sonido y toque):
+            <!-- Warm-up mini pad -->
+            <div style="background: var(--ctp-surface0); border-radius: 12px; padding: 12px; border: 1px dashed var(--ctp-surface2);">
+                <div style="font-size: 0.8rem; color: var(--ctp-subtext1); margin-bottom: 6px;">
+                    Zona de práctica previa:
                 </div>
                 <button class="ctp-btn ctp-btn-outline ctp-btn-sm" onclick="testTap(this)">
-                    Toca aquí para probar 🎵
+                    Probar toque y sonido
                 </button>
             </div>
 
             <button class="ctp-btn ctp-btn-outline ctp-btn-sm" style="width: 100%; margin-top: 14px; color: var(--ctp-red); border-color: rgba(243, 139, 168, 0.4);" onclick="salirDelLobby()">
-                🚪 Salir / Cambiar de Nombre
+                Salir o cambiar de nombre
             </button>
         </div>
     </div>
@@ -402,33 +395,38 @@
         <div class="game-hud">
             <div class="hud-row">
                 <div class="hud-stat">
-                    🎯 Faltan: <span id="contador" style="color: var(--ctp-mauve);">15</span>
+                    Taps restantes: <span id="contador" style="color: var(--ctp-mauve);">15</span>
                 </div>
                 <div class="hud-stat">
-                    ⏱️ <span id="cronometro" style="color: var(--ctp-teal);">0.0s</span>
+                    Tiempo: <span id="cronometro" style="color: var(--ctp-teal);">0.0s</span>
                 </div>
             </div>
             <div class="progress-bar-bg">
                 <div class="progress-bar-fill" id="progresoJuego"></div>
             </div>
         </div>
-        <!-- Tap circles will spawn dynamically in this full screen area -->
+        <!-- Dynamic tap circles -->
     </div>
 
     <!-- ==========================================
-         FASE 4: PANTALLA DE VICTORIA
+         FASE 4: PANTALLA DE FINALIZACIÓN
          ========================================== -->
     <div id="victoria" class="view-container" style="display: none; text-align: center;">
         <div class="ctp-card">
-            <div style="font-size: 3.2rem; margin-bottom: 6px; animation: pulse 1.5s infinite;">🏆</div>
-            <h1 style="font-size: 1.8rem; font-weight: 800; color: var(--ctp-green); margin-bottom: 4px;">
-                ¡Misión Cumplida!
+            <div style="width: 54px; height: 54px; border-radius: 50%; background: rgba(166, 227, 161, 0.15); border: 2px solid var(--ctp-green); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; color: var(--ctp-green);">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+
+            <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--ctp-green); margin-bottom: 4px;">
+                Desafío completado
             </h1>
-            <p style="color: var(--ctp-subtext0); font-size: 0.95rem; margin-bottom: 18px;">
-                ¡Completaste todos los taps a tiempo!
+            <p style="color: var(--ctp-subtext0); font-size: 0.92rem; margin-bottom: 16px;">
+                Has completado la secuencia de toques con éxito.
             </p>
 
-            <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+            <div style="display: flex; gap: 12px; margin-bottom: 18px;">
                 <div class="stat-card">
                     <div class="stat-val" id="resTiempo">0.0s</div>
                     <div class="stat-lbl">Tiempo</div>
@@ -439,23 +437,23 @@
                 </div>
             </div>
 
-            <div style="background: rgba(166, 227, 161, 0.12); border: 1px solid rgba(166, 227, 161, 0.3); border-radius: 12px; padding: 14px; margin-bottom: 18px;">
-                <div style="font-size: 1.1rem; font-weight: 700; color: var(--ctp-green); margin-bottom: 4px;">
-                    ✨ ¡Mira hacia el proyector!
+            <div style="background: rgba(166, 227, 161, 0.1); border: 1px solid rgba(166, 227, 161, 0.25); border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+                <div style="font-size: 1rem; font-weight: 700; color: var(--ctp-green); margin-bottom: 2px;">
+                    Bloque desbloqueado
                 </div>
-                <div style="font-size: 0.9rem; color: var(--ctp-subtext1);">
-                    Un fragmento del mural acaba de revelarse con tu nombre y avatar: <span id="victoriaAvatar" style="font-size:1.2rem">🚀</span> <strong id="victoriaNombre" style="color:var(--ctp-text)"></strong>
+                <div style="font-size: 0.88rem; color: var(--ctp-subtext1);">
+                    Tu parte del mural ha sido descubierta con tu nombre: <strong id="victoriaNombre" style="color:var(--ctp-text)"></strong>
                 </div>
             </div>
 
             <div style="display: flex; gap: 10px; margin-bottom: 14px;">
                 <button class="ctp-btn ctp-btn-mauve" style="flex: 1;" onclick="iniciarRonda(totalTaps)">
-                    ⚡ Jugar Otra Vez
+                    Participar de nuevo
                 </button>
             </div>
 
-            <div style="font-size: 0.85rem; color: var(--ctp-overlay1);">
-                Esperando la próxima ronda del organizador...
+            <div style="font-size: 0.82rem; color: var(--ctp-overlay1);">
+                Esperando la siguiente ronda general...
             </div>
         </div>
     </div>
@@ -466,7 +464,7 @@
     <script>
         // Configuración de juego
         let nombreUsuario = '';
-        let avatarUsuario = '🚀';
+        let colorUsuario = '#cba6f7';
         let totalTaps = 15;
         let tapsRestantes = 15;
         let tiempoInicio = 0;
@@ -474,22 +472,21 @@
         let juegoActivo = false;
         let audioActivo = true;
 
-        // Identificador único persistente para cada dispositivo/jugador
+        // Identificador persistente para el dispositivo
         let jugadorId = localStorage.getItem('game_user_id');
         if (!jugadorId) {
             jugadorId = 'p_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
             localStorage.setItem('game_user_id', jugadorId);
         }
 
-        // Paleta de colores Catppuccin para los orbes
+        // Paleta de colores Catppuccin para los orbes interactivos
         const catppuccinColors = [
-            { bg: '#cba6f7', shadow: 'rgba(203, 166, 247, 0.65)', text: '#11111b' }, // Mauve
-            { bg: '#fab387', shadow: 'rgba(250, 179, 135, 0.65)', text: '#11111b' }, // Peach
-            { bg: '#a6e3a1', shadow: 'rgba(166, 227, 161, 0.65)', text: '#11111b' }, // Green
-            { bg: '#74c7ec', shadow: 'rgba(116, 199, 236, 0.65)', text: '#11111b' }, // Sapphire
-            { bg: '#f5c2e7', shadow: 'rgba(245, 194, 231, 0.65)', text: '#11111b' }, // Pink
-            { bg: '#f9e2af', shadow: 'rgba(249, 226, 175, 0.65)', text: '#11111b' }, // Yellow
-            { bg: '#94e2d5', shadow: 'rgba(148, 226, 213, 0.65)', text: '#11111b' }  // Teal
+            { bg: '#cba6f7', shadow: 'rgba(203, 166, 247, 0.5)', text: '#11111b' }, // Mauve
+            { bg: '#fab387', shadow: 'rgba(250, 179, 135, 0.5)', text: '#11111b' }, // Peach
+            { bg: '#a6e3a1', shadow: 'rgba(166, 227, 161, 0.5)', text: '#11111b' }, // Green
+            { bg: '#74c7ec', shadow: 'rgba(116, 199, 236, 0.5)', text: '#11111b' }, // Sapphire
+            { bg: '#f5c2e7', shadow: 'rgba(245, 194, 231, 0.5)', text: '#11111b' }, // Pink
+            { bg: '#94e2d5', shadow: 'rgba(148, 226, 213, 0.5)', text: '#11111b' }  // Teal
         ];
 
         // 1. Conexión MQTT
@@ -500,36 +497,23 @@
             clean: true
         });
 
-        // Actualizar UI según estado de conexión
         cliente.on('connect', () => {
-            console.log('Cliente MQTT conectado exitosamente');
-            setConnectionStatus('online', 'En Línea');
+            setConnectionStatus('online', 'En línea');
             cliente.subscribe(topicoSecreto, (err) => {
-                if (err) console.error('Error suscribiendo al tópico:', err);
-                else if (nombreUsuario) {
-                    // Notificar presencia al reconectar
+                if (!err && nombreUsuario) {
                     cliente.publish(topicoSecreto, JSON.stringify({
                         accion: 'jugador_unido',
                         id: jugadorId,
                         nombre: nombreUsuario,
-                        avatar: avatarUsuario
+                        color: colorUsuario
                     }));
                 }
             });
         });
 
-        cliente.on('reconnect', () => {
-            setConnectionStatus('connecting', 'Reconectando...');
-        });
-
-        cliente.on('offline', () => {
-            setConnectionStatus('offline', 'Desconectado');
-        });
-
-        cliente.on('error', (err) => {
-            console.error('Error en cliente MQTT:', err);
-            setConnectionStatus('offline', 'Error Broker');
-        });
+        cliente.on('reconnect', () => setConnectionStatus('connecting', 'Reconectando'));
+        cliente.on('offline', () => setConnectionStatus('offline', 'Sin conexión'));
+        cliente.on('error', () => setConnectionStatus('offline', 'Error'));
 
         function setConnectionStatus(state, label) {
             const statusDot = document.getElementById('statusDot');
@@ -545,19 +529,38 @@
             );
         }
 
-        // Selección de Avatar
-        function selectAvatar(emoji, el) {
-            avatarUsuario = emoji;
-            document.querySelectorAll('.avatar-opt').forEach(opt => opt.classList.remove('selected'));
+        // Obtener iniciales limpias de un nombre
+        function obtenerIniciales(texto) {
+            if (!texto) return 'P';
+            const partes = texto.trim().split(/\s+/);
+            if (partes.length === 1) {
+                return partes[0].substring(0, 2).toUpperCase();
+            }
+            return (partes[0][0] + partes[1][0]).toUpperCase();
+        }
+
+        function actualizarIniciales(val) {
+            const iniciales = obtenerIniciales(val);
+            document.getElementById('avatarPreview').textContent = iniciales;
+        }
+
+        function elegirColor(hex, el) {
+            colorUsuario = hex;
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
             el.classList.add('selected');
+            document.getElementById('avatarPreview').style.background = hex;
+            document.getElementById('avatarPreview').style.boxShadow = `0 4px 18px ${hex}66`;
             sound.playClick();
         }
 
-        // Guardar o recordar nombre en LocalStorage si existe
+        // Cargar nombre guardado en LocalStorage
         window.addEventListener('DOMContentLoaded', () => {
             const saved = localStorage.getItem('game_user_name');
             const input = document.getElementById('nombre');
-            if (saved) input.value = saved;
+            if (saved) {
+                input.value = saved;
+                actualizarIniciales(saved);
+            }
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') registrarse();
             });
@@ -581,18 +584,49 @@
             document.getElementById('registro').style.display = 'none';
             document.getElementById('espera').style.display = 'block';
             document.getElementById('esperaNombre').textContent = nombreUsuario;
-            document.getElementById('esperaAvatar').textContent = avatarUsuario;
+            
+            const esperaAvatar = document.getElementById('esperaAvatar');
+            esperaAvatar.textContent = obtenerIniciales(nombreUsuario);
+            esperaAvatar.style.background = colorUsuario;
 
-            // Notificar que un nuevo jugador se unió con su ID único
+            // Notificar al broker
             if (cliente.connected) {
                 cliente.publish(topicoSecreto, JSON.stringify({
                     accion: 'jugador_unido',
                     id: jugadorId,
                     nombre: nombreUsuario,
-                    avatar: avatarUsuario
+                    color: colorUsuario
                 }));
             }
         }
+
+        // Salir de la sala voluntariamente
+        function salirDelLobby() {
+            if (cliente && cliente.connected && nombreUsuario) {
+                cliente.publish(topicoSecreto, JSON.stringify({
+                    accion: 'jugador_desconectado',
+                    id: jugadorId
+                }));
+            }
+            nombreUsuario = '';
+            localStorage.removeItem('game_user_name');
+            document.getElementById('nombre').value = '';
+            document.getElementById('espera').style.display = 'none';
+            document.getElementById('registro').style.display = 'block';
+            sound.playClick();
+        }
+
+        // Notificar al servidor si el participante cierra la ventana
+        const notificarSalida = () => {
+            if (nombreUsuario && cliente && cliente.connected) {
+                cliente.publish(topicoSecreto, JSON.stringify({
+                    accion: 'jugador_desconectado',
+                    id: jugadorId
+                }));
+            }
+        };
+        window.addEventListener('beforeunload', notificarSalida);
+        window.addEventListener('pagehide', notificarSalida);
 
         // Escuchar comandos del Administrador y la Pantalla
         cliente.on('message', (topic, mensaje) => {
@@ -600,27 +634,23 @@
                 const datos = JSON.parse(mensaje.toString());
 
                 if (datos.accion === 'ping_jugadores') {
-                    // La pantalla o admin solicita lista activa de jugadores
                     if (nombreUsuario && cliente.connected) {
                         cliente.publish(topicoSecreto, JSON.stringify({
                             accion: 'jugador_unido',
                             id: jugadorId,
                             nombre: nombreUsuario,
-                            avatar: avatarUsuario
+                            color: colorUsuario
                         }));
                     }
                 } else if (datos.accion === 'iniciar_juego') {
-                    // Si el usuario ya está registrado, arrancamos el juego
                     if (nombreUsuario && (document.getElementById('espera').style.display === 'block' || document.getElementById('victoria').style.display === 'block')) {
                         iniciarRonda(datos.taps || 15);
                     }
                 } else if (datos.accion === 'reiniciar_juego') {
-                    // Volver a la sala de espera
                     if (nombreUsuario) {
                         reiniciarEstadoJugador();
                     }
                 } else if (datos.accion === 'desconectar_todos') {
-                    // Expulsar a todos los jugadores devolviéndolos a la pantalla de registro
                     juegoActivo = false;
                     if (timerInterval) clearInterval(timerInterval);
                     nombreUsuario = '';
@@ -644,21 +674,16 @@
             tapsRestantes = totalTaps;
             juegoActivo = true;
 
-            // Ocultar vistas previas y mostrar arena
             document.getElementById('registro').style.display = 'none';
             document.getElementById('espera').style.display = 'none';
             document.getElementById('victoria').style.display = 'none';
             const juegoDiv = document.getElementById('juego');
             juegoDiv.style.display = 'block';
 
-            // Limpiar orbes anteriores si quedaron
             document.querySelectorAll('.circulo').forEach(c => c.remove());
-
-            // Actualizar HUD
             document.getElementById('contador').textContent = tapsRestantes;
             actualizarProgreso();
 
-            // Arrancar cronómetro
             tiempoInicio = Date.now();
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => {
@@ -666,10 +691,7 @@
                 document.getElementById('cronometro').textContent = elapsed.toFixed(1) + 's';
             }, 100);
 
-            // Sonido de inicio
             sound.playStart();
-
-            // Generar el primer orbe
             generarCirculo();
         }
 
@@ -678,29 +700,23 @@
             if (!juegoActivo || tapsRestantes <= 0) return;
 
             const juegoDiv = document.getElementById('juego');
-            
-            // Eliminar orbes anteriores por seguridad
             document.querySelectorAll('.circulo').forEach(c => c.remove());
 
             const circulo = document.createElement('div');
             circulo.className = 'circulo';
 
-            // Seleccionar color Catppuccin aleatorio
             const color = catppuccinColors[Math.floor(Math.random() * catppuccinColors.length)];
             circulo.style.backgroundColor = color.bg;
             circulo.style.color = color.text;
             circulo.style.boxShadow = `0 0 25px ${color.shadow}, inset 0 0 10px rgba(255,255,255,0.4)`;
 
-            // Coordenadas seguras (12% a 88% de ancho y 18% a 82% de alto para evitar bordes y notch)
             const posX = Math.floor(Math.random() * 74 + 13);
             const posY = Math.floor(Math.random() * 62 + 20);
             circulo.style.left = posX + '%';
             circulo.style.top = posY + '%';
 
-            // Mostrar número o avatar
             circulo.textContent = tapsRestantes;
 
-            // Manejador del toque rápido
             let touched = false;
             const handleTap = (e) => {
                 if (touched || !juegoActivo) return;
@@ -708,24 +724,19 @@
                 e.preventDefault();
                 e.stopPropagation();
 
-                // Efecto visual de onda / ripple
                 crearOnda(circulo.offsetLeft, circulo.offsetTop, color.bg);
 
-                // Disminuir taps
                 const tapsHechos = totalTaps - tapsRestantes + 1;
                 tapsRestantes--;
                 document.getElementById('contador').textContent = tapsRestantes;
                 actualizarProgreso();
 
-                // Sonido con escala ascendente
                 sound.playTap(tapsHechos, totalTaps);
 
-                // Vibración háptica en celulares si está soportado
                 if (navigator.vibrate) {
                     navigator.vibrate(35);
                 }
 
-                // Desaparecer con animación
                 circulo.remove();
 
                 if (tapsRestantes <= 0) {
@@ -739,24 +750,21 @@
             juegoDiv.appendChild(circulo);
         }
 
-        // Efecto de onda al tocar
         function crearOnda(x, y, colorHex) {
             const ripple = document.createElement('div');
             ripple.className = 'tap-ripple';
             ripple.style.left = x + 'px';
             ripple.style.top = y + 'px';
-            ripple.style.border = `3px solid ${colorHex}`;
+            ripple.style.border = `2.5px solid ${colorHex}`;
             document.getElementById('juego').appendChild(ripple);
-            setTimeout(() => ripple.remove(), 450);
+            setTimeout(() => ripple.remove(), 420);
         }
 
-        // Barra de progreso del juego
         function actualizarProgreso() {
             const completado = ((totalTaps - tapsRestantes) / totalTaps) * 100;
             document.getElementById('progresoJuego').style.width = completado + '%';
         }
 
-        // Finalizar juego y enviar resultado al proyector
         function finalizarJuego() {
             juegoActivo = false;
             if (timerInterval) clearInterval(timerInterval);
@@ -764,30 +772,25 @@
             const tiempoTotal = ((Date.now() - tiempoInicio) / 1000).toFixed(2);
             const velocidad = (totalTaps / tiempoTotal).toFixed(1);
 
-            // Publicar al broker MQTT
             const payload = JSON.stringify({
                 accion: 'juego_terminado',
                 id: jugadorId,
                 nombre: nombreUsuario,
-                avatar: avatarUsuario,
+                color: colorUsuario,
                 tiempo: parseFloat(tiempoTotal)
             });
             cliente.publish(topicoSecreto, payload);
 
-            // Sonido de victoria y celebración
             sound.playVictory();
             lanzarConfetti();
 
-            // Mostrar vista de victoria
             document.getElementById('juego').style.display = 'none';
             document.getElementById('victoria').style.display = 'block';
             document.getElementById('victoriaNombre').textContent = nombreUsuario;
-            document.getElementById('victoriaAvatar').textContent = avatarUsuario;
             document.getElementById('resTiempo').textContent = tiempoTotal + 's';
             document.getElementById('resVelocidad').textContent = velocidad;
         }
 
-        // Reiniciar estado si el admin envía reiniciar
         function reiniciarEstadoJugador() {
             juegoActivo = false;
             if (timerInterval) clearInterval(timerInterval);
@@ -797,51 +800,25 @@
             document.querySelectorAll('.circulo').forEach(c => c.remove());
         }
 
-        // Test tap en sala de espera
         function testTap(btn) {
             sound.init();
             sound.playTap(5, 15);
             if (navigator.vibrate) navigator.vibrate(30);
-            btn.textContent = '¡Toque recibido! 🚀';
+            btn.textContent = 'Toque registrado';
             setTimeout(() => {
-                btn.textContent = 'Toca aquí para probar 🎵';
+                btn.textContent = 'Probar toque y sonido';
             }, 1000);
         }
 
-        // Salir de la sala voluntariamente
-        function salirDelLobby() {
-            if (cliente && cliente.connected && nombreUsuario) {
-                cliente.publish(topicoSecreto, JSON.stringify({
-                    accion: 'jugador_desconectado',
-                    id: jugadorId
-                }));
-            }
-            nombreUsuario = '';
-            localStorage.removeItem('game_user_name');
-            document.getElementById('nombre').value = '';
-            document.getElementById('espera').style.display = 'none';
-            document.getElementById('registro').style.display = 'block';
-            sound.playClick();
-        }
-
-        // Notificar al servidor si el jugador cierra la pestaña o navega fuera
-        const notificarSalida = () => {
-            if (nombreUsuario && cliente && cliente.connected) {
-                cliente.publish(topicoSecreto, JSON.stringify({
-                    accion: 'jugador_desconectado',
-                    id: jugadorId
-                }));
-            }
-        };
-        window.addEventListener('beforeunload', notificarSalida);
-        window.addEventListener('pagehide', notificarSalida);
-
-        // Alternar audio
+        // Alternar audio con SVG
         function toggleAudio() {
             audioActivo = sound.toggle();
-            const btn = document.getElementById('audioToggle');
-            btn.textContent = audioActivo ? '🔊' : '🔇';
-            btn.style.opacity = audioActivo ? '1' : '0.6';
+            const icon = document.getElementById('audioIcon');
+            if (audioActivo) {
+                icon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>';
+            } else {
+                icon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line>';
+            }
         }
 
         // Confetti Canvas Animation
@@ -876,7 +853,7 @@
                 particles.forEach(p => {
                     p.x += p.vx;
                     p.y += p.vy;
-                    p.vy += 0.35; // Gravedad
+                    p.vy += 0.35;
                     p.rot += p.rotSpeed;
                     p.alpha -= 0.012;
 
