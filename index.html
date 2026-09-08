@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego Interactivo</title>
+    <script src="https://unpkg.com/@apinator/client"></script>
+    <style>
+        body { margin: 0; background: #222; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; }
+        #registro, #juego { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #juego { display: none; position: relative; }
+        input, button { padding: 15px; margin: 10px; font-size: 1.2rem; border-radius: 8px; border: none; }
+        button { background: #00ff88; font-weight: bold; cursor: pointer; }
+        
+        .circulo {
+            width: 70px; height: 70px; 
+            background: #00ff88; 
+            border-radius: 50%;
+            position: absolute; 
+            box-shadow: 0 0 15px #00ff88;
+        }
+    </style>
+</head>
+<body>
+    <!-- FASE 1: Registro -->
+    <div id="registro">
+        <h2 style="color:white">Únete al Evento</h2>
+        <input type="text" id="nombre" placeholder="Tu Nombre">
+        <button onclick="iniciar()">Jugar</button>
+    </div>
+
+    <!-- FASE 2: Juego -->
+    <div id="juego">
+        <h3 style="color:white; z-index: 10;">Faltan: <span id="contador">15</span> taps</h3>
+    </div>
+
+    <script>
+        let nombreUsuario = '';
+        let tapsRestantes = 15;
+        let apinator, channel;
+
+        function iniciar() {
+            nombreUsuario = document.getElementById('nombre').value.trim();
+            if(!nombreUsuario) return alert('Por favor, ingresa tu nombre');
+            
+            // Cambiar vistas
+            document.getElementById('registro').style.display = 'none';
+            document.getElementById('juego').style.display = 'flex';
+
+            // Conectar a Apinator
+            apinator = new Apinator('TU_PUBLIC_KEY', { cluster: 'us' });
+            channel = apinator.subscribe('evento-ar-canal');
+            
+            generarCirculo();
+        }
+
+        function generarCirculo() {
+            if (tapsRestantes <= 0) return finalizarJuego();
+
+            const juegoDiv = document.getElementById('juego');
+            const circulo = document.createElement('div');
+            circulo.className = 'circulo';
+            
+            // Coordenadas aleatorias entre 10% y 80% para no salirse del área visible
+            circulo.style.top = (Math.random() * 70 + 10) + '%';
+            circulo.style.left = (Math.random() * 70 + 10) + '%';
+            
+            circulo.onclick = function() {
+                tapsRestantes--;
+                document.getElementById('contador').textContent = tapsRestantes;
+                circulo.remove(); // Desaparece al tocarlo
+                generarCirculo(); // Aparece el siguiente
+            };
+            
+            juegoDiv.appendChild(circulo);
+        }
+
+        function finalizarJuego() {
+            document.getElementById('juego').innerHTML = '<h2 style="color:white; text-align:center;">¡Completado!<br>Mira a la pantalla principal</h2>';
+            
+            // Disparar el evento con el prefijo "client-" para omitir el backend
+            channel.trigger('client-juego-terminado', { nombre: nombreUsuario });
+        }
+    </script>
+</body>
+</html>
