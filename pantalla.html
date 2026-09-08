@@ -2,49 +2,22 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Pantalla Principal</title>
-    <!-- Importar SDK de Apinator -->
-    <script src="https://unpkg.com/@apinator/client"></script>
+    <title>Pantalla Proyector</title>
+    <!-- Importar la librería MQTT para navegadores -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
-        body { 
-            margin: 0; 
-            /* Tu imagen de fondo secreta */
-            background: url('fondo_secreto.jpg') no-repeat center center; 
-            background-size: cover;
-            overflow: hidden; 
-        }
-        #grid {
-            display: grid;
-            /* 15 columnas x 10 filas = 150 bloques */
-            grid-template-columns: repeat(15, 1fr);
-            grid-template-rows: repeat(10, 1fr);
-            height: 100vh;
-            width: 100vw;
-        }
-        .bloque {
-            background-color: #111; /* Color sólido tapando el fondo */
-            border: 1px solid #222;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-family: sans-serif;
-            font-size: 1.2rem;
-            font-weight: bold;
-            transition: background-color 0.5s ease;
-        }
-        .revelado {
-            /* Se vuelve semi-transparente para revelar la imagen de fondo pero mantener el nombre legible */
-            background-color: rgba(0, 0, 0, 0.4); 
-            border: none;
-        }
+        /* Tu CSS para el Grid y los bloques va aquí */
+        body { background: #000; color: #fff; margin: 0; }
+        #grid { display: grid; grid-template-columns: repeat(15, 1fr); height: 100vh; }
+        .bloque { border: 1px solid #333; display: flex; align-items: center; justify-content: center; }
+        .revelado { background: rgba(255,255,255,0.2); }
     </style>
 </head>
 <body>
     <div id="grid"></div>
 
     <script>
-        // 1. Renderizar los 150 bloques en el DOM
+        // 1. Generar los bloques (lógica visual)
         const grid = document.getElementById('grid');
         const bloques = [];
         for (let i = 0; i < 150; i++) {
@@ -54,24 +27,29 @@
             bloques.push(div);
         }
 
-        // 2. Conectar al WebSocket de Apinator
-        const apinator = new Apinator('app_97ed0f11e6418f58fd5ad4d6b49a9d018c8afb7c', { cluster: 'us' });
+        // 2. Conectar al broker público por WebSockets seguros (wss)
+        const cliente = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
         
-        // Suscribirse al canal global del evento
-        const channel = apinator.subscribe('evento-ar-canal');
-        
-        // 3. Escuchar la señal de los teléfonos
-        channel.bind('client-juego-terminado', (data) => {
-            // Buscar solo los bloques que aún están cubiertos
-            const bloquesDisponibles = bloques.filter(b => !b.classList.contains('revelado'));
+        // Un nombre de canal (tópico) complejo para que nadie más en el broker público interfiera
+        const topicoSecreto = 'proyecto_ar_evento_juego_1a2b3c_lpz';
+
+        cliente.on('connect', () => {
+            console.log('Pantalla conectada al servidor MQTT');
+            cliente.subscribe(topicoSecreto); // Quedarse escuchando
+        });
+
+        // 3. Reaccionar a los mensajes que llegan
+        cliente.on('message', (topic, mensaje) => {
+            // Convertir el mensaje de texto a un objeto JavaScript
+            const datos = JSON.parse(mensaje.toString());
             
-            if (bloquesDisponibles.length > 0) {
-                // Elegir un bloque al azar
-                const bloqueAleatorio = bloquesDisponibles[Math.floor(Math.random() * bloquesDisponibles.length)];
-                
-                // Inyectar el nombre y ejecutar animación CSS
-                bloqueAleatorio.textContent = data.nombre;
-                bloqueAleatorio.classList.add('revelado');
+            if (datos.accion === 'juego_terminado') {
+                const bloquesDisponibles = bloques.filter(b => !b.classList.contains('revelado'));
+                if (bloquesDisponibles.length > 0) {
+                    const bloqueAleatorio = bloquesDisponibles[Math.floor(Math.random() * bloquesDisponibles.length)];
+                    bloqueAleatorio.textContent = datos.nombre;
+                    bloqueAleatorio.classList.add('revelado');
+                }
             }
         });
     </script>

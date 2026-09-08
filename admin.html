@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin</title>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+<body>
+    <button onclick="iniciarJuego()" style="padding: 20px; font-size: 20px;">INICIAR JUEGO</button>
+
+    <script>
+        const cliente = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+        const topicoSecreto = 'proyecto_ar_evento_juego_1a2b3c_lpz';
+
+        function iniciarJuego() {
+            // Publicar el evento para que los teléfonos lo escuchen
+            const payload = JSON.stringify({ accion: 'iniciar_juego' });
+            cliente.publish(topicoSecreto, payload);
+            alert('Señal de inicio enviada a todos los teléfonos.');
+        }
+    </script>
+</body>
+</html>
