@@ -388,6 +388,10 @@
                     Toca aquí para probar 🎵
                 </button>
             </div>
+
+            <button class="ctp-btn ctp-btn-outline ctp-btn-sm" style="width: 100%; margin-top: 14px; color: var(--ctp-red); border-color: rgba(243, 139, 168, 0.4);" onclick="salirDelLobby()">
+                🚪 Salir / Cambiar de Nombre
+            </button>
         </div>
     </div>
 
@@ -615,6 +619,19 @@
                     if (nombreUsuario) {
                         reiniciarEstadoJugador();
                     }
+                } else if (datos.accion === 'desconectar_todos') {
+                    // Expulsar a todos los jugadores devolviéndolos a la pantalla de registro
+                    juegoActivo = false;
+                    if (timerInterval) clearInterval(timerInterval);
+                    nombreUsuario = '';
+                    localStorage.removeItem('game_user_name');
+                    document.getElementById('nombre').value = '';
+                    document.getElementById('juego').style.display = 'none';
+                    document.getElementById('espera').style.display = 'none';
+                    document.getElementById('victoria').style.display = 'none';
+                    document.getElementById('registro').style.display = 'block';
+                    document.querySelectorAll('.circulo').forEach(c => c.remove());
+                    sound.playClick();
                 }
             } catch (e) {
                 console.error('Error parseando mensaje MQTT:', e);
@@ -790,6 +807,34 @@
                 btn.textContent = 'Toca aquí para probar 🎵';
             }, 1000);
         }
+
+        // Salir de la sala voluntariamente
+        function salirDelLobby() {
+            if (cliente && cliente.connected && nombreUsuario) {
+                cliente.publish(topicoSecreto, JSON.stringify({
+                    accion: 'jugador_desconectado',
+                    id: jugadorId
+                }));
+            }
+            nombreUsuario = '';
+            localStorage.removeItem('game_user_name');
+            document.getElementById('nombre').value = '';
+            document.getElementById('espera').style.display = 'none';
+            document.getElementById('registro').style.display = 'block';
+            sound.playClick();
+        }
+
+        // Notificar al servidor si el jugador cierra la pestaña o navega fuera
+        const notificarSalida = () => {
+            if (nombreUsuario && cliente && cliente.connected) {
+                cliente.publish(topicoSecreto, JSON.stringify({
+                    accion: 'jugador_desconectado',
+                    id: jugadorId
+                }));
+            }
+        };
+        window.addEventListener('beforeunload', notificarSalida);
+        window.addEventListener('pagehide', notificarSalida);
 
         // Alternar audio
         function toggleAudio() {

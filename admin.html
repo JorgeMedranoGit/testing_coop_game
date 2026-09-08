@@ -208,7 +208,7 @@
             </div>
             <div class="stat-box">
                 <div class="stat-title">Bloques Revelados</div>
-                <div class="stat-num" id="statBloques" style="color: var(--ctp-green);">0 <span id="statTotalBloques" style="font-size:1rem; color:var(--ctp-subtext0)">/ 6</span></div>
+                <div class="stat-num" id="statBloques" style="color: var(--ctp-green);">0 <span id="statTotalBloques" style="font-size:1rem; color:var(--ctp-subtext0)">/ 1</span></div>
             </div>
             <div class="stat-box">
                 <div class="stat-title">Taps Requeridos</div>
@@ -229,7 +229,7 @@
                     🚀 INICIAR JUEGO (Lanza ronda)
                 </button>
 
-                <div style="display: flex; gap: 10px;">
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                     <button class="ctp-btn ctp-btn-peach" style="flex: 1;" onclick="reiniciarJuego()">
                         🔄 Reiniciar Mural
                     </button>
@@ -237,6 +237,10 @@
                         ✨ Revelar Todo
                     </button>
                 </div>
+
+                <button class="ctp-btn ctp-btn-outline" style="width: 100%; color: var(--ctp-red); border-color: rgba(243, 139, 168, 0.4);" onclick="desconectarATodos()">
+                    🚪 Desconectar a Todos los Jugadores
+                </button>
 
                 <!-- Game Settings -->
                 <div style="margin-top: 24px;">
@@ -313,7 +317,7 @@
         let configuracionTaps = 15;
         let jugadoresMap = new Map(); // id -> { id, nombre, avatar }
         let bloquesRevelados = 0;
-        let totalBloquesDinámicos = 6;
+        let totalBloquesDinámicos = 1;
 
         // Conectar al broker EMQX
         const cliente = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
@@ -376,12 +380,29 @@
                     jugadoresMap.set(id, { id, nombre: datos.nombre, avatar: datos.avatar || '👤' });
 
                     document.getElementById('statJugadores').textContent = jugadoresMap.size;
-                    totalBloquesDinámicos = Math.max(jugadoresMap.size, 4);
+                    totalBloquesDinámicos = Math.max(jugadoresMap.size, 1);
                     actualizarStatsBloques();
 
                     if (esNuevo) {
                         agregarLog('join', `Jugador unido: ${datos.avatar || '👤'} ${datos.nombre} (Total: ${jugadoresMap.size})`);
                     }
+                } else if (datos.accion === 'jugador_desconectado') {
+                    if (jugadoresMap.has(datos.id)) {
+                        const j = jugadoresMap.get(datos.id);
+                        jugadoresMap.delete(datos.id);
+                        document.getElementById('statJugadores').textContent = jugadoresMap.size;
+                        totalBloquesDinámicos = Math.max(jugadoresMap.size, 1);
+                        actualizarStatsBloques();
+                        agregarLog('reset', `Jugador desconectado: ${j.nombre} (Quedan: ${jugadoresMap.size})`);
+                    }
+                } else if (datos.accion === 'desconectar_todos') {
+                    jugadoresMap.clear();
+                    bloquesRevelados = 0;
+                    totalBloquesDinámicos = 1;
+                    document.getElementById('statJugadores').textContent = '0';
+                    actualizarStatsBloques();
+                    document.getElementById('estadoPartida').textContent = 'En Espera';
+                    document.getElementById('estadoPartida').style.color = 'var(--ctp-yellow)';
                 } else if (datos.accion === 'juego_terminado') {
                     bloquesRevelados++;
                     actualizarStatsBloques();
@@ -391,14 +412,12 @@
                     document.getElementById('estadoPartida').textContent = 'En Curso';
                     document.getElementById('estadoPartida').style.color = 'var(--ctp-green)';
                     bloquesRevelados = 0;
-                    totalBloquesDinámicos = datos.totalJugadores || Math.max(jugadoresMap.size, 4);
+                    totalBloquesDinámicos = datos.totalJugadores || Math.max(jugadoresMap.size, 1);
                     actualizarStatsBloques();
                 } else if (datos.accion === 'reiniciar_juego') {
                     bloquesRevelados = 0;
                     document.getElementById('estadoPartida').textContent = 'En Espera';
                     document.getElementById('estadoPartida').style.color = 'var(--ctp-yellow)';
-                    totalBloquesDinámicos = Math.max(jugadoresMap.size, 4);
-                    actualizarStatsBloques();
                 }
             } catch (e) {
                 console.error(e);
@@ -414,7 +433,7 @@
             sound.init();
             sound.playStart();
 
-            const cantJugadores = Math.max(jugadoresMap.size, 4);
+            const cantJugadores = Math.max(jugadoresMap.size, 1);
             const payload = JSON.stringify({
                 accion: 'iniciar_juego',
                 taps: configuracionTaps,
@@ -424,23 +443,51 @@
             cliente.publish(topicoSecreto, payload);
             document.getElementById('estadoPartida').textContent = 'En Curso';
             document.getElementById('estadoPartida').style.color = 'var(--ctp-green)';
-            agregarLog('start', `Señal INICIAR enviada a todos (${cantJugadores} bloques adaptativos, ${configuracionTaps} taps)`);
+            agregarLog('start', `Señal INICIAR enviada (${cantJugadores} bloque${cantJugadores > 1 ? 's' : ''}, ${configuracionTaps} taps)`);
         }
 
         // 2. Reiniciar Juego
         function reiniciarJuego() {
-            if (!confirm('¿Deseas reiniciar la pantalla y devolver a los jugadores al lobby?')) return;
+            if (!confirm('¿Deseas reiniciar el mural y verificar quién sigue en línea?')) return;
             sound.init();
             sound.playClick();
 
-            const payload = JSON.stringify({ accion: 'reiniciar_juego' });
-            cliente.publish(topicoSecreto, payload);
-
+            jugadoresMap.clear();
             bloquesRevelados = 0;
+            document.getElementById('statJugadores').textContent = '0';
+            document.getElementById('estadoPartida').textContent = 'En Espera';
+            document.getElementById('estadoPartida').style.color = 'var(--ctp-yellow)';
+
+            // Enviar señal de reinicio a la pantalla
+            cliente.publish(topicoSecreto, JSON.stringify({ accion: 'reiniciar_juego' }));
+
+            // Enviar ping para que solo los teléfonos con la página aún abierta respondan
+            cliente.publish(topicoSecreto, JSON.stringify({ accion: 'ping_jugadores' }));
+
+            setTimeout(() => {
+                totalBloquesDinámicos = Math.max(jugadoresMap.size, 1);
+                actualizarStatsBloques();
+            }, 500);
+
+            agregarLog('reset', 'Mural reiniciado. Comprobando jugadores activos...');
+        }
+
+        // 3. Desconectar y Expulsar a todos los jugadores
+        function desconectarATodos() {
+            if (!confirm('¿Deseas expulsar a TODOS los jugadores y devolverlos a la pantalla de registro?')) return;
+            sound.init();
+            sound.playClick();
+
+            jugadoresMap.clear();
+            bloquesRevelados = 0;
+            totalBloquesDinámicos = 1;
+            document.getElementById('statJugadores').textContent = '0';
             document.getElementById('estadoPartida').textContent = 'En Espera';
             document.getElementById('estadoPartida').style.color = 'var(--ctp-yellow)';
             actualizarStatsBloques();
-            agregarLog('reset', 'Señal de REINICIO emitida a todos los clientes');
+
+            cliente.publish(topicoSecreto, JSON.stringify({ accion: 'desconectar_todos' }));
+            agregarLog('reset', 'Todos los jugadores han sido desconectados y expulsados.');
         }
 
         // 3. Revelar Todo

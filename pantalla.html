@@ -392,18 +392,28 @@
 
     <script>
         // Estado de la pantalla
-        let totalBloques = 6; // Mínimo inicial por defecto
+        let totalBloques = 1; // 1 jugador = 1 bloque exacto
         let bloques = [];
         let revelados = 0;
         let jugadoresConectados = new Map(); // id -> { id, nombre, avatar }
         let juegoEnCurso = false;
         let audioActivo = true;
 
-        // 1. Algoritmo para calcular distribución óptima de filas y columnas (relación 16:9)
+        // 1. Algoritmo para calcular distribución de filas y columnas exactamente para N bloques
         function calcularDistribucion(N) {
-            const total = Math.max(N, 4); // Mínimo 4 bloques para mantener forma
+            const total = Math.max(N, 1);
+            if (total === 1) {
+                return { total: 1, rows: 1, filas: [1] }; // 1 jugador = 1 bloque en pantalla completa
+            }
+            if (total === 2) {
+                return { total: 2, rows: 1, filas: [2] }; // 2 jugadores = 2 bloques (50% cada uno)
+            }
+            if (total === 3) {
+                return { total: 3, rows: 1, filas: [3] }; // 3 jugadores = 3 bloques (33% cada uno)
+            }
+
             let rows = Math.round(Math.sqrt(total / 1.77));
-            if (rows < 2) rows = 2;
+            if (rows < 1) rows = 1;
             if (rows > total) rows = total;
 
             const baseCols = Math.floor(total / rows);
@@ -417,7 +427,7 @@
 
         // 2. Reconstruir la cuadrícula dinámica en el DOM
         function reconstruirCuadricula(cantidad) {
-            totalBloques = cantidad;
+            totalBloques = Math.max(cantidad, 1);
             bloques = [];
             revelados = 0;
             const grid = document.getElementById('grid');
@@ -451,7 +461,7 @@
             actualizarHUD();
         }
 
-        // Inicializar cuadrícula base
+        // Inicializar cuadrícula base con 1 bloque
         reconstruirCuadricula(totalBloques);
 
         // 3. Conectar al broker MQTT
@@ -520,21 +530,39 @@
 
                     if (esNuevo) {
                         mostrarToast(datos.avatar || '👤', `¡${datos.nombre} se unió! (${jugadoresConectados.size} en sala)`);
-                        // Si el juego todavía está en lobby/espera, ajustar dinámicamente la cuadrícula
+                        // Si el juego todavía está en lobby/espera, adaptar cuadrícula exacta al número de jugadores
                         if (!juegoEnCurso) {
-                            const cantOptima = Math.max(jugadoresConectados.size, 4);
-                            reconstruirCuadricula(cantOptima);
+                            reconstruirCuadricula(Math.max(jugadoresConectados.size, 1));
                         }
                     }
+                } else if (datos.accion === 'jugador_desconectado') {
+                    if (jugadoresConectados.has(datos.id)) {
+                        const j = jugadoresConectados.get(datos.id);
+                        jugadoresConectados.delete(datos.id);
+                        document.getElementById('playerCount').textContent = jugadoresConectados.size;
+                        mostrarToast(j.avatar || '👋', `${j.nombre} se ha desconectado`);
+                        if (!juegoEnCurso) {
+                            reconstruirCuadricula(Math.max(jugadoresConectados.size, 1));
+                        }
+                    }
+                } else if (datos.accion === 'desconectar_todos') {
+                    jugadoresConectados.clear();
+                    juegoEnCurso = false;
+                    revelados = 0;
+                    document.getElementById('playerCount').textContent = '0';
+                    reconstruirCuadricula(1);
+                    document.getElementById('grid').classList.remove('grid-completed');
+                    document.getElementById('finaleBanner').style.display = 'none';
+                    mostrarToast('🚪', 'Todos los jugadores han sido desconectados.');
                 } else if (datos.accion === 'iniciar_juego') {
                     juegoEnCurso = true;
-                    // Fijar cuadrícula al número de jugadores registrados (o mínimo 4)
-                    const cantFinal = datos.totalJugadores || Math.max(jugadoresConectados.size, 4);
+                    // Fijar cuadrícula al número exacto de jugadores registrados
+                    const cantFinal = datos.totalJugadores || Math.max(jugadoresConectados.size, 1);
                     reconstruirCuadricula(cantFinal);
                     document.getElementById('grid').classList.remove('grid-completed');
                     document.getElementById('finaleBanner').style.display = 'none';
 
-                    mostrarToast('🚀', `¡Partida iniciada! Cuadrícula de ${cantFinal} bloques adaptada a los jugadores.`);
+                    mostrarToast('🚀', `¡Partida iniciada! Cuadrícula de ${cantFinal} bloque${cantFinal > 1 ? 's' : ''}.`);
                     sound.playStart();
                 } else if (datos.accion === 'juego_terminado') {
                     revelarBloque(datos.nombre, datos.avatar, datos.tiempo);
@@ -633,11 +661,20 @@
             document.getElementById('grid').classList.remove('grid-completed');
             document.getElementById('finaleBanner').style.display = 'none';
 
-            // Reajustar cuadrícula a los jugadores conectados
-            const cant = Math.max(jugadoresConectados.size, 4);
-            reconstruirCuadricula(cant);
+            // Limpiamos la lista para volver a verificar quién está REALMENTE en línea
+            jugadoresConectados.clear();
+            document.getElementById('playerCount').textContent = '0';
 
-            mostrarToast('🔄', 'El juego ha sido reiniciado por el organizador.');
+            // Pedir a los teléfonos activos que respondan
+            cliente.publish(topicoSecreto, JSON.stringify({ accion: 'ping_jugadores' }));
+
+            // Reajustar cuadrícula a los jugadores que realmente respondan
+            setTimeout(() => {
+                const cant = Math.max(jugadoresConectados.size, 1);
+                reconstruirCuadricula(cant);
+            }, 400);
+
+            mostrarToast('🔄', 'El juego ha sido reiniciado. Comprobando jugadores en línea...');
         }
 
         // 9. Gran final
