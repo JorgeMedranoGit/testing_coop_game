@@ -48,7 +48,7 @@
             document.getElementById('juego').style.display = 'flex';
 
             // Conectar a Apinator
-            apinator = new Apinator('TU_PUBLIC_KEY', { cluster: 'us' });
+            apinator = new Apinator('app_97ed0f11e6418f58fd5ad4d6b49a9d018c8afb7c', { cluster: 'us' });
             channel = apinator.subscribe('evento-ar-canal');
             
             generarCirculo();
