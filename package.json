@@ -1,0 +1,12 @@
+{
+  "name": "testing_coop_game",
+  "version": "1.0.0",
+  "description": "Juego interactivo colaborativo multiusuario con MQTT y WebSockets",
+  "main": "simulador.js",
+  "scripts": {
+    "simular": "node simulador.js 200"
+  },
+  "dependencies": {
+    "mqtt": "^5.10.1"
+  }
+}

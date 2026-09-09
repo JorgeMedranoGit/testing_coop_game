@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Carga (Bots) | Mural Colectivo</title>
+    <!-- Catppuccin Design System -->
+    <link rel="stylesheet" href="catppuccin.css">
+    <!-- MQTT Broker Client -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <style>
+        body {
+            background: var(--ctp-crust);
+            padding: 24px 16px;
+            display: flex;
+            justify-content: center;
+            font-family: var(--font-main);
+            color: var(--ctp-text);
+            min-height: 100vh;
+        }
+
+        .sim-container {
+            width: 100%;
+            max-width: 1100px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Header */
+        .sim-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px;
+            background: var(--ctp-mantle);
+            border: 1px solid var(--ctp-surface1);
+            border-radius: 16px;
+            padding: 18px 24px;
+        }
+
+        .sim-title h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--ctp-mauve), var(--ctp-sapphire));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sim-title p {
+            color: var(--ctp-subtext0);
+            font-size: 0.85rem;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 14px;
+        }
+
+        .metric-card {
+            background: var(--ctp-surface0);
+            border: 1px solid var(--ctp-surface1);
+            border-radius: 14px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: var(--ctp-subtext0);
+        }
+
+        .metric-val {
+            font-size: 1.8rem;
+            font-weight: 800;
+            font-family: var(--font-mono);
+        }
+
+        /* Control Panel */
+        .panel-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .panel-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .control-card {
+            background: var(--ctp-surface0);
+            border: 1px solid var(--ctp-surface1);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card-heading {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--ctp-lavender);
+            border-bottom: 1px solid var(--ctp-surface1);
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-row label {
+            font-size: 0.82rem;
+            color: var(--ctp-subtext1);
+            font-weight: 600;
+        }
+
+        .preset-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-preset {
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            border-radius: 8px;
+            background: var(--ctp-surface1);
+            border: 1px solid var(--ctp-surface2);
+            color: var(--ctp-text);
+            cursor: pointer;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-preset:hover, .btn-preset.active {
+            background: var(--ctp-mauve);
+            color: var(--ctp-crust);
+            border-color: var(--ctp-mauve);
+        }
+
+        /* Action Buttons */
+        .actions-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn-action-primary {
+            background: linear-gradient(135deg, var(--ctp-mauve), var(--ctp-sapphire));
+            color: var(--ctp-crust);
+            font-weight: 800;
+            font-size: 1rem;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 4px 14px rgba(203, 166, 247, 0.3);
+        }
+
+        .btn-action-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(203, 166, 247, 0.45);
+        }
+
+        .btn-action-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-action-danger {
+            background: rgba(243, 139, 168, 0.15);
+            color: var(--ctp-red);
+            border: 1px solid var(--ctp-red);
+            font-weight: 700;
+            font-size: 0.95rem;
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-action-danger:hover:not(:disabled) {
+            background: var(--ctp-red);
+            color: var(--ctp-crust);
+        }
+
+        .btn-action-danger:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: var(--ctp-surface1);
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--ctp-sapphire), var(--ctp-green));
+            transition: width 0.2s ease;
+        }
+
+        /* Bot visual grid */
+        .bots-grid-wrapper {
+            background: var(--ctp-mantle);
+            border: 1px solid var(--ctp-surface1);
+            border-radius: 16px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .bots-legend {
+            display: flex;
+            gap: 16px;
+            font-size: 0.78rem;
+            flex-wrap: wrap;
+            color: var(--ctp-subtext0);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot-sample {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .bots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+            gap: 6px;
+            max-height: 240px;
+            overflow-y: auto;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 10px;
+            border: 1px solid var(--ctp-surface0);
+        }
+
+        .bot-cell {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            background: var(--ctp-surface1);
+            color: var(--ctp-subtext0);
+            transition: all 0.2s ease;
+            user-select: none;
+            cursor: default;
+        }
+
+        .bot-cell.connecting {
+            background: rgba(249, 226, 175, 0.3);
+            border: 1px solid var(--ctp-yellow);
+            color: var(--ctp-yellow);
+            animation: pulse 1s infinite alternate;
+        }
+
+        .bot-cell.online {
+            background: rgba(166, 227, 161, 0.2);
+            border: 1px solid var(--ctp-green);
+            color: var(--ctp-green);
+        }
+
+        .bot-cell.playing {
+            background: rgba(116, 199, 236, 0.25);
+            border: 1px solid var(--ctp-sapphire);
+            color: var(--ctp-sapphire);
+            box-shadow: 0 0 8px rgba(116, 199, 236, 0.4);
+        }
+
+        .bot-cell.completed {
+            background: rgba(203, 166, 247, 0.35);
+            border: 1px solid var(--ctp-mauve);
+            color: var(--ctp-mauve);
+            box-shadow: 0 0 10px rgba(203, 166, 247, 0.5);
+        }
+
+        .bot-cell.error {
+            background: rgba(243, 139, 168, 0.25);
+            border: 1px solid var(--ctp-red);
+            color: var(--ctp-red);
+        }
+
+        @keyframes pulse {
+            from { opacity: 0.5; }
+            to { opacity: 1; }
+        }
+
+        /* Log console */
+        .log-box {
+            background: var(--ctp-crust);
+            border: 1px solid var(--ctp-surface1);
+            border-radius: 12px;
+            padding: 14px;
+            height: 180px;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .log-row {
+            display: flex;
+            gap: 8px;
+            line-height: 1.35;
+        }
+
+        .log-time {
+            color: var(--ctp-overlay1);
+            font-size: 0.72rem;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="sim-container">
+        <!-- Header -->
+        <div class="sim-header">
+            <div class="sim-title">
+                <h1>Simulador de Carga & Bots Virtuales</h1>
+                <p>Pruebas de estrés para 200+ jugadores simultáneos vía MQTT WebSockets</p>
+            </div>
+            <div class="header-nav">
+                <a href="admin.html" target="_blank" class="ctp-btn ctp-btn-outline ctp-btn-sm">
+                    Panel Admin
+                </a>
+                <a href="pantalla.html" target="_blank" class="ctp-btn ctp-btn-outline ctp-btn-sm">
+                    Proyección
+                </a>
+                <a href="index.html" target="_blank" class="ctp-btn ctp-btn-outline ctp-btn-sm">
+                    Participante
+                </a>
+            </div>
+        </div>
+
+        <!-- Metrics Cards -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">Bots Objetivo</div>
+                <div class="metric-val" id="metricTarget" style="color: var(--ctp-mauve);">200</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">En Línea (Conectados)</div>
+                <div class="metric-val" id="metricConnected" style="color: var(--ctp-green);">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Jugando Ronda</div>
+                <div class="metric-val" id="metricPlaying" style="color: var(--ctp-sapphire);">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Completaron Dinámica</div>
+                <div class="metric-val" id="metricCompleted" style="color: var(--ctp-peach);">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Desconectados / Errores</div>
+                <div class="metric-val" id="metricErrors" style="color: var(--ctp-red);">0</div>
+            </div>
+        </div>
+
+        <!-- Progress of connection -->
+        <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px;">
+                <span style="color: var(--ctp-subtext0);">Progreso de despliegue de conexiones</span>
+                <span id="progressText" style="font-family: var(--font-mono); font-weight: 700; color: var(--ctp-lavender);">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+        </div>
+
+        <!-- Control and Options -->
+        <div class="panel-grid">
+            <!-- Left: Settings -->
+            <div class="control-card">
+                <div class="card-heading">
+                    <span>Configuración de la Prueba</span>
+                    <span class="ctp-badge ctp-badge-green" id="brokerStatus">Listo</span>
+                </div>
+
+                <div class="form-row">
+                    <label>Cantidad de Jugadores Virtuales</label>
+                    <div class="preset-buttons">
+                        <button class="btn-preset" onclick="setTargetBots(25, this)">25</button>
+                        <button class="btn-preset" onclick="setTargetBots(50, this)">50</button>
+                        <button class="btn-preset" onclick="setTargetBots(100, this)">100</button>
+                        <button class="btn-preset active" onclick="setTargetBots(200, this)">200</button>
+                        <button class="btn-preset" onclick="setTargetBots(300, this)">300</button>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <label>Régimen de Conexión (Ráfaga escalonada)</label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="range" id="batchInterval" min="50" max="500" step="50" value="150" class="ctp-range" style="flex:1;">
+                        <span id="batchIntervalVal" style="font-family: var(--font-mono); font-size: 0.85rem; width: 60px;">150ms</span>
+                    </div>
+                    <small style="color: var(--ctp-overlay1); font-size: 0.72rem;">
+                        Conecta 10 bots cada <span id="batchIntervalNote">150</span>ms para evitar que el broker público EMQX bloquee la IP por spam.
+                    </small>
+                </div>
+
+                <div class="form-row">
+                    <label>Comportamiento de Juego Automático</label>
+                    <div style="display: flex; gap: 10px; align-items: center; font-size: 0.85rem;">
+                        <input type="checkbox" id="autoPlay" checked style="accent-color: var(--ctp-mauve); width: 18px; height: 18px;">
+                        <label for="autoPlay" style="cursor: pointer; color: var(--ctp-text);">
+                            Completar ronda automáticamente al recibir señal de inicio
+                        </label>
+                    </div>
+                    <small style="color: var(--ctp-overlay1); font-size: 0.72rem;">
+                        Cada bot simulará toques humanos y enviará su bloque completado entre 3 y 9 segundos tras dar "Iniciar Juego" en el Admin.
+                    </small>
+                </div>
+            </div>
+
+            <!-- Right: Actions -->
+            <div class="control-card">
+                <div class="card-heading">
+                    <span>Acciones del Simulador</span>
+                </div>
+
+                <div class="actions-group">
+                    <button id="btnConnect" class="btn-action-primary" onclick="iniciarSimulacion()">
+                        🚀 Iniciar y Conectar 200 Bots
+                    </button>
+                    
+                    <button id="btnForceFinish" class="ctp-btn ctp-btn-secondary" onclick="forzarTerminarRonda()" disabled>
+                        ⚡ Simular Fin de Ronda Manual (Todos los activos)
+                    </button>
+
+                    <button id="btnDisconnect" class="btn-action-danger" onclick="desconectarTodosLosBots()" disabled>
+                        🛑 Desconectar Todos los Bots
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bot Visual Matrix -->
+        <div class="bots-grid-wrapper">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <span style="font-size: 0.95rem; font-weight: 700; color: var(--ctp-lavender);">
+                    Matriz Visual de Bots (<span id="botCountLabel">0 / 200</span>)
+                </span>
+                <div class="bots-legend">
+                    <div class="legend-item"><div class="dot-sample" style="background: var(--ctp-surface1);"></div> Inactivo</div>
+                    <div class="legend-item"><div class="dot-sample" style="background: var(--ctp-yellow);"></div> Conectando</div>
+                    <div class="legend-item"><div class="dot-sample" style="background: var(--ctp-green);"></div> En Sala</div>
+                    <div class="legend-item"><div class="dot-sample" style="background: var(--ctp-sapphire);"></div> Jugando</div>
+                    <div class="legend-item"><div class="dot-sample" style="background: var(--ctp-mauve);"></div> Completó</div>
+                    <div class="legend-item"><div class="dot-sample" style="background: var(--ctp-red);"></div> Error</div>
+                </div>
+            </div>
+
+            <div class="bots-grid" id="botsGrid">
+                <!-- Se generan dinámicamente -->
+            </div>
+        </div>
+
+        <!-- Live Log -->
+        <div class="bots-grid-wrapper">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.9rem; font-weight: 700; color: var(--ctp-subtext0);">Registro de Eventos del Simulador</span>
+                <button class="ctp-btn ctp-btn-sm ctp-btn-ghost" onclick="document.getElementById('logBox').innerHTML = ''">Limpiar</button>
+            </div>
+            <div class="log-box" id="logBox">
+                <div class="log-row">
+                    <span class="log-time">[00:00:00]</span>
+                    <span style="color: var(--ctp-subtext0);">Simulador listo. Selecciona la cantidad de bots y haz clic en "Iniciar y Conectar".</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración MQTT
+        const TOPICO = 'proyecto_ar_evento_juego_1a2b3c_lpz';
+        const BROKER_URL = 'wss://broker.emqx.io:8084/mqtt';
+
+        // Colores Catppuccin
+        const COLORES = [
+            '#cba6f7', '#f38ba8', '#fab387', '#f9e2af', 
+            '#a6e3a1', '#94e2d5', '#74c7ec', '#89b4fa', '#b4befe'
+        ];
+
+        // Nombres aleatorios para los bots
+        const NOMBRES_BASE = [
+            'Alex', 'Sam', 'Cris', 'Dani', 'Leo', 'Nico', 'Max', 'Vale', 'Maya', 'Santi',
+            'Lucas', 'Emma', 'Mateo', 'Sofia', 'Ian', 'Mora', 'Bruno', 'Gael', 'Elena', 'Zoe'
+        ];
+
+        let targetBots = 200;
+        let bots = []; // Array de instancias { id, nombre, color, client, state, timer }
+        let batchTimer = null;
+        let connectIndex = 0;
+        let batchSize = 10; // 10 bots por tanda
+
+        // Inicializar interfaz
+        document.getElementById('batchInterval').addEventListener('input', (e) => {
+            document.getElementById('batchIntervalVal').textContent = e.target.value + 'ms';
+            document.getElementById('batchIntervalNote').textContent = e.target.value;
+        });
+
+        function setTargetBots(num, btn) {
+            if (bots.length > 0 && bots.some(b => b.state !== 'idle' && b.state !== 'disconnected')) {
+                alert('Desconecta los bots actuales antes de cambiar la cantidad objetivo.');
+                return;
+            }
+            targetBots = num;
+            document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('metricTarget').textContent = num;
+            document.getElementById('btnConnect').textContent = `🚀 Iniciar y Conectar ${num} Bots`;
+            renderGrid(num);
+        }
+
+        // Renderizar la rejilla visual vacía
+        function renderGrid(count) {
+            const grid = document.getElementById('botsGrid');
+            grid.innerHTML = '';
+            for (let i = 1; i <= count; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'bot-cell';
+                cell.id = `bot-cell-${i}`;
+                cell.textContent = i;
+                cell.title = `Bot #${i} (Inactivo)`;
+                grid.appendChild(cell);
+            }
+            document.getElementById('botCountLabel').textContent = `0 / ${count}`;
+        }
+
+        renderGrid(targetBots);
+
+        // Logging
+        function log(msg, color = 'var(--ctp-text)') {
+            const box = document.getElementById('logBox');
+            const now = new Date().toTimeString().split(' ')[0];
+            const row = document.createElement('div');
+            row.className = 'log-row';
+            row.innerHTML = `<span class="log-time">[${now}]</span> <span style="color: ${color}">${msg}</span>`;
+            box.appendChild(row);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // Iniciar Simulación
+        function iniciarSimulacion() {
+            // Deshabilitar controles de inicio
+            document.getElementById('btnConnect').disabled = true;
+            document.getElementById('btnDisconnect').disabled = false;
+            document.getElementById('btnForceFinish').disabled = false;
+
+            // Limpiar bots previos
+            desconectarTodosLosBots(false);
+
+            log(`Iniciando conexión escalonada de ${targetBots} bots virtuales...`, 'var(--ctp-sapphire)');
+            renderGrid(targetBots);
+
+            bots = [];
+            for (let i = 1; i <= targetBots; i++) {
+                const randomName = NOMBRES_BASE[Math.floor(Math.random() * NOMBRES_BASE.length)];
+                bots.push({
+                    index: i,
+                    id: `bot_${i}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+                    nombre: `Bot ${i} (${randomName})`,
+                    color: COLORES[i % COLORES.length],
+                    client: null,
+                    state: 'idle', // idle, connecting, online, playing, completed, error, disconnected
+                    timer: null
+                });
+            }
+
+            connectIndex = 0;
+            const intervalMs = parseInt(document.getElementById('batchInterval').value) || 150;
+            
+            // Iniciar conexión por lotes (Staggering)
+            batchTimer = setInterval(() => {
+                const limit = Math.min(connectIndex + batchSize, targetBots);
+                for (let i = connectIndex; i < limit; i++) {
+                    conectarBot(bots[i]);
+                }
+                connectIndex = limit;
+
+                // Actualizar barra de progreso
+                const pct = Math.round((connectIndex / targetBots) * 100);
+                document.getElementById('progressBar').style.width = pct + '%';
+                document.getElementById('progressText').textContent = pct + '%';
+
+                if (connectIndex >= targetBots) {
+                    clearInterval(batchTimer);
+                    batchTimer = null;
+                    log(`Todas las ${targetBots} solicitudes de conexión han sido despachadas al broker.`, 'var(--ctp-green)');
+                }
+            }, intervalMs);
+        }
+
+        // Conectar un Bot individual vía MQTT
+        function conectarBot(bot) {
+            setBotState(bot, 'connecting');
+
+            try {
+                const client = mqtt.connect(BROKER_URL, {
+                    keepalive: 60,
+                    reconnectPeriod: 5000,
+                    clean: true,
+                    clientId: `sim_${bot.id}`
+                });
+
+                bot.client = client;
+
+                client.on('connect', () => {
+                    setBotState(bot, 'online');
+                    
+                    // Suscribirse al tópico
+                    client.subscribe(TOPICO, (err) => {
+                        if (!err) {
+                            // Enviar evento de unión
+                            client.publish(TOPICO, JSON.stringify({
+                                accion: 'jugador_unido',
+                                id: bot.id,
+                                nombre: bot.nombre,
+                                color: bot.color
+                            }));
+                        }
+                    });
+                });
+
+                client.on('message', (t, msg) => {
+                    try {
+                        const data = JSON.parse(msg.toString());
+                        manejarMensaje(bot, data);
+                    } catch (e) {}
+                });
+
+                client.on('error', (err) => {
+                    setBotState(bot, 'error');
+                });
+
+                client.on('offline', () => {
+                    if (bot.state !== 'disconnected') {
+                        setBotState(bot, 'connecting');
+                    }
+                });
+
+            } catch (err) {
+                setBotState(bot, 'error');
+                log(`Error conectando bot #${bot.index}: ${err.message}`, 'var(--ctp-red)');
+            }
+        }
+
+        // Manejar mensajes entrantes en cada bot
+        function manejarMensaje(bot, data) {
+            if (bot.state === 'disconnected') return;
+
+            // Ping de jugadores desde Admin o Pantalla
+            if (data.accion === 'ping_jugadores') {
+                if (bot.client && bot.client.connected) {
+                    bot.client.publish(TOPICO, JSON.stringify({
+                        accion: 'jugador_unido',
+                        id: bot.id,
+                        nombre: bot.nombre,
+                        color: bot.color
+                    }));
+                }
+            } 
+            // Inicio de ronda
+            else if (data.accion === 'iniciar_juego') {
+                setBotState(bot, 'playing');
+                const autoPlay = document.getElementById('autoPlay').checked;
+
+                if (autoPlay) {
+                    // Simular retraso humano: 3.5 a 11.5 segundos
+                    const duracionSegundos = (3.5 + Math.random() * 8.0).toFixed(2);
+                    const delayMs = parseFloat(duracionSegundos) * 1000;
+
+                    if (bot.timer) clearTimeout(bot.timer);
+                    bot.timer = setTimeout(() => {
+                        if (bot.state === 'playing' && bot.client && bot.client.connected) {
+                            bot.client.publish(TOPICO, JSON.stringify({
+                                accion: 'juego_terminado',
+                                id: bot.id,
+                                nombre: bot.nombre,
+                                color: bot.color,
+                                tiempo: parseFloat(duracionSegundos)
+                            }));
+                            setBotState(bot, 'completed');
+                        }
+                    }, delayMs);
+                }
+            }
+            // Reiniciar juego
+            else if (data.accion === 'reiniciar_juego') {
+                if (bot.timer) clearTimeout(bot.timer);
+                if (bot.state === 'playing' || bot.state === 'completed') {
+                    setBotState(bot, 'online');
+                }
+            }
+            // Desconectar todos
+            else if (data.accion === 'desconectar_todos') {
+                if (bot.timer) clearTimeout(bot.timer);
+                setBotState(bot, 'disconnected');
+                if (bot.client) {
+                    try { bot.client.end(true); } catch (e) {}
+                }
+            }
+        }
+
+        // Cambiar estado visual y métricas de un bot
+        function setBotState(bot, newState) {
+            bot.state = newState;
+            const cell = document.getElementById(`bot-cell-${bot.index}`);
+            if (cell) {
+                cell.className = `bot-cell ${newState}`;
+                cell.title = `${bot.nombre}: ${newState.toUpperCase()}`;
+            }
+            actualizarMetricas();
+        }
+
+        // Actualizar contadores del HUD
+        function actualizarMetricas() {
+            let conn = 0, playing = 0, comp = 0, err = 0;
+            bots.forEach(b => {
+                if (b.state === 'online') conn++;
+                else if (b.state === 'playing') { conn++; playing++; }
+                else if (b.state === 'completed') { conn++; comp++; }
+                else if (b.state === 'error') err++;
+            });
+
+            document.getElementById('metricConnected').textContent = conn;
+            document.getElementById('metricPlaying').textContent = playing;
+            document.getElementById('metricCompleted').textContent = comp;
+            document.getElementById('metricErrors').textContent = err;
+            document.getElementById('botCountLabel').textContent = `${conn} / ${targetBots}`;
+        }
+
+        // Forzar a todos los bots en juego a terminar de inmediato
+        function forzarTerminarRonda() {
+            let finalizados = 0;
+            bots.forEach(bot => {
+                if (bot.state === 'playing' && bot.client && bot.client.connected) {
+                    if (bot.timer) clearTimeout(bot.timer);
+                    const tiempo = (2.0 + Math.random() * 3.0).toFixed(2);
+                    bot.client.publish(TOPICO, JSON.stringify({
+                        accion: 'juego_terminado',
+                        id: bot.id,
+                        nombre: bot.nombre,
+                        color: bot.color,
+                        tiempo: parseFloat(tiempo)
+                    }));
+                    setBotState(bot, 'completed');
+                    finalizados++;
+                }
+            });
+            log(`Se forzó la finalización de ${finalizados} bots activos.`, 'var(--ctp-mauve)');
+        }
+
+        // Desconectar todos los bots limpiamente
+        function desconectarTodosLosBots(isUserAction = true) {
+            if (batchTimer) {
+                clearInterval(batchTimer);
+                batchTimer = null;
+            }
+
+            bots.forEach(bot => {
+                if (bot.timer) clearTimeout(bot.timer);
+                if (bot.client) {
+                    try {
+                        if (bot.client.connected) {
+                            bot.client.publish(TOPICO, JSON.stringify({
+                                accion: 'jugador_desconectado',
+                                id: bot.id
+                            }));
+                        }
+                        bot.client.end(true);
+                    } catch (e) {}
+                }
+                setBotState(bot, 'idle');
+            });
+
+            if (isUserAction) {
+                log('Todos los bots han sido desconectados.', 'var(--ctp-red)');
+                document.getElementById('btnConnect').disabled = false;
+                document.getElementById('btnDisconnect').disabled = true;
+                document.getElementById('btnForceFinish').disabled = true;
+                document.getElementById('progressBar').style.width = '0%';
+                document.getElementById('progressText').textContent = '0%';
+            }
+        }
+
+        // Limpiar al cerrar pestaña
+        window.addEventListener('beforeunload', () => {
+            desconectarTodosLosBots(false);
+        });
+    </script>
+</body>
+</html>
