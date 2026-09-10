@@ -474,6 +474,10 @@
                         ⚠️ Desconectar 1 Bot (Probar Reasignación Prioritaria)
                     </button>
 
+                    <button id="btnInactOne" class="ctp-btn ctp-btn-outline" onclick="simularInactividadUnBot()" style="color: var(--ctp-yellow); border-color: rgba(249, 226, 175, 0.4);">
+                        ⏱️ Simular Inactividad en 1 Bot (Desconectar y reasignar)
+                    </button>
+
                     <button id="btnDisconnect" class="btn-action-danger" onclick="desconectarTodosLosBots()" disabled>
                         🛑 Desconectar Todos los Bots
                     </button>
@@ -827,6 +831,28 @@
             }
             setBotState(bot, 'disconnected');
             log(`Bot desconectado manualmente: ${bot.nombre}`, 'var(--ctp-peach)');
+        }
+
+        // Simular inactividad en un bot para probar la regla de reasignación
+        function simularInactividadUnBot() {
+            const activos = bots.filter(b => b.state === 'completed' || b.state === 'online' || b.state === 'playing');
+            if (activos.length === 0) {
+                alert('No hay bots activos para simular inactividad.');
+                return;
+            }
+            const bot = activos[Math.floor(Math.random() * activos.length)];
+            if (bot.timer) clearTimeout(bot.timer);
+            if (bot.client && bot.client.connected) {
+                bot.client.publish(TOPICO, JSON.stringify({
+                    accion: 'jugador_desconectado',
+                    id: bot.id,
+                    nombre: bot.nombre,
+                    motivo: 'inactividad'
+                }));
+                bot.client.end(true);
+            }
+            setBotState(bot, 'disconnected');
+            log(`⏱️ Bot desconectado por inactividad: ${bot.nombre}. Cuadrante reasignado al 1° lugar.`, 'var(--ctp-yellow)');
         }
 
         // Desconectar todos los bots limpiamente

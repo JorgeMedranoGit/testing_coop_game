@@ -378,6 +378,14 @@
                 <div class="color-dot" style="background: #b4befe;" onclick="elegirColor('#b4befe', this)" title="Lavanda"></div>
             </div>
 
+            <!-- Aviso de desconexión por inactividad -->
+            <div id="inactividadAvisoDesconexion" style="display: none; background: rgba(250, 179, 135, 0.15); border: 1px solid var(--ctp-peach); border-radius: 12px; padding: 14px; margin-bottom: 16px; text-align: center;">
+                <div style="font-weight: 800; color: var(--ctp-peach); margin-bottom: 4px; font-size: 0.95rem;">⏱️ Desconectado por Inactividad</div>
+                <div style="font-size: 0.82rem; color: var(--ctp-subtext0); line-height: 1.4;">
+                    No se detectó respuesta durante la partida.<br>Tu cuadrante fue reasignado automáticamente al 1° lugar del ranking.
+                </div>
+            </div>
+
             <!-- Entrada de Nombre -->
             <div style="margin-bottom: 20px; text-align: left;">
                 <label for="nombre" style="font-size: 0.8rem; font-weight: 700; color: var(--ctp-subtext1); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">
@@ -521,6 +529,35 @@
                 Esperando la siguiente ronda general...
             </div>
         </div>
+    <!-- Modal Advertencia de Inactividad (10s antes de desconectar) -->
+    <div id="inactivityWarningModal" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 32px); max-width: 380px; background: var(--ctp-surface0); border: 2px solid var(--ctp-peach); border-radius: 16px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); z-index: 9999; text-align: center;">
+        <div style="font-size: 1.6rem; margin-bottom: 4px;">⚠️</div>
+        <div style="font-weight: 800; color: var(--ctp-peach); font-size: 1.05rem; margin-bottom: 4px;">
+            ¿Sigues ahí?
+        </div>
+        <div style="font-size: 0.85rem; color: var(--ctp-subtext0); margin-bottom: 12px; line-height: 1.4;">
+            Detectamos inactividad. Serás desconectado en <strong id="inactividadSegTxt" style="color: var(--ctp-peach); font-size: 1rem;">10</strong>s y tu cuadrante se reasignará al 1° lugar del ranking.
+        </div>
+        <button class="ctp-btn ctp-btn-peach" style="width: 100%; font-weight: 800;" onclick="registrarActividadUsuario()">
+            ¡Sigo aquí! Continuar en la partida
+        </button>
+    </div>
+
+    <!-- Modal Celebración Segundo Cuadrante Asignado al 1° Lugar -->
+    <div id="bonusCuadrantePopup" style="display: none; position: fixed; inset: 0; background: rgba(17, 17, 27, 0.85); backdrop-filter: blur(8px); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
+        <div style="background: var(--ctp-surface0); border: 2px solid var(--ctp-yellow); border-radius: 20px; padding: 24px; max-width: 420px; width: 100%; text-align: center; box-shadow: 0 16px 40px rgba(0,0,0,0.6);">
+            <div style="font-size: 3rem; margin-bottom: 8px;">👑</div>
+            <div style="font-size: 1.3rem; font-weight: 800; color: var(--ctp-yellow); margin-bottom: 8px;">
+                ¡2° Cuadrante Desbloqueado!
+            </div>
+            <p id="bonusPopupMsg" style="font-size: 0.92rem; color: var(--ctp-text); line-height: 1.5; margin-bottom: 18px;">
+                Al estar en 1° lugar en el ranking, se te ha otorgado un cuadrante adicional tras la desconexión de otro jugador.<br>
+                <strong style="color:var(--ctp-green);">No necesitas jugar de nuevo</strong>: tu cuadrante ya se ha desbloqueado en la pantalla principal con tu nombre.
+            </p>
+            <button class="ctp-btn ctp-btn-mauve" style="width: 100%; font-weight: 800;" onclick="cerrarModalBonus()">
+                ¡Excelente!
+            </button>
+        </div>
     </div>
 
     <!-- ==========================================
@@ -537,6 +574,116 @@
         let timerInterval = null;
         let juegoActivo = false;
         let audioActivo = true;
+
+        // Configuración y control de inactividad
+        let timeoutInactividad = 30; // segundos de inactividad tolerados
+        let ultimaActividad = Date.now();
+        let avisoInactividadMostrado = false;
+        let checkInactividadInterval = null;
+        let heartbeatInterval = null;
+
+        function registrarActividadUsuario() {
+            ultimaActividad = Date.now();
+            if (avisoInactividadMostrado) {
+                ocultarAdvertenciaInactividad();
+            }
+        }
+
+        ['pointerdown', 'touchstart', 'mousedown', 'keydown', 'scroll'].forEach(evt => {
+            window.addEventListener(evt, registrarActividadUsuario, { passive: true });
+        });
+
+        function mostrarAdvertenciaInactividad(segRestantes) {
+            avisoInactividadMostrado = true;
+            const modal = document.getElementById('inactivityWarningModal');
+            const txt = document.getElementById('inactividadSegTxt');
+            if (txt) txt.textContent = segRestantes;
+            if (modal) modal.style.display = 'block';
+        }
+
+        function ocultarAdvertenciaInactividad() {
+            avisoInactividadMostrado = false;
+            const modal = document.getElementById('inactivityWarningModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function mostrarModalCuadranteBonus(htmlContent) {
+            const popup = document.getElementById('bonusCuadrantePopup');
+            const msg = document.getElementById('bonusPopupMsg');
+            if (msg && htmlContent) msg.innerHTML = htmlContent;
+            if (popup) popup.style.display = 'flex';
+        }
+
+        function cerrarModalBonus() {
+            const popup = document.getElementById('bonusCuadrantePopup');
+            if (popup) popup.style.display = 'none';
+        }
+
+        function desconectarPorInactividad() {
+            ocultarAdvertenciaInactividad();
+            if (nombreUsuario && cliente && cliente.connected) {
+                cliente.publish(topicoSecreto, JSON.stringify({
+                    accion: 'jugador_desconectado',
+                    id: jugadorId,
+                    nombre: nombreUsuario,
+                    motivo: 'inactividad'
+                }));
+            }
+
+            // Limpiar juego
+            juegoActivo = false;
+            if (timerInterval) clearInterval(timerInterval);
+
+            // Regresar a pantalla de registro con aviso
+            document.getElementById('juego').style.display = 'none';
+            document.getElementById('espera').style.display = 'none';
+            document.getElementById('victoria').style.display = 'none';
+            document.getElementById('gameStatsGroup').style.display = 'none';
+            document.getElementById('headerProgress').style.display = 'none';
+            document.querySelectorAll('.circulo').forEach(c => c.remove());
+
+            const aviso = document.getElementById('inactividadAvisoDesconexion');
+            if (aviso) aviso.style.display = 'block';
+
+            document.getElementById('registro').style.display = 'block';
+            nombreUsuario = '';
+            sound.playWarning();
+        }
+
+        // Heartbeat y Watchdog del cliente
+        function iniciarMonitoreoInactividad() {
+            if (heartbeatInterval) clearInterval(heartbeatInterval);
+            heartbeatInterval = setInterval(() => {
+                if (nombreUsuario && cliente && cliente.connected) {
+                    cliente.publish(topicoSecreto, JSON.stringify({
+                        accion: 'heartbeat',
+                        id: jugadorId,
+                        nombre: nombreUsuario,
+                        color: colorUsuario
+                    }));
+                }
+            }, 7000);
+
+            if (checkInactividadInterval) clearInterval(checkInactividadInterval);
+            checkInactividadInterval = setInterval(() => {
+                if (!nombreUsuario || timeoutInactividad <= 0) return;
+
+                const transcurrido = (Date.now() - ultimaActividad) / 1000;
+                const tiempoAviso = Math.max(5, timeoutInactividad - 10);
+
+                if (transcurrido >= timeoutInactividad) {
+                    desconectarPorInactividad();
+                } else if (transcurrido >= tiempoAviso) {
+                    const restantes = Math.max(1, Math.ceil(timeoutInactividad - transcurrido));
+                    mostrarAdvertenciaInactividad(restantes);
+                } else {
+                    if (avisoInactividadMostrado) {
+                        ocultarAdvertenciaInactividad();
+                    }
+                }
+            }, 1000);
+        }
+        iniciarMonitoreoInactividad();
 
         // Identificador persistente para el dispositivo
         let jugadorId = localStorage.getItem('game_user_id');
@@ -655,6 +802,10 @@
             sound.init();
             sound.playClick();
 
+            const aviso = document.getElementById('inactividadAvisoDesconexion');
+            if (aviso) aviso.style.display = 'none';
+            ultimaActividad = Date.now();
+
             document.getElementById('registro').style.display = 'none';
             document.getElementById('espera').style.display = 'block';
             document.getElementById('esperaNombre').textContent = nombreUsuario;
@@ -677,6 +828,7 @@
 
         // Salir de la sala voluntariamente
         function salirDelLobby() {
+            ocultarAdvertenciaInactividad();
             if (cliente && cliente.connected && nombreUsuario) {
                 cliente.publish(topicoSecreto, JSON.stringify({
                     accion: 'jugador_desconectado',
@@ -720,21 +872,40 @@
                 } else if (datos.accion === 'iniciar_juego') {
                     tiempoRonda = datos.tiempoRonda || 15;
                     minTargets = datos.minTargets || (datos.taps || 10);
+                    if (datos.timeoutInactividad !== undefined) {
+                        timeoutInactividad = Number(datos.timeoutInactividad);
+                    }
+                    ultimaActividad = Date.now();
                     actualizarTextosReglas();
 
                     if (nombreUsuario && (document.getElementById('espera').style.display === 'block' || document.getElementById('victoria').style.display === 'block')) {
                         iniciarRonda(tiempoRonda, minTargets);
                     }
+                } else if (datos.accion === 'config_actualizada') {
+                    if (datos.timeoutInactividad !== undefined) timeoutInactividad = Number(datos.timeoutInactividad);
+                    if (datos.tiempoRonda !== undefined) tiempoRonda = Number(datos.tiempoRonda);
+                    if (datos.minTargets !== undefined) minTargets = Number(datos.minTargets);
+                    actualizarTextosReglas();
                 } else if (datos.accion === 'cuadrante_reasignado') {
-                    // Notificar si a este jugador se le asignó un 2do cuadrante por desconexión
+                    // Notificar si a este jugador se le asignó un 2do cuadrante por desconexión / inactividad
                     if (datos.idGanador === jugadorId) {
                         sound.playBonus();
+                        if (navigator.vibrate) navigator.vibrate([100, 50, 150]);
+
+                        const exDueno = datos.nombreExDueno || 'otro participante';
+                        const motivoTxt = datos.motivo === 'inactividad' ? 'por inactividad' : 'de la sala';
+                        const bannerTxt = `¡Felicidades! Al mantener el 1° lugar en el ranking, se te asignó el cuadrante de <strong>${exDueno}</strong> (desconectado ${motivoTxt}).<br><br><span style="color:var(--ctp-green); font-weight:700;">✨ No necesitas jugar de nuevo: tu cuadrante ya fue desbloqueado en la pantalla principal con tu nombre.</span>`;
+
                         const banner = document.getElementById('bonusCuadranteBanner');
                         if (banner) {
                             banner.style.display = 'block';
-                            document.getElementById('bonusCuadranteTxt').textContent = 
-                                `¡Felicidades! Al estar en 1° lugar con ${targetsDestruidos} targets, se te ha otorgado un 2° cuadrante en el mural tras la desconexión de ${datos.nombreExDueno || 'otro participante'}.`;
+                            document.getElementById('bonusCuadranteTxt').innerHTML = bannerTxt;
                         }
+                        mostrarModalCuadranteBonus(bannerTxt);
+                    }
+                } else if (datos.accion === 'jugador_desconectado') {
+                    if (datos.id === jugadorId && datos.motivo === 'inactividad') {
+                        desconectarPorInactividad();
                     }
                 } else if (datos.accion === 'reiniciar_juego') {
                     if (nombreUsuario) {

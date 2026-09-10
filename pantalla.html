@@ -650,11 +650,13 @@
         let bloques = [];
         let revelados = 0;
         let jugadoresConectados = new Map(); // id -> { id, nombre, color }
-        let rankingJugadores = new Map(); // id -> { id, nombre, color, targets, califica, tiempo, timestamp, conectado, cuadrantes }
+        let rankingJugadores = new Map(); // id -> { id, nombre, color, targets, califica, tiempo, timestamp, conectado, cuadrantes, ultimaActividad }
         let juegoEnCurso = false;
         let audioActivo = true;
         let configTiempoRonda = 15;
         let configMinTargets = 10;
+        let configTimeoutInactividad = 30; // segundos para auto-desconectar inactivos (0 = desactivado)
+        let watchdogInterval = null;
 
         function obtenerIniciales(texto) {
             if (!texto) return 'P';
@@ -724,6 +726,43 @@
         // Inicializar cuadrícula base con 1 bloque
         reconstruirCuadricula(totalBloques);
 
+        // Actualizar etiqueta del HUD con tiempo y mínimo de targets
+        function actualizarBadgeRonda() {
+            const roundBadge = document.getElementById('roundInfoBadge');
+            if (roundBadge) {
+                roundBadge.style.display = 'inline-flex';
+                document.getElementById('roundTimerTxt').textContent = `⏱️ ${configTiempoRonda}s`;
+                document.getElementById('roundMinTxt').textContent = `🎯 Mín: ${configMinTargets}`;
+            }
+        }
+
+        // Watchdog de inactividad: desconecta a jugadores sin respuesta y reasigna su cuadrante
+        function iniciarWatchdogInactividad() {
+            if (watchdogInterval) clearInterval(watchdogInterval);
+            watchdogInterval = setInterval(() => {
+                if (!configTimeoutInactividad || configTimeoutInactividad <= 0) return;
+                const ahora = Date.now();
+                const timeoutMs = configTimeoutInactividad * 1000;
+
+                rankingJugadores.forEach(jugador => {
+                    if (jugador.conectado) {
+                        const sinActividad = ahora - (jugador.ultimaActividad || ahora);
+                        if (sinActividad > timeoutMs) {
+                            console.log(`[Watchdog Pantalla] ${jugador.nombre} (${jugador.id}) inactivo por ${Math.round(sinActividad/1000)}s -> Desconectando y reasignando.`);
+                            manejarDesconexion(jugador.id, 'inactividad');
+                            cliente.publish(topicoSecreto, JSON.stringify({
+                                accion: 'jugador_desconectado',
+                                id: jugador.id,
+                                nombre: jugador.nombre,
+                                motivo: 'inactividad'
+                            }));
+                        }
+                    }
+                });
+            }, 2500);
+        }
+        iniciarWatchdogInactividad();
+
         // 3. Conectar al broker MQTT
         const topicoSecreto = 'proyecto_ar_evento_juego_1a2b3c_lpz';
         const cliente = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
@@ -785,13 +824,15 @@
                             cuadrantes: 0,
                             conectado: true,
                             tiempo: 0,
-                            timestamp: Date.now()
+                            timestamp: Date.now(),
+                            ultimaActividad: Date.now()
                         };
                         rankingJugadores.set(pId, rJugador);
                     } else {
                         rJugador.nombre = datos.nombre;
                         rJugador.color = datos.color || rJugador.color;
                         rJugador.conectado = true;
+                        rJugador.ultimaActividad = Date.now();
                     }
 
                     document.getElementById('playerCount').textContent = jugadoresConectados.size;
@@ -803,8 +844,22 @@
                         }
                     }
                     actualizarRankingModal();
+                } else if (datos.accion === 'heartbeat') {
+                    const pId = datos.id || datos.nombre;
+                    let rJugador = rankingJugadores.get(pId);
+                    if (rJugador) {
+                        rJugador.ultimaActividad = Date.now();
+                        rJugador.conectado = true;
+                    }
+                } else if (datos.accion === 'config_actualizada') {
+                    if (datos.timeoutInactividad !== undefined) {
+                        configTimeoutInactividad = Number(datos.timeoutInactividad);
+                    }
+                    if (datos.tiempoRonda !== undefined) configTiempoRonda = Number(datos.tiempoRonda);
+                    if (datos.minTargets !== undefined) configMinTargets = Number(datos.minTargets);
+                    actualizarBadgeRonda();
                 } else if (datos.accion === 'jugador_desconectado') {
-                    manejarDesconexion(datos.id);
+                    manejarDesconexion(datos.id, datos.motivo || 'desconexion');
                 } else if (datos.accion === 'desconectar_todos') {
                     jugadoresConectados.clear();
                     rankingJugadores.clear();
@@ -821,19 +876,21 @@
                     juegoEnCurso = true;
                     configTiempoRonda = datos.tiempoRonda || 15;
                     configMinTargets = datos.minTargets || (datos.taps || 10);
+                    if (datos.timeoutInactividad !== undefined) {
+                        configTimeoutInactividad = Number(datos.timeoutInactividad);
+                    }
 
                     // Actualizar badge de ronda
-                    const roundBadge = document.getElementById('roundInfoBadge');
-                    roundBadge.style.display = 'inline-flex';
-                    document.getElementById('roundTimerTxt').textContent = `⏱️ ${configTiempoRonda}s`;
-                    document.getElementById('roundMinTxt').textContent = `🎯 Mín: ${configMinTargets}`;
+                    actualizarBadgeRonda();
 
-                    // Resetear estadísticas de los jugadores en la sala
+                    // Resetear estadísticas y refrescar actividad de los jugadores
+                    const ahoraRonda = Date.now();
                     rankingJugadores.forEach(j => {
                         j.targets = 0;
                         j.califica = false;
                         j.cuadrantes = 0;
                         j.tiempo = 0;
+                        j.ultimaActividad = ahoraRonda;
                     });
 
                     const cantFinal = datos.totalJugadores || Math.max(jugadoresConectados.size, 1);
@@ -869,7 +926,8 @@
                     nombre: datos.nombre,
                     color: datos.color || '#cba6f7',
                     cuadrantes: 0,
-                    conectado: true
+                    conectado: true,
+                    ultimaActividad: Date.now()
                 };
                 rankingJugadores.set(pId, j);
             }
@@ -881,6 +939,7 @@
             j.tiempo = datos.tiempo || configTiempoRonda;
             j.timestamp = Date.now();
             j.conectado = true;
+            j.ultimaActividad = Date.now();
 
             if (califica) {
                 revelarBloque(j.nombre, j.color, j.targets, j.tiempo, j.id);
@@ -941,7 +1000,8 @@
 
         // 7. Manejo de Desconexión y Regla de Prioridad de Asignación:
         // "si un jugador se desconecta la prioridad sera: Asignarle el cuadrante al primer lugar a menos que ya se le haya asignado un segundo cuadrante"
-        function manejarDesconexion(idJugador) {
+        // (Un cuadrado reasignado no significa que la persona deba volver a hacer el minijuego solo que el cuadrante se desbloquea con su nombre)
+        function manejarDesconexion(idJugador, motivo = 'desconexion') {
             let desconectado = rankingJugadores.get(idJugador) || jugadoresConectados.get(idJugador);
             const nombreDesc = desconectado ? desconectado.nombre : 'Un participante';
 
@@ -954,30 +1014,55 @@
                 rankingJugadores.get(idJugador).conectado = false;
             }
 
-            mostrarToast(desconectado?.color || '#fab387', obtenerIniciales(nombreDesc), `${nombreDesc} se ha retirado`);
+            const esInactivo = (motivo === 'inactividad');
+            if (esInactivo) {
+                mostrarToast(desconectado?.color || '#fab387', '⏱️', `<strong>${nombreDesc}</strong> fue desconectado por inactividad`);
+            } else {
+                mostrarToast(desconectado?.color || '#fab387', obtenerIniciales(nombreDesc), `${nombreDesc} se ha retirado`);
+            }
 
             if (juegoEnCurso) {
                 // Bloques revelados que pertenecían al jugador desconectado
                 const bloquesDelDesconectado = bloques.filter(b => b.classList.contains('revelado') && b.dataset.jugadorId === idJugador);
 
-                bloquesDelDesconectado.forEach(bloque => {
-                    // Ordenar ranking de participantes conectados que calificaron (mayor cantidad de targets primero)
-                    const candidatos = Array.from(rankingJugadores.values())
-                        .filter(j => j.conectado && j.califica)
-                        .sort((a, b) => (b.targets || 0) - (a.targets || 0) || (a.timestamp || 0) - (b.timestamp || 0));
+                if (bloquesDelDesconectado.length > 0) {
+                    bloquesDelDesconectado.forEach(bloque => {
+                        // Ordenar ranking de participantes conectados que calificaron (mayor cantidad de targets primero)
+                        const candidatos = Array.from(rankingJugadores.values())
+                            .filter(j => j.conectado && j.califica)
+                            .sort((a, b) => (b.targets || 0) - (a.targets || 0) || (a.timestamp || 0) - (b.timestamp || 0));
 
-                    // Regla de prioridad: 1er lugar a menos que ya se le haya asignado un segundo cuadrante
-                    // Si el 1° lugar ya tiene 2 cuadrantes, pasa al siguiente en el ranking que tenga menos de 2
-                    const beneficiario = candidatos.find(j => (j.cuadrantes || 0) < 2);
+                        // Regla de prioridad: 1er lugar a menos que ya se le haya asignado un segundo cuadrante
+                        // Si el 1° lugar ya tiene 2 cuadrantes, pasa al siguiente en el ranking que tenga menos de 2
+                        const beneficiario = candidatos.find(j => (j.cuadrantes || 0) < 2);
 
-                    if (beneficiario) {
-                        beneficiario.cuadrantes = (beneficiario.cuadrantes || 1) + 1;
-                        reasignarBloque(bloque, beneficiario, nombreDesc);
-                    } else {
-                        // Si no hay jugadores calificados conectados o todos ya tienen 2 cuadrantes
-                        desrevelarBloque(bloque);
+                        if (beneficiario) {
+                            beneficiario.cuadrantes = (beneficiario.cuadrantes || 1) + 1;
+                            reasignarBloque(bloque, beneficiario, nombreDesc, esInactivo);
+                        } else {
+                            // Si no hay jugadores calificados conectados o todos ya tienen 2 cuadrantes
+                            desrevelarBloque(bloque);
+                        }
+                    });
+                } else {
+                    // El participante desconectado/inactivo NO había desbloqueado aún su bloque
+                    // Reasignar un bloque disponible (cubierto) al 1° lugar para que se desbloquee automáticamente con su nombre
+                    // (sin que éste deba volver a hacer el minijuego)
+                    const disponibles = bloques.filter(b => !b.classList.contains('revelado'));
+                    if (disponibles.length > 0) {
+                        const candidatos = Array.from(rankingJugadores.values())
+                            .filter(j => j.conectado && j.califica)
+                            .sort((a, b) => (b.targets || 0) - (a.targets || 0) || (a.timestamp || 0) - (b.timestamp || 0));
+
+                        const beneficiario = candidatos.find(j => (j.cuadrantes || 0) < 2);
+
+                        if (beneficiario) {
+                            beneficiario.cuadrantes = (beneficiario.cuadrantes || 1) + 1;
+                            const bloqueADesbloquear = disponibles[Math.floor(Math.random() * disponibles.length)];
+                            reasignarBloque(bloqueADesbloquear, beneficiario, nombreDesc, esInactivo);
+                        }
                     }
-                });
+                }
             } else {
                 reconstruirCuadricula(Math.max(jugadoresConectados.size, 1));
             }
@@ -986,7 +1071,9 @@
         }
 
         // 8. Reasignar bloque a un jugador con prioridad (1er lugar o siguiente en ranking)
-        function reasignarBloque(bloque, ganador, nombreExDueno) {
+        function reasignarBloque(bloque, ganador, nombreExDueno, esInactivo = false) {
+            const eraRevelado = bloque.classList.contains('revelado');
+
             bloque.dataset.jugadorId = ganador.id;
             bloque.dataset.jugadorNombre = ganador.nombre;
             bloque.dataset.jugadorColor = ganador.color;
@@ -1019,12 +1106,18 @@
 
             bloque.classList.add('revelado', 'bloque-bonus');
 
+            if (!eraRevelado) {
+                revelados++;
+                actualizarHUD();
+            }
+
             sound.playBonus();
 
+            const razonTxt = esInactivo ? 'por inactividad' : 'de la sala';
             mostrarToast(
                 '#f9e2af',
                 '👑',
-                `<strong>${nombreExDueno}</strong> se desconectó.<br>Prioridad de ranking: ¡Cuadrante reasignado a <strong>${ganador.nombre}</strong> (${ganador.targets} targets) - 2° cuadrante asignado!`
+                `<strong>${nombreExDueno}</strong> fue desconectado ${razonTxt}.<br>Prioridad de ranking: ¡Cuadrante desbloqueado automáticamente para <strong>${ganador.nombre}</strong> (1° lugar con ${ganador.targets} targets)!`
             );
 
             // Emitir evento MQTT para sincronizar con Admin y Participante
@@ -1034,8 +1127,13 @@
                 nombreGanador: ganador.nombre,
                 colorGanador: ganador.color,
                 cuadrantesTotal: ganador.cuadrantes,
-                nombreExDueno: nombreExDueno
+                nombreExDueno: nombreExDueno,
+                motivo: esInactivo ? 'inactividad' : 'desconexion'
             }));
+
+            if (revelados >= totalBloques) {
+                dispararGranFinal();
+            }
         }
 
         // 9. Des-revelar un bloque si no hay candidatos

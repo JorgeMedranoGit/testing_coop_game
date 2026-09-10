@@ -90,6 +90,18 @@ function conectarBot(bot) {
                     }));
                 }
             });
+
+            // Heartbeat periódico para informar actividad al watchdog de Pantalla y Admin
+            bot.heartbeatTimer = setInterval(() => {
+                if (bot.state !== 'disconnected' && bot.client && bot.client.connected) {
+                    bot.client.publish(TOPICO, JSON.stringify({
+                        accion: 'heartbeat',
+                        id: bot.id,
+                        nombre: bot.nombre,
+                        color: bot.color
+                    }));
+                }
+            }, 8000);
         });
 
         client.on('message', (topic, msg) => {
@@ -163,6 +175,7 @@ function cerrarLimpio() {
     console.log('\n\x1b[31m%s\x1b[0m', '🛑 Desconectando todos los bots...');
     bots.forEach(b => {
         if (b.timer) clearTimeout(b.timer);
+        if (b.heartbeatTimer) clearInterval(b.heartbeatTimer);
         if (b.client) {
             try {
                 if (b.client.connected) {
