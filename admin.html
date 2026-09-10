@@ -216,8 +216,12 @@
                 <div class="stat-num" id="statBloques" style="color: var(--ctp-green);">0 <span id="statTotalBloques" style="font-size:1rem; color:var(--ctp-subtext0)">/ 1</span></div>
             </div>
             <div class="stat-box">
-                <div class="stat-title">Taps Requeridos</div>
-                <div class="stat-num" id="statTaps" style="color: var(--ctp-peach);">15</div>
+                <div class="stat-title">Tiempo de Ronda</div>
+                <div class="stat-num" id="statTiempo" style="color: var(--ctp-mauve);">15s</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">Mínimo de Targets</div>
+                <div class="stat-num" id="statMinTargets" style="color: var(--ctp-peach);">10</div>
             </div>
         </div>
 
@@ -253,13 +257,25 @@
                         Configuración de Ronda
                     </h3>
                     <div class="setting-group">
-                        <label style="font-size: 0.9rem; color: var(--ctp-text);">Cantidad de toques por participante:</label>
-                        <select id="selectTaps" class="ctp-input" style="width: 105px; padding: 8px 12px; font-weight: 700;" onchange="cambiarTaps(this.value)">
-                            <option value="5">5 toques</option>
-                            <option value="10">10 toques</option>
-                            <option value="15" selected>15 toques</option>
-                            <option value="20">20 toques</option>
-                            <option value="30">30 toques</option>
+                        <label style="font-size: 0.9rem; color: var(--ctp-text);">Tiempo de la ronda (timer):</label>
+                        <select id="selectTiempo" class="ctp-input" style="width: 120px; padding: 8px 12px; font-weight: 700;" onchange="cambiarTiempo(this.value)">
+                            <option value="10">10 seg</option>
+                            <option value="15" selected>15 seg</option>
+                            <option value="20">20 seg</option>
+                            <option value="30">30 seg</option>
+                            <option value="45">45 seg</option>
+                            <option value="60">60 seg</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label style="font-size: 0.9rem; color: var(--ctp-text);">Mínimo de targets requerido:</label>
+                        <select id="selectMinTargets" class="ctp-input" style="width: 120px; padding: 8px 12px; font-weight: 700;" onchange="cambiarMinTargets(this.value)">
+                            <option value="3">3 targets</option>
+                            <option value="5">5 targets</option>
+                            <option value="8">8 targets</option>
+                            <option value="10" selected>10 targets</option>
+                            <option value="15">15 targets</option>
+                            <option value="20">20 targets</option>
                         </select>
                     </div>
                 </div>
@@ -271,7 +287,7 @@
                     Herramientas de Simulación
                 </h2>
                 <p style="font-size: 0.88rem; color: var(--ctp-subtext0); margin-bottom: 16px; line-height: 1.45;">
-                    Permite emular participantes virtuales para comprobar la adaptación dinámica de la cuadrícula:
+                    Emula participantes virtuales y pon a prueba la reasignación prioritaria al 1° lugar:
                 </p>
 
                 <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -281,18 +297,60 @@
                     <button class="ctp-btn ctp-btn-outline" onclick="simularRáfaga(5)">
                         Simular 5 participantes
                     </button>
-                    <button class="ctp-btn ctp-btn-outline" onclick="simularRáfaga(15)">
-                        Simular 15 participantes
+                    <button class="ctp-btn ctp-btn-outline" style="color: var(--ctp-peach); border-color: rgba(250, 179, 135, 0.4);" onclick="simularDesconexionConCuadrante()">
+                        ⚠️ Simular Desconexión (Reasignar cuadrante al 1° lugar)
                     </button>
                 </div>
 
                 <div style="margin-top: 16px; padding: 12px; background: rgba(180, 190, 254, 0.08); border: 1px solid rgba(180, 190, 254, 0.2); border-radius: 10px;">
                     <div style="font-size: 0.8rem; color: var(--ctp-lavender);">
-                        Modo activo: 1 bloque por participante presente en sala.
+                        Regla activa: si un jugador se desconecta, se reasigna su cuadrante al 1° lugar (máx. 2 cuadrantes por jugador).
                     </div>
                 </div>
             </div>
 
+        </div>
+
+        <!-- Live Ranking Card -->
+        <div class="ctp-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.4rem;">🏆</span>
+                    <div>
+                        <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--ctp-text);">
+                            Ranking de Posiciones & Cuadrantes
+                        </h2>
+                        <p style="font-size: 0.78rem; color: var(--ctp-subtext0);">
+                            Prioridad de reasignación automática al 1° lugar (hasta 2 cuadrantes)
+                        </p>
+                    </div>
+                </div>
+                <span class="ctp-badge ctp-badge-mauve" id="adminRankingInfoBadge">
+                    Ronda: 15s | Mín: 10 targets
+                </span>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--ctp-surface2); color: var(--ctp-subtext0); text-transform: uppercase; font-size: 0.74rem; letter-spacing: 0.05em;">
+                            <th style="padding: 10px 12px;">Posición</th>
+                            <th style="padding: 10px 12px;">Participante</th>
+                            <th style="padding: 10px 12px;">Targets</th>
+                            <th style="padding: 10px 12px;">Mínimo Requerido</th>
+                            <th style="padding: 10px 12px;">Cuadrantes Asignados</th>
+                            <th style="padding: 10px 12px;">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminRankingTbody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: var(--ctp-overlay1); padding: 24px 0;">
+                                Esperando participantes en la sala...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Live Activity Console -->
@@ -319,8 +377,9 @@
     <!-- Script de Lógica del Administrador -->
     <script>
         const topicoSecreto = 'proyecto_ar_evento_juego_1a2b3c_lpz';
-        let configuracionTaps = 15;
-        let jugadoresMap = new Map(); // id -> { id, nombre, color }
+        let configuracionTiempo = 15;
+        let configuracionMinTargets = 10;
+        let jugadoresMap = new Map(); // id -> { id, nombre, color, targets, califica, tiempo, cuadrantes, conectado, timestamp }
         let bloquesRevelados = 0;
         let totalBloquesDinámicos = 1;
 
@@ -333,7 +392,7 @@
 
         cliente.on('connect', () => {
             setConnectionStatus('online', 'En línea');
-            agregarLog('mqtt', 'Conexión establecida con el servidor');
+            agregarLog('mqtt', 'Conexión establecida con el servidor broker');
             cliente.subscribe(topicoSecreto, (err) => {
                 if (err) {
                     agregarLog('mqtt', 'Error en suscripción: ' + err.message);
@@ -376,24 +435,52 @@
                 if (datos.accion === 'jugador_unido') {
                     const id = datos.id || datos.nombre;
                     const esNuevo = !jugadoresMap.has(id);
-                    jugadoresMap.set(id, { id, nombre: datos.nombre, color: datos.color || '#cba6f7' });
+                    let j = jugadoresMap.get(id);
+                    if (!j) {
+                        j = {
+                            id,
+                            nombre: datos.nombre,
+                            color: datos.color || '#cba6f7',
+                            targets: 0,
+                            califica: false,
+                            cuadrantes: 0,
+                            conectado: true,
+                            tiempo: 0,
+                            timestamp: Date.now()
+                        };
+                        jugadoresMap.set(id, j);
+                    } else {
+                        j.nombre = datos.nombre;
+                        j.color = datos.color || j.color;
+                        j.conectado = true;
+                    }
 
-                    document.getElementById('statJugadores').textContent = jugadoresMap.size;
-                    totalBloquesDinámicos = Math.max(jugadoresMap.size, 1);
+                    const activos = Array.from(jugadoresMap.values()).filter(x => x.conectado).length;
+                    document.getElementById('statJugadores').textContent = activos;
+                    totalBloquesDinámicos = Math.max(activos, 1);
                     actualizarStatsBloques();
 
                     if (esNuevo) {
-                        agregarLog('join', `Participante unido: ${datos.nombre} (Total: ${jugadoresMap.size})`);
+                        agregarLog('join', `Participante unido: ${datos.nombre} (Conectados: ${activos})`);
                     }
+                    renderAdminRanking();
                 } else if (datos.accion === 'jugador_desconectado') {
                     if (jugadoresMap.has(datos.id)) {
                         const j = jugadoresMap.get(datos.id);
-                        jugadoresMap.delete(datos.id);
-                        document.getElementById('statJugadores').textContent = jugadoresMap.size;
-                        totalBloquesDinámicos = Math.max(jugadoresMap.size, 1);
-                        actualizarStatsBloques();
-                        agregarLog('reset', `Participante retirado: ${j.nombre} (Restantes: ${jugadoresMap.size})`);
+                        j.conectado = false;
+                        const activos = Array.from(jugadoresMap.values()).filter(x => x.conectado).length;
+                        document.getElementById('statJugadores').textContent = activos;
+                        agregarLog('reset', `Participante retirado: ${j.nombre} (Restantes en sala: ${activos})`);
+                        renderAdminRanking();
                     }
+                } else if (datos.accion === 'cuadrante_reasignado') {
+                    // Sincronizar reasignación de cuadrante al 1° lugar
+                    if (jugadoresMap.has(datos.idGanador)) {
+                        const ganador = jugadoresMap.get(datos.idGanador);
+                        ganador.cuadrantes = datos.cuadrantesTotal || 2;
+                    }
+                    agregarLog('finish', `REASIGNACIÓN: Cuadrante de "${datos.nombreExDueno || 'desconectado'}" asignado al 1° Lugar: ${datos.nombreGanador} (Total: ${datos.cuadrantesTotal} cuadrantes)`);
+                    renderAdminRanking();
                 } else if (datos.accion === 'desconectar_todos') {
                     jugadoresMap.clear();
                     bloquesRevelados = 0;
@@ -402,21 +489,57 @@
                     actualizarStatsBloques();
                     document.getElementById('estadoPartida').textContent = 'En espera';
                     document.getElementById('estadoPartida').style.color = 'var(--ctp-yellow)';
+                    renderAdminRanking();
                 } else if (datos.accion === 'juego_terminado') {
-                    bloquesRevelados++;
-                    actualizarStatsBloques();
-                    const tiempoInfo = datos.tiempo ? ` (${datos.tiempo}s)` : '';
-                    agregarLog('finish', `${datos.nombre} completó su bloque${tiempoInfo}`);
+                    const id = datos.id || datos.nombre;
+                    const targets = Number(datos.targets !== undefined ? datos.targets : (datos.taps || 0));
+                    const califica = (datos.califica !== undefined) ? Boolean(datos.califica) : (targets >= configuracionMinTargets);
+
+                    let j = jugadoresMap.get(id);
+                    if (!j) {
+                        j = {
+                            id,
+                            nombre: datos.nombre,
+                            color: datos.color || '#cba6f7',
+                            cuadrantes: 0,
+                            conectado: true
+                        };
+                        jugadoresMap.set(id, j);
+                    }
+
+                    j.targets = targets;
+                    j.califica = califica;
+                    j.tiempo = datos.tiempo || configuracionTiempo;
+                    j.timestamp = Date.now();
+
+                    if (califica) {
+                        bloquesRevelados++;
+                        j.cuadrantes = (j.cuadrantes || 0) + 1;
+                        actualizarStatsBloques();
+                        agregarLog('finish', `[LOGRO] ${datos.nombre} logró ${targets} targets (Mín: ${configuracionMinTargets}). Cuadrante desbloqueado.`);
+                    } else {
+                        agregarLog('reset', `[AVISO] ${datos.nombre} logró ${targets} targets (Mín: ${configuracionMinTargets}). No alcanzó mínimo.`);
+                    }
+
+                    renderAdminRanking();
                 } else if (datos.accion === 'iniciar_juego') {
                     document.getElementById('estadoPartida').textContent = 'En curso';
                     document.getElementById('estadoPartida').style.color = 'var(--ctp-green)';
                     bloquesRevelados = 0;
-                    totalBloquesDinámicos = datos.totalJugadores || Math.max(jugadoresMap.size, 1);
+                    totalBloquesDinámicos = datos.totalJugadores || Math.max(Array.from(jugadoresMap.values()).filter(x => x.conectado).length, 1);
                     actualizarStatsBloques();
+
+                    jugadoresMap.forEach(j => {
+                        j.targets = 0;
+                        j.califica = false;
+                        j.cuadrantes = 0;
+                    });
+                    renderAdminRanking();
                 } else if (datos.accion === 'reiniciar_juego') {
                     bloquesRevelados = 0;
                     document.getElementById('estadoPartida').textContent = 'En espera';
                     document.getElementById('estadoPartida').style.color = 'var(--ctp-yellow)';
+                    renderAdminRanking();
                 }
             } catch (e) {
                 console.error(e);
@@ -427,22 +550,100 @@
             document.getElementById('statBloques').innerHTML = `${bloquesRevelados} <span id="statTotalBloques" style="font-size:1rem; color:var(--ctp-subtext0)">/ ${totalBloquesDinámicos}</span>`;
         }
 
+        // Renderizar la tabla de clasificación en vivo
+        function renderAdminRanking() {
+            const tbody = document.getElementById('adminRankingTbody');
+            if (!tbody) return;
+
+            const lista = Array.from(jugadoresMap.values())
+                .sort((a, b) => (b.targets || 0) - (a.targets || 0) || (a.timestamp || 0) - (b.timestamp || 0));
+
+            if (lista.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--ctp-overlay1); padding: 24px 0;">
+                            Esperando participantes en la sala...
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            lista.forEach((j, idx) => {
+                const pos = idx + 1;
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid var(--ctp-surface1)';
+                if (pos === 1 && j.targets > 0) {
+                    tr.style.background = 'rgba(249, 226, 175, 0.08)';
+                }
+
+                let medalla = `#${pos}`;
+                if (pos === 1) medalla = '🥇 1°';
+                else if (pos === 2) medalla = '🥈 2°';
+                else if (pos === 3) medalla = '🥉 3°';
+
+                let badgeCalifica = '';
+                if (j.targets >= configuracionMinTargets) {
+                    badgeCalifica = `<span class="ctp-badge ctp-badge-green" style="padding: 2px 8px; font-size:0.75rem;">Superado</span>`;
+                } else if (j.targets > 0) {
+                    badgeCalifica = `<span class="ctp-badge ctp-badge-red" style="padding: 2px 8px; font-size:0.75rem;">No alcanzó</span>`;
+                } else {
+                    badgeCalifica = `<span class="ctp-badge ctp-badge-yellow" style="padding: 2px 8px; font-size:0.75rem;">Pendiente</span>`;
+                }
+
+                let badgeCuadrante = '';
+                if (j.cuadrantes >= 2) {
+                    badgeCuadrante = `<span class="ctp-badge ctp-badge-yellow" style="padding: 2px 8px; font-size:0.75rem;">👑 2 Cuadrantes (1° Lugar)</span>`;
+                } else if (j.cuadrantes === 1) {
+                    badgeCuadrante = `<span class="ctp-badge ctp-badge-green" style="padding: 2px 8px; font-size:0.75rem;">🟩 1 Cuadrante</span>`;
+                } else {
+                    badgeCuadrante = `<span style="color:var(--ctp-overlay0); font-size:0.78rem;">0</span>`;
+                }
+
+                let estadoTxt = j.conectado
+                    ? `<span style="color:var(--ctp-green); font-weight:700;">● En sala</span>`
+                    : `<span style="color:var(--ctp-red); font-weight:700;">● Desconectado</span>`;
+
+                tr.innerHTML = `
+                    <td style="padding: 10px 12px; font-family: var(--font-mono); font-weight: 700;">${medalla}</td>
+                    <td style="padding: 10px 12px; font-weight: 700;">
+                        <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${j.color}; margin-right:6px;"></span>
+                        ${j.nombre}
+                    </td>
+                    <td style="padding: 10px 12px; font-family: var(--font-mono); font-weight: 800; color: var(--ctp-mauve);">
+                        ${j.targets} targets
+                    </td>
+                    <td style="padding: 10px 12px;">${badgeCalifica}</td>
+                    <td style="padding: 10px 12px;">${badgeCuadrante}</td>
+                    <td style="padding: 10px 12px; font-size: 0.8rem;">${estadoTxt}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('adminRankingInfoBadge').textContent = 
+                `Ronda: ${configuracionTiempo}s | Mín: ${configuracionMinTargets} targets`;
+        }
+
         // 1. Iniciar Juego
         function iniciarJuego() {
             sound.init();
             sound.playStart();
 
-            const cantJugadores = Math.max(jugadoresMap.size, 1);
+            const activos = Array.from(jugadoresMap.values()).filter(x => x.conectado).length;
+            const cantJugadores = Math.max(activos, 1);
             const payload = JSON.stringify({
                 accion: 'iniciar_juego',
-                taps: configuracionTaps,
+                tiempoRonda: configuracionTiempo,
+                minTargets: configuracionMinTargets,
+                taps: configuracionMinTargets, // retrocompatibilidad
                 totalJugadores: cantJugadores
             });
 
             cliente.publish(topicoSecreto, payload);
             document.getElementById('estadoPartida').textContent = 'En curso';
             document.getElementById('estadoPartida').style.color = 'var(--ctp-green)';
-            agregarLog('start', `Dinámica iniciada (${cantJugadores} bloque${cantJugadores > 1 ? 's' : ''}, ${configuracionTaps} toques)`);
+            agregarLog('start', `Dinámica iniciada (${cantJugadores} bloques, ${configuracionTiempo}s de tiempo, mín. ${configuracionMinTargets} targets)`);
         }
 
         // 2. Reiniciar Juego
@@ -461,8 +662,10 @@
             cliente.publish(topicoSecreto, JSON.stringify({ accion: 'ping_jugadores' }));
 
             setTimeout(() => {
-                totalBloquesDinámicos = Math.max(jugadoresMap.size, 1);
+                const activos = Array.from(jugadoresMap.values()).filter(x => x.conectado).length;
+                totalBloquesDinámicos = Math.max(activos, 1);
                 actualizarStatsBloques();
+                renderAdminRanking();
             }, 500);
 
             agregarLog('reset', 'Mural reiniciado. Re-verificando participantes activos...');
@@ -481,6 +684,7 @@
             document.getElementById('estadoPartida').textContent = 'En espera';
             document.getElementById('estadoPartida').style.color = 'var(--ctp-yellow)';
             actualizarStatsBloques();
+            renderAdminRanking();
 
             cliente.publish(topicoSecreto, JSON.stringify({ accion: 'desconectar_todos' }));
             agregarLog('reset', 'Todos los participantes han sido desconectados.');
@@ -497,14 +701,22 @@
             agregarLog('start', 'Comando para descubrir todo el mural ejecutado.');
         }
 
-        // 5. Cambiar taps
-        function cambiarTaps(val) {
-            configuracionTaps = parseInt(val, 10);
-            document.getElementById('statTaps').textContent = configuracionTaps;
-            agregarLog('mqtt', `Dificultad ajustada a ${configuracionTaps} toques`);
+        // 5. Configuración de tiempo y targets
+        function cambiarTiempo(val) {
+            configuracionTiempo = parseInt(val, 10);
+            document.getElementById('statTiempo').textContent = configuracionTiempo + 's';
+            renderAdminRanking();
+            agregarLog('mqtt', `Tiempo de ronda ajustado a ${configuracionTiempo} segundos`);
         }
 
-        // 6. Simuladores sin emojis
+        function cambiarMinTargets(val) {
+            configuracionMinTargets = parseInt(val, 10);
+            document.getElementById('statMinTargets').textContent = configuracionMinTargets;
+            renderAdminRanking();
+            agregarLog('mqtt', `Mínimo de targets ajustado a ${configuracionMinTargets}`);
+        }
+
+        // 6. Simuladores de participantes
         const nombresMock = ['Mateo', 'Valentina', 'Santiago', 'Sofia', 'Lucas', 'Camila', 'Sebastian', 'Mariana', 'Alejandro', 'Lucia', 'Daniel', 'Paula', 'Diego', 'Elena', 'Gabriel', 'Andres', 'Victoria', 'Felipe'];
         const coloresMock = ['#cba6f7', '#74c7ec', '#a6e3a1', '#fab387', '#f5c2e7', '#b4befe'];
 
@@ -515,7 +727,10 @@
             const simId = 'sim_' + Date.now() + '_' + Math.floor(Math.random() * 9999);
             const nombre = nombresMock[Math.floor(Math.random() * nombresMock.length)] + ' (Sim)';
             const color = coloresMock[Math.floor(Math.random() * coloresMock.length)];
-            const tiempo = (Math.random() * 4 + 2.5).toFixed(2);
+            
+            // Generar targets aleatorios entre mín - 2 y mín + 8
+            const targetsGenerados = Math.max(2, Math.floor(configuracionMinTargets - 2 + Math.random() * 11));
+            const califica = targetsGenerados >= configuracionMinTargets;
 
             cliente.publish(topicoSecreto, JSON.stringify({
                 accion: 'jugador_unido',
@@ -530,9 +745,11 @@
                     id: simId,
                     nombre: nombre,
                     color: color,
-                    tiempo: parseFloat(tiempo)
+                    targets: targetsGenerados,
+                    califica: califica,
+                    tiempo: configuracionTiempo
                 }));
-            }, 380);
+            }, 350);
         }
 
         function simularRáfaga(cantidad) {
@@ -544,6 +761,34 @@
                 count++;
                 if (count >= cantidad) clearInterval(intervalo);
             }, 180);
+        }
+
+        // Simular desconexión de un participante con cuadrante para probar la reasignación prioritaria al 1° lugar
+        function simularDesconexionConCuadrante() {
+            sound.init();
+            sound.playClick();
+
+            // Buscar un jugador conectado que tenga cuadrante asignado (que no sea el 1° lugar absoluto)
+            const jugadoresConCuadrante = Array.from(jugadoresMap.values())
+                .filter(j => j.conectado && j.cuadrantes > 0);
+
+            if (jugadoresConCuadrante.length === 0) {
+                alert('Primero simula o conecta participantes para que tengan cuadrantes descubiertos.');
+                return;
+            }
+
+            // Seleccionar preferentemente un jugador que no sea el 1° lugar para ver cómo el 1° lugar recibe el 2° cuadrante
+            let victima = jugadoresConCuadrante[jugadoresConCuadrante.length - 1];
+            if (jugadoresConCuadrante.length > 1) {
+                victima = jugadoresConCuadrante[1]; // el 2° lugar o siguiente
+            }
+
+            agregarLog('reset', `Simulando desconexión de "${victima.nombre}" para comprobar la reasignación de cuadrante...`);
+
+            cliente.publish(topicoSecreto, JSON.stringify({
+                accion: 'jugador_desconectado',
+                id: victima.id
+            }));
         }
 
         // 7. Consola de Log

@@ -120,7 +120,12 @@ function manejarMensaje(bot, data) {
         }
     } else if (data.accion === 'iniciar_juego') {
         bot.state = 'playing';
-        const duracion = (3.5 + Math.random() * 8.0).toFixed(2);
+        const minTargetsReq = data.minTargets || (data.taps || 10);
+        const tiempoRonda = data.tiempoRonda || 15;
+        const targetsDestruidos = Math.max(3, Math.floor(minTargetsReq - 3 + Math.random() * 14));
+        const califica = targetsDestruidos >= minTargetsReq;
+
+        const duracion = Math.min(tiempoRonda, 3.5 + Math.random() * (tiempoRonda - 2.5)).toFixed(2);
         const delayMs = parseFloat(duracion) * 1000;
 
         if (bot.timer) clearTimeout(bot.timer);
@@ -131,7 +136,9 @@ function manejarMensaje(bot, data) {
                     id: bot.id,
                     nombre: bot.nombre,
                     color: bot.color,
-                    tiempo: parseFloat(duracion)
+                    targets: targetsDestruidos,
+                    califica: califica,
+                    tiempo: tiempoRonda
                 }));
                 bot.state = 'completed';
                 completados++;

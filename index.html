@@ -324,12 +324,13 @@
             <!-- Centro: Métricas en juego (solo activas durante la ronda) -->
             <div id="gameStatsGroup" class="header-center" style="display: none;">
                 <div class="hud-pill">
-                    <span class="hud-pill-label">Restantes</span>
-                    <span class="hud-pill-val" id="contador">15</span>
+                    <span class="hud-pill-label">Targets</span>
+                    <span class="hud-pill-val" id="contador">0</span>
+                    <span id="contadorMinLabel" style="font-size:0.72rem; color:var(--ctp-subtext0); font-weight:700;">/ mín. 10</span>
                 </div>
-                <div class="hud-pill">
+                <div class="hud-pill" id="cronometroPill">
                     <span class="hud-pill-label">Tiempo</span>
-                    <span class="hud-pill-val" id="cronometro">0.0s</span>
+                    <span class="hud-pill-val" id="cronometro">15.0s</span>
                 </div>
             </div>
 
@@ -344,7 +345,7 @@
             </div>
         </div>
 
-        <!-- Barra de progreso adherida a la base del header -->
+        <!-- Barra de progreso adherida a la base del header (Tiempo Restante) -->
         <div class="header-progress" id="headerProgress" style="display: none;">
             <div class="header-progress-fill" id="progresoJuego"></div>
         </div>
@@ -406,21 +407,32 @@
             <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--ctp-text); margin-bottom: 4px;">
                 Todo listo, <span id="esperaNombre" style="color: var(--ctp-mauve);">Participante</span>
             </h2>
-            <div class="ctp-badge ctp-badge-green" style="margin-bottom: 16px;">
+            <div class="ctp-badge ctp-badge-green" style="margin-bottom: 14px;">
                 Conectado a la sala
             </div>
 
-            <p style="color: var(--ctp-subtext0); font-size: 0.92rem; line-height: 1.5; margin-bottom: 20px;">
-                Esperando la señal de inicio del anfitrión.<br>
-                Mantén la pantalla abierta y prepárate para tocar los círculos.
+            <!-- Reglas de la ronda activa -->
+            <div style="background: rgba(203, 166, 247, 0.08); border: 1px solid rgba(203, 166, 247, 0.22); border-radius: 12px; padding: 12px; margin-bottom: 16px;">
+                <div style="font-size: 0.76rem; font-weight: 700; color: var(--ctp-mauve); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">
+                    Reglas de la ronda
+                </div>
+                <div style="display: flex; justify-content: center; gap: 14px; font-family: var(--font-mono); font-size: 0.88rem; color: var(--ctp-text);">
+                    <span>⏱️ <strong id="esperaTiempoTxt">15s</strong></span>
+                    <span>🎯 Mín: <strong id="esperaMinTxt">10 targets</strong></span>
+                </div>
+            </div>
+
+            <p style="color: var(--ctp-subtext0); font-size: 0.9rem; line-height: 1.45; margin-bottom: 18px;">
+                Destruye tantos targets como puedas antes de que se acabe el tiempo.<br>
+                Supera el mínimo para desbloquear tu cuadrante en el mural.
             </p>
 
             <div style="margin-bottom: 16px;">
-                <button class="ctp-btn ctp-btn-green" style="width: 100%; margin-bottom: 8px;" onclick="iniciarRonda(totalTaps)">
+                <button class="ctp-btn ctp-btn-green" style="width: 100%; margin-bottom: 8px;" onclick="iniciarRonda(tiempoRonda, minTargets)">
                     Comenzar ahora (modo individual)
                 </button>
                 <div style="font-size: 0.78rem; color: var(--ctp-overlay1);">
-                    O espera a que el anfitrión inicie a todos simultáneamente
+                    O espera a que el anfitrión inicie la ronda general
                 </div>
             </div>
 
@@ -452,23 +464,37 @@
          ========================================== -->
     <div id="victoria" class="view-container" style="display: none; text-align: center;">
         <div class="ctp-card">
-            <div style="width: 54px; height: 54px; border-radius: 50%; background: rgba(166, 227, 161, 0.15); border: 2px solid var(--ctp-green); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; color: var(--ctp-green);">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Banner de Segundo Cuadrante Reasignado -->
+            <div id="bonusCuadranteBanner" style="display: none; background: rgba(249, 226, 175, 0.15); border: 1.5px solid var(--ctp-yellow); border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+                <div style="font-size: 1.05rem; font-weight: 800; color: var(--ctp-yellow); margin-bottom: 4px;">
+                    👑 ¡Segundo Cuadrante Asignado!
+                </div>
+                <div style="font-size: 0.84rem; color: var(--ctp-text);" id="bonusCuadranteTxt">
+                    Al ser el 1° lugar del ranking, se te ha otorgado un cuadrante extra tras una desconexión.
+                </div>
+            </div>
+
+            <div id="victoriaIconBox" style="width: 54px; height: 54px; border-radius: 50%; background: rgba(166, 227, 161, 0.15); border: 2px solid var(--ctp-green); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; color: var(--ctp-green);">
+                <svg id="victoriaIconSvg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
             </div>
 
-            <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--ctp-green); margin-bottom: 4px;">
+            <h1 id="victoriaTitulo" style="font-size: 1.55rem; font-weight: 800; color: var(--ctp-green); margin-bottom: 4px;">
                 Desafío completado
             </h1>
-            <p style="color: var(--ctp-subtext0); font-size: 0.92rem; margin-bottom: 16px;">
-                Has completado la secuencia de toques con éxito.
+            <p id="victoriaSubtitulo" style="color: var(--ctp-subtext0); font-size: 0.9rem; margin-bottom: 16px;">
+                Has completado la ronda con éxito.
             </p>
 
-            <div style="display: flex; gap: 12px; margin-bottom: 18px;">
+            <div style="display: flex; gap: 10px; margin-bottom: 16px;">
                 <div class="stat-card">
-                    <div class="stat-val" id="resTiempo">0.0s</div>
-                    <div class="stat-lbl">Tiempo</div>
+                    <div class="stat-val" id="resTargets">0</div>
+                    <div class="stat-lbl">Targets</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="resMinimo">10</div>
+                    <div class="stat-lbl">Mínimo Req.</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-val" id="resVelocidad">0.0</div>
@@ -476,18 +502,18 @@
                 </div>
             </div>
 
-            <div style="background: rgba(166, 227, 161, 0.1); border: 1px solid rgba(166, 227, 161, 0.25); border-radius: 12px; padding: 14px; margin-bottom: 16px;">
-                <div style="font-size: 1rem; font-weight: 700; color: var(--ctp-green); margin-bottom: 2px;">
-                    Bloque desbloqueado
+            <div id="victoriaStatusBox" style="background: rgba(166, 227, 161, 0.1); border: 1px solid rgba(166, 227, 161, 0.25); border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+                <div id="victoriaStatusTitle" style="font-size: 1rem; font-weight: 700; color: var(--ctp-green); margin-bottom: 2px;">
+                    Cuadrante Desbloqueado
                 </div>
-                <div style="font-size: 0.88rem; color: var(--ctp-subtext1);">
+                <div id="victoriaStatusDesc" style="font-size: 0.88rem; color: var(--ctp-subtext1);">
                     Tu parte del mural ha sido descubierta con tu nombre: <strong id="victoriaNombre" style="color:var(--ctp-text)"></strong>
                 </div>
             </div>
 
             <div style="display: flex; gap: 10px; margin-bottom: 14px;">
-                <button class="ctp-btn ctp-btn-mauve" style="flex: 1;" onclick="iniciarRonda(totalTaps)">
-                    Participar de nuevo
+                <button class="ctp-btn ctp-btn-mauve" style="flex: 1;" onclick="iniciarRonda(tiempoRonda, minTargets)">
+                    Jugar de nuevo
                 </button>
             </div>
 
@@ -504,8 +530,9 @@
         // Configuración de juego
         let nombreUsuario = '';
         let colorUsuario = '#cba6f7';
-        let totalTaps = 15;
-        let tapsRestantes = 15;
+        let tiempoRonda = 15; // N segundos de duración
+        let minTargets = 10;  // mínimo de targets para desbloquear cuadrante
+        let targetsDestruidos = 0;
         let tiempoInicio = 0;
         let timerInterval = null;
         let juegoActivo = false;
@@ -592,6 +619,13 @@
             sound.playClick();
         }
 
+        function actualizarTextosReglas() {
+            const tiempoEl = document.getElementById('esperaTiempoTxt');
+            const minEl = document.getElementById('esperaMinTxt');
+            if (tiempoEl) tiempoEl.textContent = `${tiempoRonda}s`;
+            if (minEl) minEl.textContent = `${minTargets} targets`;
+        }
+
         // Cargar nombre guardado en LocalStorage
         window.addEventListener('DOMContentLoaded', () => {
             const saved = localStorage.getItem('game_user_name');
@@ -603,6 +637,7 @@
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') registrarse();
             });
+            actualizarTextosReglas();
         });
 
         // Registrarse al juego
@@ -623,6 +658,7 @@
             document.getElementById('registro').style.display = 'none';
             document.getElementById('espera').style.display = 'block';
             document.getElementById('esperaNombre').textContent = nombreUsuario;
+            actualizarTextosReglas();
             
             const esperaAvatar = document.getElementById('esperaAvatar');
             esperaAvatar.textContent = obtenerIniciales(nombreUsuario);
@@ -682,8 +718,23 @@
                         }));
                     }
                 } else if (datos.accion === 'iniciar_juego') {
+                    tiempoRonda = datos.tiempoRonda || 15;
+                    minTargets = datos.minTargets || (datos.taps || 10);
+                    actualizarTextosReglas();
+
                     if (nombreUsuario && (document.getElementById('espera').style.display === 'block' || document.getElementById('victoria').style.display === 'block')) {
-                        iniciarRonda(datos.taps || 15);
+                        iniciarRonda(tiempoRonda, minTargets);
+                    }
+                } else if (datos.accion === 'cuadrante_reasignado') {
+                    // Notificar si a este jugador se le asignó un 2do cuadrante por desconexión
+                    if (datos.idGanador === jugadorId) {
+                        sound.playBonus();
+                        const banner = document.getElementById('bonusCuadranteBanner');
+                        if (banner) {
+                            banner.style.display = 'block';
+                            document.getElementById('bonusCuadranteTxt').textContent = 
+                                `¡Felicidades! Al estar en 1° lugar con ${targetsDestruidos} targets, se te ha otorgado un 2° cuadrante en el mural tras la desconexión de ${datos.nombreExDueno || 'otro participante'}.`;
+                        }
                     }
                 } else if (datos.accion === 'reiniciar_juego') {
                     if (nombreUsuario) {
@@ -709,32 +760,64 @@
             }
         });
 
-        // Iniciar una ronda de juego
-        function iniciarRonda(tapsConfigurados) {
-            totalTaps = tapsConfigurados || 15;
-            tapsRestantes = totalTaps;
+        // Iniciar una ronda de juego con timer de N segundos y mínimo de targets
+        function iniciarRonda(tiempoConfig, minConfig) {
+            tiempoRonda = tiempoConfig || 15;
+            minTargets = minConfig || 10;
+            targetsDestruidos = 0;
             juegoActivo = true;
+
+            actualizarTextosReglas();
 
             document.getElementById('registro').style.display = 'none';
             document.getElementById('espera').style.display = 'none';
             document.getElementById('victoria').style.display = 'none';
+            document.getElementById('bonusCuadranteBanner').style.display = 'none';
             const juegoDiv = document.getElementById('juego');
             juegoDiv.style.display = 'block';
 
             // Activar HUD en el header unificado (cero superposición)
             document.getElementById('gameStatsGroup').style.display = 'flex';
             document.getElementById('headerProgress').style.display = 'block';
-            document.getElementById('contador').textContent = tapsRestantes;
-            actualizarProgreso();
+            document.getElementById('contador').textContent = targetsDestruidos;
+            document.getElementById('contador').style.color = 'var(--ctp-mauve)';
+            document.getElementById('contadorMinLabel').innerHTML = `/ mín. ${minTargets}`;
+            document.getElementById('cronometro').textContent = tiempoRonda.toFixed(1) + 's';
+            document.getElementById('cronometro').style.color = 'var(--ctp-mauve)';
+            document.getElementById('progresoJuego').style.width = '100%';
 
             document.querySelectorAll('.circulo').forEach(c => c.remove());
 
             tiempoInicio = Date.now();
             if (timerInterval) clearInterval(timerInterval);
+
+            let tickWarning = false;
+
             timerInterval = setInterval(() => {
-                const elapsed = (Date.now() - tiempoInicio) / 1000;
-                document.getElementById('cronometro').textContent = elapsed.toFixed(1) + 's';
-            }, 100);
+                const transcurrido = (Date.now() - tiempoInicio) / 1000;
+                const restante = Math.max(0, tiempoRonda - transcurrido);
+
+                document.getElementById('cronometro').textContent = restante.toFixed(1) + 's';
+
+                // Alerta en los últimos 4 segundos
+                if (restante <= 4.0) {
+                    document.getElementById('cronometro').style.color = 'var(--ctp-red)';
+                    if (!tickWarning && restante <= 3.0) {
+                        sound.playWarning();
+                        tickWarning = true;
+                    }
+                } else {
+                    document.getElementById('cronometro').style.color = 'var(--ctp-mauve)';
+                }
+
+                // Progreso visual del tiempo restante (100% a 0%)
+                const pctTiempo = Math.max(0, Math.min(100, (restante / tiempoRonda) * 100));
+                document.getElementById('progresoJuego').style.width = pctTiempo + '%';
+
+                if (restante <= 0) {
+                    finalizarJuego();
+                }
+            }, 50);
 
             sound.playStart();
             generarCirculo();
@@ -742,7 +825,7 @@
 
         // Generar un orbe interactivo en zona segura
         function generarCirculo() {
-            if (!juegoActivo || tapsRestantes <= 0) return;
+            if (!juegoActivo) return;
 
             const juegoDiv = document.getElementById('juego');
             document.querySelectorAll('.circulo').forEach(c => c.remove());
@@ -761,7 +844,8 @@
             circulo.style.left = posX + '%';
             circulo.style.top = posY + '%';
 
-            circulo.textContent = tapsRestantes;
+            // Mostrar el conteo progresivo de targets en el orbe
+            circulo.textContent = targetsDestruidos + 1;
 
             let touched = false;
             const handleTap = (e) => {
@@ -772,24 +856,24 @@
 
                 crearOnda(circulo.offsetLeft, circulo.offsetTop, color.bg);
 
-                const tapsHechos = totalTaps - tapsRestantes + 1;
-                tapsRestantes--;
-                document.getElementById('contador').textContent = tapsRestantes;
-                actualizarProgreso();
+                targetsDestruidos++;
+                document.getElementById('contador').textContent = targetsDestruidos;
 
-                sound.playTap(tapsHechos, totalTaps);
+                // Feedback al cruzar el umbral mínimo
+                if (targetsDestruidos === minTargets) {
+                    sound.playBonus();
+                    document.getElementById('contador').style.color = 'var(--ctp-green)';
+                    document.getElementById('contadorMinLabel').innerHTML = `/ mín. ${minTargets} <span style="color:var(--ctp-green); font-weight:800;">✔</span>`;
+                } else {
+                    sound.playTap(targetsDestruidos, minTargets);
+                }
 
                 if (navigator.vibrate) {
                     navigator.vibrate(35);
                 }
 
                 circulo.remove();
-
-                if (tapsRestantes <= 0) {
-                    finalizarJuego();
-                } else {
-                    generarCirculo();
-                }
+                generarCirculo();
             };
 
             circulo.addEventListener('pointerdown', handleTap);
@@ -806,11 +890,6 @@
             setTimeout(() => ripple.remove(), 420);
         }
 
-        function actualizarProgreso() {
-            const completado = ((totalTaps - tapsRestantes) / totalTaps) * 100;
-            document.getElementById('progresoJuego').style.width = completado + '%';
-        }
-
         function finalizarJuego() {
             juegoActivo = false;
             if (timerInterval) clearInterval(timerInterval);
@@ -818,27 +897,75 @@
             // Ocultar métricas del header durante la vista de victoria
             document.getElementById('gameStatsGroup').style.display = 'none';
             document.getElementById('headerProgress').style.display = 'none';
+            document.querySelectorAll('.circulo').forEach(c => c.remove());
 
-            const tiempoTotal = ((Date.now() - tiempoInicio) / 1000).toFixed(2);
-            const velocidad = (totalTaps / tiempoTotal).toFixed(1);
+            const tiempoTotal = parseFloat(tiempoRonda).toFixed(1);
+            const velocidad = (targetsDestruidos / tiempoRonda).toFixed(1);
+            const califica = (targetsDestruidos >= minTargets);
 
             const payload = JSON.stringify({
                 accion: 'juego_terminado',
                 id: jugadorId,
                 nombre: nombreUsuario,
                 color: colorUsuario,
+                targets: targetsDestruidos,
+                califica: califica,
                 tiempo: parseFloat(tiempoTotal)
             });
             cliente.publish(topicoSecreto, payload);
 
-            sound.playVictory();
-            lanzarConfetti();
-
             document.getElementById('juego').style.display = 'none';
             document.getElementById('victoria').style.display = 'block';
             document.getElementById('victoriaNombre').textContent = nombreUsuario;
-            document.getElementById('resTiempo').textContent = tiempoTotal + 's';
+            document.getElementById('resTargets').textContent = targetsDestruidos;
+            document.getElementById('resMinimo').textContent = minTargets;
             document.getElementById('resVelocidad').textContent = velocidad;
+
+            const iconBox = document.getElementById('victoriaIconBox');
+            const iconSvg = document.getElementById('victoriaIconSvg');
+            const titulo = document.getElementById('victoriaTitulo');
+            const subtitulo = document.getElementById('victoriaSubtitulo');
+            const statusBox = document.getElementById('victoriaStatusBox');
+            const statusTitle = document.getElementById('victoriaStatusTitle');
+            const statusDesc = document.getElementById('victoriaStatusDesc');
+
+            if (califica) {
+                sound.playVictory();
+                lanzarConfetti();
+
+                iconBox.style.background = 'rgba(166, 227, 161, 0.15)';
+                iconBox.style.borderColor = 'var(--ctp-green)';
+                iconBox.style.color = 'var(--ctp-green)';
+                iconSvg.innerHTML = '<polyline points="20 6 9 17 4 12"></polyline>';
+
+                titulo.textContent = '¡Desafío Logrado!';
+                titulo.style.color = 'var(--ctp-green)';
+                subtitulo.textContent = `Destruiste ${targetsDestruidos} targets en ${tiempoRonda}s (Superaste el mínimo de ${minTargets}).`;
+
+                statusBox.style.background = 'rgba(166, 227, 161, 0.1)';
+                statusBox.style.borderColor = 'rgba(166, 227, 161, 0.3)';
+                statusTitle.textContent = '🟩 Cuadrante Desbloqueado';
+                statusTitle.style.color = 'var(--ctp-green)';
+                statusDesc.innerHTML = `Tu parte del mural ha sido descubierta con tu nombre: <strong style="color:var(--ctp-text)">${nombreUsuario}</strong>`;
+            } else {
+                sound.playWarning();
+
+                iconBox.style.background = 'rgba(250, 179, 135, 0.15)';
+                iconBox.style.borderColor = 'var(--ctp-peach)';
+                iconBox.style.color = 'var(--ctp-peach)';
+                iconSvg.innerHTML = '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>';
+
+                titulo.textContent = 'Tiempo Concluido';
+                titulo.style.color = 'var(--ctp-peach)';
+                const faltaron = minTargets - targetsDestruidos;
+                subtitulo.textContent = `Destruiste ${targetsDestruidos} targets en ${tiempoRonda}s (Faltaron ${faltaron} para el mínimo).`;
+
+                statusBox.style.background = 'rgba(250, 179, 135, 0.1)';
+                statusBox.style.borderColor = 'rgba(250, 179, 135, 0.3)';
+                statusTitle.textContent = '⚠️ Mínimo No Alcanzado';
+                statusTitle.style.color = 'var(--ctp-peach)';
+                statusDesc.innerHTML = `No alcanzaste el mínimo requerido de <strong>${minTargets} targets</strong> para desbloquear un cuadrante en esta ronda.`;
+            }
         }
 
         function reiniciarEstadoJugador() {
@@ -848,13 +975,15 @@
             document.getElementById('headerProgress').style.display = 'none';
             document.getElementById('juego').style.display = 'none';
             document.getElementById('victoria').style.display = 'none';
+            document.getElementById('bonusCuadranteBanner').style.display = 'none';
             document.getElementById('espera').style.display = 'block';
             document.querySelectorAll('.circulo').forEach(c => c.remove());
+            actualizarTextosReglas();
         }
 
         function testTap(btn) {
             sound.init();
-            sound.playTap(5, 15);
+            sound.playTap(5, minTargets);
             if (navigator.vibrate) navigator.vibrate(30);
             btn.textContent = 'Toque registrado';
             setTimeout(() => {

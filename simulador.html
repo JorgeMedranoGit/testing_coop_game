@@ -470,6 +470,10 @@
                         ⚡ Simular Fin de Ronda Manual (Todos los activos)
                     </button>
 
+                    <button id="btnDiscOne" class="ctp-btn ctp-btn-outline" onclick="desconectarUnBotAleatorio()" style="color: var(--ctp-peach); border-color: rgba(250, 179, 135, 0.4);">
+                        ⚠️ Desconectar 1 Bot (Probar Reasignación Prioritaria)
+                    </button>
+
                     <button id="btnDisconnect" class="btn-action-danger" onclick="desconectarTodosLosBots()" disabled>
                         🛑 Desconectar Todos los Bots
                     </button>
@@ -709,9 +713,15 @@
                 const autoPlay = document.getElementById('autoPlay').checked;
 
                 if (autoPlay) {
-                    // Simular retraso humano: 3.5 a 11.5 segundos
-                    const duracionSegundos = (3.5 + Math.random() * 8.0).toFixed(2);
-                    const delayMs = parseFloat(duracionSegundos) * 1000;
+                    const minTargetsReq = data.minTargets || (data.taps || 10);
+                    const tiempoRonda = data.tiempoRonda || 15;
+
+                    // Cada bot genera una cantidad de targets destruidos (algunos califican, otros no)
+                    const targetsDestruidos = Math.max(3, Math.floor(minTargetsReq - 3 + Math.random() * 14));
+                    const califica = targetsDestruidos >= minTargetsReq;
+
+                    // El bot termina cerca del final del tiempo de ronda (escalonado)
+                    const delayMs = (Math.min(tiempoRonda, 3.5 + Math.random() * (tiempoRonda - 2.5))) * 1000;
 
                     if (bot.timer) clearTimeout(bot.timer);
                     bot.timer = setTimeout(() => {
@@ -721,7 +731,9 @@
                                 id: bot.id,
                                 nombre: bot.nombre,
                                 color: bot.color,
-                                tiempo: parseFloat(duracionSegundos)
+                                targets: targetsDestruidos,
+                                califica: califica,
+                                tiempo: tiempoRonda
                             }));
                             setBotState(bot, 'completed');
                         }
@@ -779,19 +791,42 @@
             bots.forEach(bot => {
                 if (bot.state === 'playing' && bot.client && bot.client.connected) {
                     if (bot.timer) clearTimeout(bot.timer);
-                    const tiempo = (2.0 + Math.random() * 3.0).toFixed(2);
+                    const targetsDestruidos = Math.floor(8 + Math.random() * 12);
+                    const califica = targetsDestruidos >= 10;
                     bot.client.publish(TOPICO, JSON.stringify({
                         accion: 'juego_terminado',
                         id: bot.id,
                         nombre: bot.nombre,
                         color: bot.color,
-                        tiempo: parseFloat(tiempo)
+                        targets: targetsDestruidos,
+                        califica: califica,
+                        tiempo: 15
                     }));
                     setBotState(bot, 'completed');
                     finalizados++;
                 }
             });
             log(`Se forzó la finalización de ${finalizados} bots activos.`, 'var(--ctp-mauve)');
+        }
+
+        // Desconectar un solo bot para probar la regla de prioridad de asignación
+        function desconectarUnBotAleatorio() {
+            const activos = bots.filter(b => b.state === 'completed' || b.state === 'online');
+            if (activos.length === 0) {
+                alert('No hay bots activos para desconectar.');
+                return;
+            }
+            const bot = activos[Math.floor(Math.random() * activos.length)];
+            if (bot.timer) clearTimeout(bot.timer);
+            if (bot.client && bot.client.connected) {
+                bot.client.publish(TOPICO, JSON.stringify({
+                    accion: 'jugador_desconectado',
+                    id: bot.id
+                }));
+                bot.client.end(true);
+            }
+            setBotState(bot, 'disconnected');
+            log(`Bot desconectado manualmente: ${bot.nombre}`, 'var(--ctp-peach)');
         }
 
         // Desconectar todos los bots limpiamente
