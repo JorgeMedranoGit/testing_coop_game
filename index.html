@@ -1057,56 +1057,6 @@
             border-color: #00f0ff;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 240, 255, 0.6);
         }
-
-        /* ========================================================
-           BARRA FLOTANTE DE NAVEGACIÓN Y DESARROLLADOR
-           ======================================================== */
-        .dev-nav-bar {
-            position: fixed;
-            bottom: 6px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(4, 16, 45, 0.92);
-            border: 1px solid rgba(0, 195, 255, 0.4);
-            border-radius: 999px;
-            padding: 4px 10px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            z-index: 9999;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
-            backdrop-filter: blur(8px);
-            max-width: 96vw;
-            overflow-x: auto;
-        }
-
-        .dev-nav-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(0, 240, 255, 0.3);
-            color: #d8ecff;
-            border-radius: 6px;
-            padding: 4px 8px;
-            font-family: monospace;
-            font-size: 0.72rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.15s;
-            white-space: nowrap;
-        }
-
-        .dev-nav-btn:hover,
-        .dev-nav-btn.active {
-            background: #0077ff;
-            color: #ffffff;
-            border-color: #00f0ff;
-            box-shadow: 0 0 8px #00f0ff;
-        }
-
-        .dev-nav-toggle {
-            background: #e10098;
-            color: #fff;
-            border-color: #ff5ec9;
-        }
     </style>
 </head>
 <body>
@@ -1449,27 +1399,7 @@
     <div id="cyberToast" class="cyber-toast"></div>
 
     <!-- ========================================================
-         BARRA FLOTANTE DE DESARROLLADOR / ACCESO RÁPIDO A PANTALLAS
-         ======================================================== -->
-    <div class="dev-nav-bar" id="devNavBar">
-        <span style="font-size: 0.68rem; color: #74c7ec; font-weight: 800; margin-right: 2px;">DEV:</span>
-        <button class="dev-nav-btn active" onclick="goToScreen(0)">P0</button>
-        <button class="dev-nav-btn" onclick="goToScreen(1)">P1</button>
-        <button class="dev-nav-btn" onclick="goToScreen(2)">P2</button>
-        <button class="dev-nav-btn" onclick="goToScreen(3)">P3</button>
-        <button class="dev-nav-btn" onclick="goToScreen(4)">P4</button>
-        <button class="dev-nav-btn" onclick="goToScreen(5)">P5</button>
-        <button class="dev-nav-btn" onclick="goToScreen(6)">P6</button>
-        <button class="dev-nav-btn" onclick="goToScreen(7)">P7</button>
-        <button class="dev-nav-btn" onclick="goToScreen(8)">P8</button>
-        <button class="dev-nav-btn" onclick="goToScreen(9)">P9</button>
-        <button class="dev-nav-btn" onclick="goToScreen(10)">P10</button>
-        <button class="dev-nav-btn dev-nav-toggle" id="btnToggleCombat" onclick="toggleCombateAdmin()">⚡ Combate</button>
-        <button class="dev-nav-btn" style="background: rgba(255,255,255,0.06);" onclick="toggleDevBar()">✕</button>
-    </div>
-
-    <!-- ========================================================
-         LÓGICA DEL JUEGO, ANIMACIONES, MQTT Y ENDPOINTS
+         LÓGICA DEL JUEGO, ANIMACIONES, MQTT Y AR
          ======================================================== -->
     <script src="index.js"></script>
 </body>

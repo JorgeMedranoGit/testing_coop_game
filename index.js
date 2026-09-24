@@ -31,7 +31,6 @@ let juegoTimerInterval = null;
 let mocoSpawnerInterval = null;
 let waitingDotsInterval = null;
 let activeMocos = [];
-let devBarVisible = true;
 let cargandoTimer = null;
 let toastTimeout = null;
 
@@ -138,13 +137,6 @@ function goToScreen(index) {
         targetScreen.classList.add('active');
     }
 
-    // Actualizar botones de navegación en barra de desarrollador
-    document.querySelectorAll('.dev-nav-btn').forEach((b, i) => {
-        if (i > 0 && i <= 11) {
-            b.classList.toggle('active', (i - 1) === index);
-        }
-    });
-
     // Inicializaciones por pantalla
     if (index === 2) {
         iniciarCargandoScreen();
@@ -154,13 +146,6 @@ function goToScreen(index) {
         iniciarPartidaJugador();
     } else if (index === 10) {
         mostrarResultadosFinales();
-    }
-}
-
-function toggleDevBar() {
-    const bar = document.getElementById('devNavBar');
-    if (bar) {
-        bar.style.display = bar.style.display === 'none' ? 'flex' : 'none';
     }
 }
 
@@ -328,14 +313,6 @@ function setEstadoCombate(activo, silenciarNotif = false) {
         }
     }
 
-    // Actualizar botón en barra de desarrollador
-    const btnToggle = document.getElementById('btnToggleCombat');
-    if (btnToggle) {
-        btnToggle.textContent = combateHabilitado ? '⚡ Combate ON' : '🔒 Combate OFF';
-        btnToggle.style.background = combateHabilitado ? '#00e5ff' : '#6c7086';
-        btnToggle.style.color = combateHabilitado ? '#001a33' : '#ffffff';
-    }
-
     if (combateHabilitado && !estadoPrevio) {
         if (!silenciarNotif) {
             mostrarToastCyber('⚡ ¡A COMBATIR HABILITADO POR ADMINISTRACIÓN!', true);
@@ -358,12 +335,6 @@ function setEstadoCombate(activo, silenciarNotif = false) {
             goToScreen(3);
         }
     }
-}
-
-function toggleCombateAdmin() {
-    sound.init();
-    sound.playClick();
-    setEstadoCombate(!combateHabilitado);
 }
 
 function intentarCombateInactivo(e) {
@@ -823,23 +794,4 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-
-    // Atajos de teclado para depuración (0..9, Q, C, D)
-    window.addEventListener('keydown', (e) => {
-        if (e.target.tagName === 'INPUT') return;
-        if (e.key >= '0' && e.key <= '9') {
-            const s = parseInt(e.key, 10);
-            if (!combateHabilitado && (s === 6 || s === 7 || s === 8 || s === 9)) {
-                mostrarToastCyber('🔒 Pantalla ' + s + ' bloqueada: Requiere habilitación de combate por administración.');
-                return;
-            }
-            goToScreen(s);
-        } else if (e.key === 'q' || e.key === 'Q') {
-            goToScreen(10);
-        } else if (e.key === 'c' || e.key === 'C') {
-            toggleCombateAdmin();
-        } else if (e.key === 'd' || e.key === 'D') {
-            toggleDevBar();
-        }
-    });
 });
