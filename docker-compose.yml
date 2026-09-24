@@ -13,9 +13,10 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-neumo_secure_pass_2024}
       POSTGRES_DB: ${POSTGRES_DB:-neumoflux_db}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - neumoflux_pgdata:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      # Mapeado a 5433 en el host para evitar cualquier conflicto con PostgreSQLs existentes (OpenProject/sistema)
+      - "${DB_PORT_HOST:-5433}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-neumo_user} -d ${POSTGRES_DB:-neumoflux_db}"]
       interval: 5s
@@ -47,7 +48,7 @@ services:
       - neumo_network
 
 volumes:
-  postgres_data:
+  neumoflux_pgdata:
     driver: local
 
 networks:
