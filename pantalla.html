@@ -363,52 +363,7 @@
             top: 1px;
         }
 
-        /* Recent Player Toast */
-        .toast-feed {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 100;
-            pointer-events: none;
-            max-width: 380px;
-        }
-
-        .toast-item {
-            background: rgba(30, 30, 46, 0.92);
-            backdrop-filter: blur(12px);
-            border-left: 3px solid var(--ctp-green);
-            border-top: 1px solid var(--ctp-surface2);
-            border-right: 1px solid var(--ctp-surface2);
-            border-bottom: 1px solid var(--ctp-surface2);
-            border-radius: 12px;
-            padding: 10px 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-            animation: slideInToast 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-
-        .toast-badge {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
-            font-weight: 800;
-            color: #11111b;
-            flex-shrink: 0;
-        }
-
-        @keyframes slideInToast {
-            0% { transform: translateX(80px); opacity: 0; }
-            100% { transform: translateX(0); opacity: 1; }
-        }
+        /* Pantalla Limpia: Sin toas/logs flotantes en la proyeccion */
 
         /* Grand Finale Modal */
         #finaleBanner {
@@ -671,9 +626,6 @@
 
     <!-- Contenedor dinámico de la cuadrícula -->
     <div id="grid"></div>
-
-    <!-- Toast Feed for live player arrivals -->
-    <div class="toast-feed" id="toastFeed"></div>
 
     <!-- Modal de Ranking de Posiciones -->
     <div class="ranking-modal-backdrop" id="rankingModal" onclick="cerrarRankingFuera(event)">
@@ -1001,6 +953,8 @@
                     mostrarToast('#a6e3a1', 'OK', `Ronda iniciada: <strong>${configTiempoRonda}s</strong> (Mínimo: <strong>${configMinTargets} targets</strong>)`);
                     sound.playStart();
                     actualizarRankingModal();
+                } else if (datos.accion === 'progreso_juego') {
+                    procesarProgresoJugador(datos);
                 } else if (datos.accion === 'juego_terminado') {
                     procesarFinDeJuegoJugador(datos);
                 } else if (datos.accion === 'reiniciar_juego') {
@@ -1013,7 +967,59 @@
             }
         });
 
-        // 5. Procesar fin de juego de un jugador (Targets + Calificación)
+        // 4.1 Procesar progreso en tiempo real (Desbloqueo INMEDIATO al alcanzar el mínimo de targets)
+        function procesarProgresoJugador(datos) {
+            const pId = datos.id || datos.nombre;
+            const targets = Number(datos.targets || 0);
+
+            let j = rankingJugadores.get(pId);
+            if (!j) {
+                j = {
+                    id: pId,
+                    nombre: datos.nombre,
+                    color: datos.color || '#cba6f7',
+                    targets: 0,
+                    califica: false,
+                    cuadrantes: 0,
+                    conectado: true,
+                    timestamp: Date.now(),
+                    ultimaActividad: Date.now()
+                };
+                rankingJugadores.set(pId, j);
+            }
+
+            j.nombre = datos.nombre || j.nombre;
+            j.targets = Math.max(j.targets || 0, targets);
+            j.ultimaActividad = Date.now();
+            j.conectado = true;
+
+            // REGLA: El panel se desbloquea en cuanto el jugador alcanza el mínimo de targets (no cuando se acaba el tiempo)
+            if (j.targets >= configMinTargets && (j.cuadrantes || 0) === 0) {
+                j.califica = true;
+                j.cuadrantes = 1;
+                const tiempoTranscurrido = Math.round((Date.now() - (j.timestamp || Date.now())) / 1000);
+                revelarBloque(j.nombre, j.color, j.targets, tiempoTranscurrido, j.id);
+            } else if (j.cuadrantes > 0) {
+                // Actualizar contador en vivo sobre el bloque ya revelado
+                actualizarScoreEnBloque(j.id, j.targets);
+            }
+
+            actualizarRankingModal();
+        }
+
+        // Actualizar el número de targets visibles en el bloque ya revelado
+        function actualizarScoreEnBloque(jugadorId, targets) {
+            const bloque = bloques.find(b => b.classList.contains('revelado') && b.dataset.jugadorId === jugadorId && !b.dataset.esBonus);
+            if (bloque) {
+                const scoreBadge = bloque.querySelector('.bloque-score-badge');
+                if (scoreBadge) {
+                    scoreBadge.innerHTML = `🎯 <strong>${targets}</strong> targets`;
+                }
+                bloque.dataset.targets = targets;
+            }
+        }
+
+        // 5. Procesar fin de juego de un jugador (Targets + Calificación final)
         function procesarFinDeJuegoJugador(datos) {
             const pId = datos.id || datos.nombre;
             const targets = Number(datos.targets !== undefined ? datos.targets : (datos.taps || 0));
@@ -1025,31 +1031,31 @@
                     id: pId,
                     nombre: datos.nombre,
                     color: datos.color || '#cba6f7',
+                    targets: 0,
+                    califica: false,
                     cuadrantes: 0,
                     conectado: true,
+                    timestamp: Date.now(),
                     ultimaActividad: Date.now()
                 };
                 rankingJugadores.set(pId, j);
             }
 
-            j.nombre = datos.nombre;
+            j.nombre = datos.nombre || j.nombre;
             j.color = datos.color || j.color;
-            j.targets = targets;
+            j.targets = Math.max(j.targets || 0, targets);
             j.califica = califica;
             j.tiempo = datos.tiempo || configTiempoRonda;
             j.timestamp = Date.now();
             j.conectado = true;
             j.ultimaActividad = Date.now();
 
-            if (califica) {
+            // Solo desbloquear si aún no lo había hecho en vivo durante la partida
+            if (califica && (j.cuadrantes || 0) === 0) {
                 revelarBloque(j.nombre, j.color, j.targets, j.tiempo, j.id);
-                j.cuadrantes = (j.cuadrantes || 0) + 1;
-            } else {
-                mostrarToast(
-                    '#fab387',
-                    '⚠️',
-                    `<strong>${j.nombre}</strong> destruyó <strong>${j.targets} targets</strong> (Mínimo requerido: ${configMinTargets}). No desbloqueó cuadrante.`
-                );
+                j.cuadrantes = 1;
+            } else if (j.cuadrantes > 0) {
+                actualizarScoreEnBloque(j.id, j.targets);
             }
 
             actualizarRankingModal();
@@ -1451,30 +1457,9 @@
             document.getElementById('finaleBanner').style.display = 'none';
         }
 
-        // 15. Toast notification con límite activo en el DOM
+        // 15. Toast notification (Desactivado: pantalla de proyección limpia sin logs flotantes)
         function mostrarToast(color, iniciales, textoHtml) {
-            const toastFeed = document.getElementById('toastFeed');
-            if (!toastFeed) return;
-
-            // Mantener un máximo de 4 notificaciones simultáneas en pantalla
-            while (toastFeed.children.length >= 4) {
-                toastFeed.removeChild(toastFeed.firstElementChild);
-            }
-
-            const toast = document.createElement('div');
-            toast.className = 'toast-item';
-            toast.innerHTML = `
-                <div class="toast-badge" style="background: ${color}">${iniciales}</div>
-                <div style="font-size: 0.88rem; color: var(--ctp-text); line-height: 1.4;">${textoHtml}</div>
-            `;
-
-            toastFeed.appendChild(toast);
-            setTimeout(() => {
-                toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(15px)';
-                setTimeout(() => toast.remove(), 300);
-            }, 3500);
+            // Pantalla limpia para proyección sin mensajes emergentes
         }
 
         // 16. Pantalla completa y audio

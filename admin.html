@@ -591,6 +591,25 @@
                     document.getElementById('estadoPartida').textContent = 'En espera';
                     document.getElementById('estadoPartida').style.color = 'var(--ctp-yellow)';
                     renderAdminRanking();
+                } else if (datos.accion === 'progreso_juego') {
+                    const id = datos.id || datos.nombre;
+                    const targets = Number(datos.targets || 0);
+
+                    let j = jugadoresMap.get(id);
+                    if (j) {
+                        j.targets = Math.max(j.targets || 0, targets);
+                        j.ultimaActividad = Date.now();
+
+                        // Desbloqueo en tiempo real al alcanzar el mínimo
+                        if (j.targets >= configuracionMinTargets && (j.cuadrantes || 0) === 0) {
+                            j.califica = true;
+                            j.cuadrantes = 1;
+                            bloquesRevelados++;
+                            actualizarStatsBloques();
+                            agregarLog('finish', `🎯 [DESBLOQUEADO EN VIVO] ${j.nombre} alcanzó ${j.targets} targets (Mín: ${configuracionMinTargets}). ¡Cuadrante liberado en el mural!`);
+                        }
+                        renderAdminRanking();
+                    }
                 } else if (datos.accion === 'juego_terminado') {
                     const id = datos.id || datos.nombre;
                     const targets = Number(datos.targets !== undefined ? datos.targets : (datos.taps || 0));
@@ -609,19 +628,21 @@
                         jugadoresMap.set(id, j);
                     }
 
-                    j.targets = targets;
+                    j.targets = Math.max(j.targets || 0, targets);
                     j.califica = califica;
                     j.tiempo = datos.tiempo || configuracionTiempo;
                     j.timestamp = Date.now();
                     j.ultimaActividad = Date.now();
 
                     if (califica) {
-                        bloquesRevelados++;
-                        j.cuadrantes = (j.cuadrantes || 0) + 1;
-                        actualizarStatsBloques();
-                        agregarLog('finish', `[LOGRO] ${datos.nombre} logró ${targets} targets (Mín: ${configuracionMinTargets}). Cuadrante desbloqueado.`);
+                        if ((j.cuadrantes || 0) === 0) {
+                            bloquesRevelados++;
+                            j.cuadrantes = 1;
+                            actualizarStatsBloques();
+                        }
+                        agregarLog('finish', `[FIN RONDA] ${datos.nombre} finalizó con ${j.targets} targets (Calificado: SÍ).`);
                     } else {
-                        agregarLog('reset', `[AVISO] ${datos.nombre} logró ${targets} targets (Mín: ${configuracionMinTargets}). No alcanzó mínimo.`);
+                        agregarLog('reset', `[FIN RONDA] ${datos.nombre} finalizó con ${j.targets} targets (Bajo mínimo).`);
                     }
 
                     renderAdminRanking();

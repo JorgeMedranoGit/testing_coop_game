@@ -25,6 +25,8 @@ let participante = {
 // Estado del Juego
 let puntos = 0;
 let tiempoRonda = 60; // Configurable desde Panel Admin
+let minTargets = 10;
+let metaAlcanzadaCelebrada = false;
 let tiempoRestante = 60;
 let mocosEliminados = 0;
 let juegoTimerInterval = null;
@@ -415,6 +417,7 @@ function iniciarPartidaJugador() {
 
     puntos = 0;
     mocosEliminados = 0;
+    metaAlcanzadaCelebrada = false;
     tiempoRestante = tiempoRonda;
     activeMocos = [];
 
@@ -567,6 +570,13 @@ function eliminarMoco(id, x, y, fueImpacto) {
                 targets: mocosEliminados
             }));
         }
+
+        // Celebrar desbloqueo instantáneo en la pantalla host en cuanto se alcanza el mínimo
+        if (mocosEliminados >= minTargets && !metaAlcanzadaCelebrada) {
+            metaAlcanzadaCelebrada = true;
+            sound.playBonus();
+            mostrarToastCyber('🎉 ¡Meta alcanzada! ¡Tu cuadrante se ha desbloqueado en la pantalla!');
+        }
     }
 
     if (mocoObj.elem && mocoObj.elem.parentNode) {
@@ -715,6 +725,9 @@ function manejarMensajeMQTT(data, topic = '') {
     else if (data.accion === 'iniciar_juego') {
         if (data.tiempoRonda) {
             tiempoRonda = Number(data.tiempoRonda);
+        }
+        if (data.minTargets) {
+            minTargets = Number(data.minTargets);
         }
         setEstadoCombate(true, true);
         if (currentScreen === 8 || currentScreen === 7 || currentScreen === 6) {

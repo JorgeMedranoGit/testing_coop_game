@@ -72,7 +72,7 @@ function iniciarSincronizadorMQTT() {
                         totalJugadores: data.totalJugadores || 0
                     });
                     if (ronda && ronda.id) rondaActualId = ronda.id;
-                } else if (data.accion === 'fin_juego') {
+                } else if (data.accion === 'fin_juego' || data.accion === 'juego_terminado') {
                     const pId = data.id || data.nombre;
                     await db.guardarPuntuacion({
                         participanteId: pId,
