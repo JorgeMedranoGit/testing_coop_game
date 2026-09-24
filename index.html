@@ -3,1234 +3,1465 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mural Colectivo | Participante</title>
-    <!-- Catppuccin Design System -->
-    <link rel="stylesheet" href="catppuccin.css">
+    <title>Super Neumoflux | Experiencia Interactiva</title>
+    
+    <!-- Google Fonts: Montserrat (Modern, Tech, Bold) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;0,900;1,800&display=swap" rel="stylesheet">
+    
     <!-- MQTT Broker Client -->
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <!-- Procedural Sound Effects -->
     <script src="sound.js"></script>
+
     <style>
-        body {
-            background: radial-gradient(circle at 50% 20%, var(--ctp-surface0) 0%, var(--ctp-base) 60%, var(--ctp-crust) 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-            padding-top: 70px; /* Espacio para el header unificado */
+        :root {
+            --bg-deep-blue: #031435;
+            --cyber-blue: #0077ff;
+            --cyber-cyan: #00f0ff;
+            --cyber-magenta: #e10098;
+            --cyber-purple: #9d00ff;
+            --text-white: #ffffff;
+            --text-muted: #b8d4f0;
+            --panel-bg: rgba(6, 44, 110, 0.72);
+            --panel-border: #00b4ff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
             user-select: none;
             -webkit-user-select: none;
-            touch-action: manipulation;
+        }
+
+        body {
+            background-color: #010817;
+            font-family: 'Montserrat', sans-serif;
+            color: var(--text-white);
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             overflow: hidden;
-            font-family: var(--font-main);
         }
 
-        /* ==========================================
-           HEADER UNIFICADO (Sin superposiciones)
-           ========================================== */
-        .app-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 100;
-            background: rgba(24, 24, 37, 0.88);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-            border-bottom: 1px solid rgba(203, 166, 247, 0.18);
-        }
-
-        .header-content {
+        /* Contenedor tipo pantalla móvil (9:16) con adaptación responsive */
+        .app-viewport {
+            width: 100%;
+            max-width: 430px;
+            height: 100vh;
+            height: 100dvh;
+            max-height: 890px;
+            position: relative;
+            overflow: hidden;
+            background: url('assets/bg_cyber_clean.png') no-repeat center bottom;
+            background-size: cover;
             display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 60px rgba(0, 119, 255, 0.35);
+        }
+
+        @media (max-width: 480px) {
+            .app-viewport {
+                max-height: 100dvh;
+                box-shadow: none;
+            }
+        }
+
+        /* Base para todas las pantallas */
+        .screen-view {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
-            padding: 10px 16px;
-            max-width: 900px;
-            margin: 0 auto;
-            gap: 12px;
+            padding: 18px 20px 24px 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.28s ease;
+            z-index: 10;
         }
 
-        .header-left, .header-right {
+        .screen-view.active {
+            display: flex;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Headers comunes */
+        .header-logo-wrap {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 12px 10px 4px 10px;
+            z-index: 20;
+        }
+
+        .header-white-bar {
+            background: #ffffff;
+            width: calc(100% + 40px);
+            margin: -18px -20px 8px -20px;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo-color-img {
+            max-width: 250px;
+            width: 82%;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .logo-white-img {
+            max-width: 270px;
+            width: 86%;
+            height: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 0 8px rgba(0, 200, 255, 0.4));
+        }
+
+        /* Botones futuristas angulados basados en los sprites */
+        .btn-cyber {
+            position: relative;
+            width: 100%;
+            max-width: 320px;
+            height: 58px;
+            background: none;
+            border: none;
+            outline: none;
+            cursor: pointer;
             display: flex;
             align-items: center;
-            flex-shrink: 0;
+            justify-content: center;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+            transition: transform 0.15s ease, filter 0.15s ease;
+            margin: 6px auto;
+            z-index: 15;
         }
 
-        .header-center {
+        .btn-cyber:active {
+            transform: scale(0.96);
+        }
+
+        .btn-cyber-bg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .btn-cyber-content {
+            position: relative;
+            z-index: 2;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
-            flex: 1;
+            width: 100%;
+            text-align: center;
+            line-height: 1.15;
+            padding: 0 14px;
         }
 
-        .hud-pill {
-            display: inline-flex;
-            align-items: baseline;
-            gap: 6px;
-            background: var(--ctp-surface0);
-            border: 1px solid var(--ctp-surface2);
-            padding: 5px 12px;
-            border-radius: 999px;
+        /* Botón Magenta (Normal) */
+        .btn-magenta .btn-cyber-bg {
+            filter: drop-shadow(0 4px 14px rgba(225, 0, 152, 0.45));
         }
 
-        .hud-pill-label {
-            color: var(--ctp-subtext0);
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            font-size: 0.72rem;
-            font-weight: 700;
+        /* Botón Gris / Plomo (Deshabilitado) */
+        .btn-disabled {
+            cursor: not-allowed;
+            opacity: 0.92;
         }
-
-        .hud-pill-val {
-            font-family: var(--font-mono);
-            font-weight: 800;
-            color: var(--ctp-mauve);
+        .btn-disabled .btn-cyber-content {
+            color: #d8e4f2;
             font-size: 0.95rem;
         }
 
-        .header-progress {
-            width: 100%;
-            height: 4px;
-            background: rgba(49, 50, 68, 0.45);
-            overflow: hidden;
+        /* Botón Azul Activo ("A COMBATIR") con animación llamativa */
+        .btn-combat-active {
+            animation: combatPulse 1.4s infinite cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .header-progress-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, var(--ctp-mauve), var(--ctp-sapphire), var(--ctp-green));
-            transition: width 0.15s ease-out;
-            box-shadow: 0 0 10px var(--ctp-green);
+        @keyframes combatPulse {
+            0% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 12px #00f0ff) drop-shadow(0 0 20px rgba(0, 119, 255, 0.8));
+            }
+            50% {
+                transform: scale(1.045);
+                filter: drop-shadow(0 0 24px #00f0ff) drop-shadow(0 0 35px #0077ff);
+            }
+            100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 12px #00f0ff) drop-shadow(0 0 20px rgba(0, 119, 255, 0.8));
+            }
         }
 
-        .icon-btn {
-            background: var(--ctp-surface0);
-            border: 1px solid var(--ctp-surface2);
-            color: var(--ctp-text);
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .icon-btn:active {
-            transform: scale(0.92);
-        }
-
-        .icon-btn svg {
-            width: 16px;
-            height: 16px;
-        }
-
-        /* Monogram Avatar */
-        .monogram-avatar {
-            width: 76px;
-            height: 76px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.7rem;
-            font-weight: 800;
-            margin: 0 auto 14px auto;
-            color: #11111b;
-            background: var(--ctp-mauve);
-            box-shadow: 0 4px 20px rgba(203, 166, 247, 0.35);
-            transition: all 0.25s ease;
-        }
-
-        /* Color Picker Row */
-        .color-row {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin: 14px 0 20px 0;
-        }
-
-        .color-dot {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .color-dot:hover {
-            transform: scale(1.15);
-        }
-
-        .color-dot.selected {
-            border-color: #ffffff;
-            transform: scale(1.2);
-            box-shadow: 0 0 12px rgba(255, 255, 255, 0.45);
-        }
-
-        /* Main Container Views */
-        .view-container {
-            width: 100%;
-            max-width: 420px;
-            z-index: 10;
-        }
-
-        /* Waiting Radar */
-        .radar-box {
+        /* Marco Cyber Panel */
+        .cyber-panel {
             position: relative;
-            width: 110px;
-            height: 110px;
-            margin: 18px auto;
+            width: 100%;
+            max-width: 324px;
+            background: linear-gradient(180deg, rgba(0, 80, 180, 0.55) 0%, rgba(2, 28, 75, 0.78) 100%);
+            border: 2px solid #00c3ff;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 20, 60, 0.8), inset 0 0 20px rgba(0, 195, 255, 0.25);
+            padding: 20px 18px;
+            margin: auto 0;
+            text-align: center;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 12;
+        }
+
+        /* HUD brackets decorativos */
+        .hud-brackets::before,
+        .hud-brackets::after {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-color: #00f0ff;
+            border-style: solid;
+            pointer-events: none;
+        }
+        .hud-brackets::before {
+            top: 6px;
+            left: 6px;
+            border-width: 2.5px 0 0 2.5px;
+        }
+        .hud-brackets::after {
+            bottom: 6px;
+            right: 6px;
+            border-width: 0 2.5px 2.5px 0;
+        }
+
+        .cyber-panel-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 12px;
+            line-height: 1.35;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        /* ========================================================
+           PANTALLA 0: BIENVENIDA Y ROBOT FLOTANDO
+           ======================================================== */
+        #screen-0 .content-area {
+            position: relative;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .speech-bubble-container {
+            position: absolute;
+            top: 10px;
+            right: 4px;
+            width: 195px;
+            z-index: 14;
+            animation: bubblePulse 3s infinite ease-in-out;
+        }
+
+        @keyframes bubblePulse {
+            0%, 100% { transform: scale(1) translateY(0); }
+            50% { transform: scale(1.02) translateY(-3px); }
+        }
+
+        .speech-bubble-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+        }
+
+        .speech-bubble-text {
+            position: absolute;
+            inset: 0;
+            padding: 16px 14px 22px 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.72rem;
+            font-weight: 800;
+            line-height: 1.3;
+            text-align: center;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .robot-floating-wrap {
+            position: relative;
+            width: 260px;
+            height: 310px;
+            margin-top: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: robotFloat 3.2s infinite ease-in-out;
+        }
+
+        @keyframes robotFloat {
+            0% {
+                transform: translateY(0px) rotate(0deg);
+                filter: drop-shadow(0 15px 25px rgba(0, 150, 255, 0.4));
+            }
+            50% {
+                transform: translateY(-16px) rotate(1.8deg);
+                filter: drop-shadow(0 28px 35px rgba(0, 220, 255, 0.65));
+            }
+            100% {
+                transform: translateY(0px) rotate(0deg);
+                filter: drop-shadow(0 15px 25px rgba(0, 150, 255, 0.4));
+            }
+        }
+
+        .robot-floating-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* ========================================================
+           PANTALLA 1: FORMULARIO DE REGISTRO
+           ======================================================== */
+        .form-group {
+            margin-bottom: 12px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #d8ecff;
+            margin-bottom: 5px;
+            letter-spacing: 0.03em;
+        }
+
+        .form-input {
+            width: 100%;
+            height: 38px;
+            background: #ffffff;
+            border: 2px solid #5ab8ff;
+            border-radius: 6px;
+            padding: 0 12px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: #0a2540;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: #00f0ff;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+        }
+
+        .form-feedback {
+            font-size: 0.78rem;
+            min-height: 18px;
+            margin-top: 4px;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        /* ========================================================
+           PANTALLA 2: CARGANDO Y LOGO RESPIRA
+           ======================================================== */
+        #screen-2 {
+            justify-content: center;
+            gap: 24px;
+        }
+
+        .logo-breathe-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: logoBreathe 2.4s infinite ease-in-out;
+            cursor: pointer;
+        }
+
+        @keyframes logoBreathe {
+            0% {
+                transform: scale(0.94);
+                filter: drop-shadow(0 0 15px rgba(0, 160, 255, 0.45));
+            }
+            50% {
+                transform: scale(1.08);
+                filter: drop-shadow(0 0 35px rgba(225, 0, 152, 0.75)) drop-shadow(0 0 50px rgba(0, 240, 255, 0.6));
+            }
+            100% {
+                transform: scale(0.94);
+                filter: drop-shadow(0 0 15px rgba(0, 160, 255, 0.45));
+            }
+        }
+
+        .logo-breathe-img {
+            max-width: 220px;
+            width: 75vw;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .loading-text {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 0.05em;
+            text-shadow: 0 0 12px rgba(0, 180, 255, 0.7);
+        }
+
+        /* ========================================================
+           PANTALLAS 3 & 6: MENÚ PRINCIPAL (COMBATE INACTIVO / ACTIVO)
+           ======================================================== */
+        .hub-buttons-wrap {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 10px;
+            z-index: 15;
+        }
+
+        .hub-character-wrap {
+            position: relative;
+            width: 260px;
+            height: 310px;
+            margin-bottom: -10px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 12;
+            animation: robotHoverGentle 3s infinite ease-in-out;
+        }
+
+        .hub-character-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 0 22px rgba(0, 200, 255, 0.45));
+        }
+
+        @keyframes robotHoverGentle {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* Botón Bloqueado por Administración */
+        .btn-combat-locked {
+            opacity: 0.65;
+            cursor: not-allowed !important;
+            filter: grayscale(0.8) brightness(0.85);
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .btn-combat-locked:hover,
+        .btn-combat-locked:active {
+            transform: none !important;
+            box-shadow: none !important;
+            filter: grayscale(0.8) brightness(0.85) !important;
+        }
+
+        .locked-badge-row {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 0.95rem;
+            font-weight: 900;
+            letter-spacing: 0.04em;
+        }
+
+        .locked-subtext {
+            font-size: 0.68rem;
+            letter-spacing: 0.05em;
+            color: #e2e8f0;
+            font-weight: 800;
+            display: block;
+            margin-top: 2px;
+            text-transform: uppercase;
+        }
+
+        /* ========================================================
+           PANTALLA 4: INSTRUCCIÓN AR CON SOBRE
+           ======================================================== */
+        .sobre-ar-wrap {
+            width: 140px;
+            height: 140px;
+            margin: 6px auto 14px auto;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .radar-ring {
+        .sobre-ar-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.5));
+        }
+
+        .sobre-ar-text {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #ffffff;
+            line-height: 1.4;
+            margin-bottom: 6px;
+        }
+
+        /* ========================================================
+           PANTALLA 5: REALIDAD AUMENTADA (HTML PLACEHOLDER)
+           ======================================================== */
+        #screen-5 {
+            background: #000000;
+            padding: 12px 16px;
+            justify-content: flex-start;
+        }
+
+        .ar-top-bar {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 25;
+            margin-bottom: 20px;
+        }
+
+        .btn-salir-hud {
+            background: rgba(0, 119, 255, 0.2);
+            border: 1.5px solid #00c3ff;
+            color: #ffffff;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+        }
+
+        .btn-salir-hud:active {
+            transform: scale(0.94);
+            background: rgba(0, 119, 255, 0.4);
+        }
+
+        .ar-logo-badge {
+            width: 65px;
+            height: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.5));
+        }
+
+        .ar-viewport-placeholder {
+            flex: 1;
+            width: 100%;
+            border: 2px dashed rgba(0, 240, 255, 0.4);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 50, 120, 0.25) 0%, rgba(0, 0, 0, 0.9) 100%);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .ar-scanline {
             position: absolute;
-            border-radius: 50%;
-            border: 1.5px solid var(--ctp-mauve);
-            opacity: 0.8;
-            animation: radarPing 2.4s infinite cubic-bezier(0, 0.2, 0.8, 1);
-        }
-
-        .radar-ring:nth-child(2) {
-            animation-delay: 0.8s;
-            border-color: var(--ctp-sapphire);
-        }
-
-        .radar-ring:nth-child(3) {
-            animation-delay: 1.6s;
-            border-color: var(--ctp-pink);
-        }
-
-        @keyframes radarPing {
-            0% { width: 30px; height: 30px; opacity: 0.9; }
-            100% { width: 120px; height: 120px; opacity: 0; }
-        }
-
-        /* Arena Full Screen */
-        #juego {
-            position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: radial-gradient(circle at 50% 50%, var(--ctp-surface0) 0%, var(--ctp-base) 70%, var(--ctp-crust) 100%);
-            display: none;
-            overflow: hidden;
-            z-index: 40;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #00f0ff, transparent);
+            box-shadow: 0 0 12px #00f0ff;
+            animation: scanLine 2.5s infinite linear;
         }
 
-        /* Floating Circles */
-        .circulo {
-            width: 86px;
-            height: 86px;
-            border-radius: 50%;
-            position: absolute;
+        @keyframes scanLine {
+            0% { top: 0%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        .ar-reticle {
+            width: 150px;
+            height: 150px;
+            border: 2px solid rgba(0, 240, 255, 0.35);
+            border-radius: 16px;
+            position: relative;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.6rem;
+        }
+
+        /* ========================================================
+           PANTALLA 7: EXPLICACIÓN DE COMBATE ("¡TAP!")
+           ======================================================== */
+        .tutorial-preview-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            margin: 10px 0;
+            padding: 0 4px;
+        }
+
+        .tutorial-robot-img {
+            width: 155px;
+            max-width: 52%;
+            height: auto;
+            max-height: 220px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 18px rgba(0, 200, 255, 0.45));
+            animation: robotPointPulse 2.6s infinite ease-in-out;
+        }
+
+        @keyframes robotPointPulse {
+            0%, 100% {
+                transform: translateY(0px) scale(1);
+            }
+            50% {
+                transform: translateY(-6px) scale(1.03);
+                filter: drop-shadow(0 0 25px rgba(0, 240, 255, 0.7));
+            }
+        }
+
+        .tutorial-target-box {
+            position: relative;
+            width: 105px;
+            height: 105px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tutorial-ring-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            animation: spinSlow 8s infinite linear;
+        }
+
+        @keyframes spinSlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .tutorial-moco-img {
+            width: 65px;
+            height: 65px;
+            object-fit: contain;
+            z-index: 2;
+        }
+
+        .tap-prompt-badge {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: #ffffff;
+            margin-top: 8px;
+            text-shadow: 0 0 10px #00f0ff;
+            letter-spacing: 0.05em;
+        }
+
+        /* ========================================================
+           PANTALLA 8: EN ESPERA...
+           ======================================================== */
+        .waiting-dots-title {
+            font-size: 1.35rem;
             font-weight: 800;
-            font-family: var(--font-mono);
+            color: #ffffff;
+            letter-spacing: 0.05em;
+            margin-bottom: 18px;
+            min-height: 36px;
+        }
+
+        .waiting-logo-wrap {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: logoBreathe 2.2s infinite ease-in-out;
+        }
+
+        /* ========================================================
+           PANTALLA 9: EL JUEGO ACTIVO
+           ======================================================== */
+        #screen-9 {
+            padding: 10px 14px;
+            justify-content: flex-start;
+        }
+
+        .game-hud-top {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 30;
+            margin-bottom: 8px;
+        }
+
+        .player-pill-hud {
+            position: relative;
+            background: linear-gradient(90deg, #0050c8, #0088ff);
+            border: 1.5px solid #00f0ff;
+            border-radius: 8px;
+            padding: 5px 14px;
+            font-size: 1.05rem;
+            font-weight: 900;
+            font-style: italic;
+            color: #ffffff;
+            letter-spacing: 0.04em;
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .game-hud-sub {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4px;
+            z-index: 30;
+            margin-bottom: 4px;
+        }
+
+        .hud-score-val {
+            font-size: 1.45rem;
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+            letter-spacing: 0.02em;
+        }
+
+        .hud-timer-val {
+            font-size: 1.65rem;
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: 0 0 14px rgba(0, 240, 255, 0.8), 0 2px 6px rgba(0, 0, 0, 0.9);
+            font-family: monospace;
+            letter-spacing: 0.05em;
+        }
+
+        .hud-badge-small {
+            width: 48px;
+            height: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.6));
+        }
+
+        /* Arena interactiva */
+        .game-arena {
+            position: relative;
+            width: 100%;
+            flex: 1;
+            overflow: hidden;
+            z-index: 20;
+        }
+
+        /* Robot saludando y animando en el pie de pantalla 9 */
+        .game-cheering-robot {
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            transform-origin: bottom center;
+            width: 175px;
+            height: auto;
+            object-fit: contain;
+            pointer-events: none;
+            z-index: 22;
+            filter: drop-shadow(0 0 18px rgba(0, 180, 255, 0.5));
+            animation: robotCheerWave 2.4s infinite ease-in-out;
+            transition: transform 0.15s ease-out;
+        }
+
+        @keyframes robotCheerWave {
+            0% {
+                transform: translateX(-50%) translateY(0px) rotate(0deg) scale(1);
+            }
+            25% {
+                transform: translateX(-50%) translateY(-8px) rotate(-3.5deg) scale(1.03);
+                filter: drop-shadow(0 0 25px rgba(0, 240, 255, 0.7));
+            }
+            50% {
+                transform: translateX(-50%) translateY(-3px) rotate(0deg) scale(1.01);
+            }
+            75% {
+                transform: translateX(-50%) translateY(-10px) rotate(3.5deg) scale(1.04);
+                filter: drop-shadow(0 0 28px rgba(0, 220, 255, 0.75));
+            }
+            100% {
+                transform: translateX(-50%) translateY(0px) rotate(0deg) scale(1);
+            }
+        }
+
+        /* Salto y animación especial cuando el jugador acierta un moco */
+        .game-cheering-robot.pump {
+            animation: robotHitPump 0.35s ease-out forwards;
+        }
+
+        @keyframes robotHitPump {
+            0% {
+                transform: translateX(-50%) translateY(0) scale(1);
+            }
+            40% {
+                transform: translateX(-50%) translateY(-18px) scale(1.1) rotate(-4deg);
+                filter: drop-shadow(0 0 35px #00ffff) drop-shadow(0 0 15px #e10098);
+            }
+            70% {
+                transform: translateX(-50%) translateY(-8px) scale(1.05) rotate(2deg);
+            }
+            100% {
+                transform: translateX(-50%) translateY(0) scale(1);
+            }
+        }
+
+        /* Diana moco interactiva */
+        .moco-target {
+            position: absolute;
+            width: 86px;
+            height: 86px;
+            transform: translate(-50%, -50%) scale(0.3);
             cursor: pointer;
-            transform: translate(-50%, -50%) scale(0.2);
-            animation: spawnPop 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, floatGentle 2.5s ease-in-out infinite alternate;
-            user-select: none;
+            z-index: 25;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: mocoPopIn 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
             touch-action: manipulation;
-            border: 3px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), inset 0 2px 10px rgba(255, 255, 255, 0.5);
         }
 
-        @keyframes floatGentle {
-            0% { transform: translate(-50%, -50%) scale(1); }
-            100% { transform: translate(-50%, -54%) scale(1.04); }
-        }
-
-        @keyframes spawnPop {
-            0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0.2; }
+        @keyframes mocoPopIn {
+            0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
             100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         }
 
-        .tap-ripple {
+        /* Anillo temporizador SVG con animación circular */
+        .target-timer-svg {
             position: absolute;
-            border-radius: 50%;
+            inset: -4px;
+            width: calc(100% + 8px);
+            height: calc(100% + 8px);
             pointer-events: none;
+            transform: rotate(-90deg);
+        }
+
+        .target-timer-circle {
+            fill: none;
+            stroke: #a6c000;
+            stroke-width: 5;
+            stroke-linecap: round;
+            stroke-dasharray: 260;
+            stroke-dashoffset: 0;
+            transition: stroke-dashoffset 0.1s linear, stroke 0.2s linear;
+        }
+
+        .moco-splat-img {
+            width: 62px;
+            height: 62px;
+            object-fit: contain;
+            pointer-events: none;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6));
+        }
+
+        /* Efecto flotante "PUAJ!" y "+10" al tocar */
+        .hit-effect-puaj {
+            position: absolute;
+            font-size: 1.45rem;
+            font-weight: 900;
+            font-style: italic;
+            color: #ffffff;
+            text-shadow: 0 0 10px #e10098, 0 2px 6px #000;
+            pointer-events: none;
+            z-index: 35;
+            transform: translate(-50%, -50%) rotate(-8deg);
+            animation: puajAnim 0.65s ease-out forwards;
+        }
+
+        @keyframes puajAnim {
+            0% { transform: translate(-50%, -50%) scale(0.5) rotate(-15deg); opacity: 0; }
+            30% { transform: translate(-50%, -70%) scale(1.2) rotate(4deg); opacity: 1; }
+            100% { transform: translate(-50%, -100%) scale(1) rotate(-5deg); opacity: 0; }
+        }
+
+        .hit-effect-points {
+            position: absolute;
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: #00f0ff;
+            text-shadow: 0 0 12px #0077ff, 0 2px 4px #000;
+            pointer-events: none;
+            z-index: 35;
             transform: translate(-50%, -50%);
-            animation: ripEffect 0.4s ease-out forwards;
+            animation: pointsAnim 0.7s ease-out forwards;
         }
 
-        @keyframes ripEffect {
-            0% { width: 30px; height: 30px; opacity: 0.9; }
-            100% { width: 160px; height: 160px; opacity: 0; }
+        @keyframes pointsAnim {
+            0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0; }
+            20% { transform: translate(-50%, -65%) scale(1.1); opacity: 1; }
+            100% { transform: translate(-50%, -115%) scale(1); opacity: 0; }
         }
 
-        #confettiCanvas {
+        /* ========================================================
+           PANTALLA 10: TIEMPO TERMINADO (RESULTADOS)
+           ======================================================== */
+        .score-big-box {
+            margin: 12px 0 18px 0;
+        }
+
+        .score-big-num {
+            font-size: 2.4rem;
+            font-weight: 900;
+            color: #00f0ff;
+            text-shadow: 0 0 20px rgba(0, 240, 255, 0.7);
+            line-height: 1;
+        }
+
+        .score-sub-label {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #d8ecff;
+            margin-top: 6px;
+        }
+
+        /* Robot celebrando en Screen 10 */
+        .final-celebration-wrap {
+            position: relative;
+            width: 175px;
+            height: 140px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 12;
+            margin-top: -6px;
+        }
+
+        .final-celebration-robot {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            transform-origin: bottom center;
+            filter: drop-shadow(0 0 20px rgba(0, 240, 255, 0.55));
+            animation: robotVictoryDance 2.6s infinite ease-in-out;
+        }
+
+        @keyframes robotVictoryDance {
+            0% {
+                transform: translateY(0px) rotate(0deg) scale(1);
+            }
+            20% {
+                transform: translateY(-14px) rotate(-4.5deg) scale(1.06);
+                filter: drop-shadow(0 0 32px rgba(0, 240, 255, 0.85)) drop-shadow(0 0 16px rgba(225, 0, 152, 0.6));
+            }
+            40% {
+                transform: translateY(-4px) rotate(2deg) scale(1.02);
+            }
+            60% {
+                transform: translateY(-16px) rotate(5deg) scale(1.08);
+                filter: drop-shadow(0 0 36px rgba(0, 255, 220, 0.9)) drop-shadow(0 0 20px rgba(0, 150, 255, 0.7));
+            }
+            80% {
+                transform: translateY(-6px) rotate(-2deg) scale(1.03);
+            }
+            100% {
+                transform: translateY(0px) rotate(0deg) scale(1);
+            }
+        }
+
+        /* Notificación Flotante Cyber Toast */
+        .cyber-toast {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: rgba(8, 20, 42, 0.96);
+            border: 2px solid #ff3366;
+            color: #ffffff;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 800;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 16px rgba(255, 51, 102, 0.5);
+            z-index: 99999;
             pointer-events: none;
-            z-index: 99;
+            transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.35s ease;
+            opacity: 0;
+            max-width: 90%;
+            width: 320px;
+            line-height: 1.35;
         }
 
-        .stat-card {
-            background: var(--ctp-surface0);
-            border-radius: 12px;
-            padding: 12px;
-            border: 1px solid var(--ctp-surface2);
-            text-align: center;
-            flex: 1;
+        .cyber-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
         }
-        .stat-val {
-            font-size: 1.4rem;
-            font-weight: 800;
-            color: var(--ctp-mauve);
-            font-family: var(--font-mono);
+
+        .cyber-toast.success {
+            border-color: #00f0ff;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 240, 255, 0.6);
         }
-        .stat-lbl {
-            font-size: 0.75rem;
-            color: var(--ctp-subtext0);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+
+        /* ========================================================
+           BARRA FLOTANTE DE NAVEGACIÓN Y DESARROLLADOR
+           ======================================================== */
+        .dev-nav-bar {
+            position: fixed;
+            bottom: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(4, 16, 45, 0.92);
+            border: 1px solid rgba(0, 195, 255, 0.4);
+            border-radius: 999px;
+            padding: 4px 10px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            z-index: 9999;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            max-width: 96vw;
+            overflow-x: auto;
+        }
+
+        .dev-nav-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            color: #d8ecff;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-family: monospace;
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+
+        .dev-nav-btn:hover,
+        .dev-nav-btn.active {
+            background: #0077ff;
+            color: #ffffff;
+            border-color: #00f0ff;
+            box-shadow: 0 0 8px #00f0ff;
+        }
+
+        .dev-nav-toggle {
+            background: #e10098;
+            color: #fff;
+            border-color: #ff5ec9;
         }
     </style>
 </head>
 <body>
 
-    <!-- Canvas de confeti para victoria -->
-    <canvas id="confettiCanvas"></canvas>
+    <div class="app-viewport">
 
-    <!-- ==========================================
-         BARRA SUPERIOR UNIFICADA (Zero superposición)
-         ========================================== -->
-    <header class="app-header">
-        <div class="header-content">
-            <!-- Izquierda: Estado de conexión -->
-            <div class="header-left">
-                <div id="connStatus" class="ctp-badge ctp-badge-yellow">
-                    <span class="status-dot connecting" id="statusDot"></span>
-                    <span id="statusText">Conectando</span>
+        <!-- ========================================================
+             PANTALLA 0: BIENVENIDA (ROBOT FLOTANDO + CHAT BUBBLE)
+             ======================================================== -->
+        <div id="screen-0" class="screen-view active">
+            <!-- Header con fondo blanco como en Pantallas.png -->
+            <div class="header-white-bar">
+                <img src="assets/ui/logo_color.png" class="logo-color-img" alt="NeumoFluX">
+            </div>
+
+            <div class="content-area">
+                <!-- Globo de diálogo cómico -->
+                <div class="speech-bubble-container">
+                    <img src="assets/ui/chat_bubble.png" class="speech-bubble-img" alt="Chat Bubble">
+                    <div class="speech-bubble-text">
+                        ¡HOLA!<br>
+                        VAMOS A LUCHAR<br>
+                        CONTRA LA INFLAMACIÓN<br>
+                        BRONQUIAL
+                    </div>
+                </div>
+
+                <!-- Robot principal con animación de flotación -->
+                <div class="robot-floating-wrap">
+                    <img src="assets/robot_flotando_clean.png" class="robot-floating-img" alt="Super Neumoflux Robot">
                 </div>
             </div>
 
-            <!-- Centro: Métricas en juego (solo activas durante la ronda) -->
-            <div id="gameStatsGroup" class="header-center" style="display: none;">
-                <div class="hud-pill">
-                    <span class="hud-pill-label">Targets</span>
-                    <span class="hud-pill-val" id="contador">0</span>
-                    <span id="contadorMinLabel" style="font-size:0.72rem; color:var(--ctp-subtext0); font-weight:700;">/ mín. 10</span>
-                </div>
-                <div class="hud-pill" id="cronometroPill">
-                    <span class="hud-pill-label">Tiempo</span>
-                    <span class="hud-pill-val" id="cronometro">15.0s</span>
-                </div>
-            </div>
-
-            <!-- Derecha: Control de sonido -->
-            <div class="header-right">
-                <button class="icon-btn" id="audioToggle" onclick="toggleAudio()" title="Alternar sonido">
-                    <svg id="audioIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-
-        <!-- Barra de progreso adherida a la base del header (Tiempo Restante) -->
-        <div class="header-progress" id="headerProgress" style="display: none;">
-            <div class="header-progress-fill" id="progresoJuego"></div>
-        </div>
-    </header>
-
-    <!-- ==========================================
-         FASE 1: REGISTRO DE PARTICIPANTE
-         ========================================== -->
-    <div id="registro" class="view-container">
-        <div class="ctp-card" style="text-align: center;">
-            <div class="monogram-avatar" id="avatarPreview">P</div>
-
-            <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--ctp-text); margin-bottom: 6px;">
-                Mural Colectivo
-            </h1>
-            <p style="color: var(--ctp-subtext0); font-size: 0.92rem; margin-bottom: 18px; line-height: 1.5;">
-                Ingresa tu nombre para reclamar tu espacio en la pantalla comunitaria.
-            </p>
-
-            <!-- Selector de Color de Distintivo -->
-            <label style="font-size: 0.8rem; font-weight: 700; color: var(--ctp-subtext1); text-transform: uppercase; letter-spacing: 0.05em;">
-                Color de tu distintivo
-            </label>
-            <div class="color-row">
-                <div class="color-dot selected" style="background: #cba6f7;" onclick="elegirColor('#cba6f7', this)" title="Malva"></div>
-                <div class="color-dot" style="background: #74c7ec;" onclick="elegirColor('#74c7ec', this)" title="Zafiro"></div>
-                <div class="color-dot" style="background: #a6e3a1;" onclick="elegirColor('#a6e3a1', this)" title="Verde"></div>
-                <div class="color-dot" style="background: #fab387;" onclick="elegirColor('#fab387', this)" title="Melocotón"></div>
-                <div class="color-dot" style="background: #f5c2e7;" onclick="elegirColor('#f5c2e7', this)" title="Rosa"></div>
-                <div class="color-dot" style="background: #b4befe;" onclick="elegirColor('#b4befe', this)" title="Lavanda"></div>
-            </div>
-
-            <!-- Aviso de desconexión por inactividad -->
-            <div id="inactividadAvisoDesconexion" style="display: none; background: rgba(250, 179, 135, 0.15); border: 1px solid var(--ctp-peach); border-radius: 12px; padding: 14px; margin-bottom: 16px; text-align: center;">
-                <div style="font-weight: 800; color: var(--ctp-peach); margin-bottom: 4px; font-size: 0.95rem;">⏱️ Desconectado por Inactividad</div>
-                <div style="font-size: 0.82rem; color: var(--ctp-subtext0); line-height: 1.4;">
-                    No se detectó respuesta durante la partida.<br>Tu cuadrante fue reasignado automáticamente al 1° lugar del ranking.
-                </div>
-            </div>
-
-            <!-- Entrada de Nombre -->
-            <div style="margin-bottom: 20px; text-align: left;">
-                <label for="nombre" style="font-size: 0.8rem; font-weight: 700; color: var(--ctp-subtext1); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">
-                    Nombre o alias
-                </label>
-                <input type="text" id="nombre" class="ctp-input" placeholder="Escribe tu nombre..." maxlength="18" autocomplete="off" oninput="actualizarIniciales(this.value)">
-            </div>
-
-            <button class="ctp-btn ctp-btn-mauve" style="width: 100%;" onclick="registrarse()">
-                Unirme a la sala
+            <!-- Botón Ingresar -->
+            <button class="btn-cyber btn-magenta" onclick="goToScreen(1)">
+                <img src="assets/ui/btn_magenta.png" class="btn-cyber-bg" alt="Botón">
+                <span class="btn-cyber-content">INGRESAR</span>
             </button>
         </div>
-    </div>
 
-    <!-- ==========================================
-         FASE 2: SALA DE ESPERA (LOBBY)
-         ========================================== -->
-    <div id="espera" class="view-container" style="display: none; text-align: center;">
-        <div class="ctp-card">
-            <div class="radar-box">
-                <div class="radar-ring"></div>
-                <div class="radar-ring"></div>
-                <div class="radar-ring"></div>
-                <div class="monogram-avatar" id="esperaAvatar" style="margin: 0; width: 68px; height: 68px; font-size: 1.4rem;">P</div>
+        <!-- ========================================================
+             PANTALLA 1: FORMULARIO DE DATOS (ENDPOINT)
+             ======================================================== -->
+        <div id="screen-1" class="screen-view">
+            <div class="header-white-bar">
+                <img src="assets/ui/logo_color.png" class="logo-color-img" alt="NeumoFluX">
             </div>
 
-            <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--ctp-text); margin-bottom: 4px;">
-                Todo listo, <span id="esperaNombre" style="color: var(--ctp-mauve);">Participante</span>
-            </h2>
-            <div class="ctp-badge ctp-badge-green" style="margin-bottom: 14px;">
-                Conectado a la sala
+            <!-- Panel con formulario -->
+            <div class="cyber-panel">
+                <h2 class="cyber-panel-title">Necesitamos algunos datos para continuar.</h2>
+                <form id="formRegistro" onsubmit="guardarRegistro(event)">
+                    <div class="form-group">
+                        <label for="inputNombre">Nombre</label>
+                        <input type="text" id="inputNombre" class="form-input" placeholder="Nombre completo" required autocomplete="name" value="Marta Vargas">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputCarnet">Carnet</label>
+                        <input type="text" id="inputCarnet" class="form-input" placeholder="C.I. / Documento" required value="7894561">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputWhatsapp">Número de Whatsapp</label>
+                        <input type="tel" id="inputWhatsapp" class="form-input" placeholder="Ej: 71234567" required value="76543210">
+                    </div>
+
+                    <div id="registroFeedback" class="form-feedback" style="color: #74c7ec;"></div>
+
+                    <button type="submit" class="btn-cyber btn-magenta" style="margin-top: 14px;">
+                        <img src="assets/ui/btn_magenta.png" class="btn-cyber-bg" alt="Botón">
+                        <span class="btn-cyber-content">¡LISTO!</span>
+                    </button>
+                </form>
             </div>
 
-            <!-- Reglas de la ronda activa -->
-            <div style="background: rgba(203, 166, 247, 0.08); border: 1px solid rgba(203, 166, 247, 0.22); border-radius: 12px; padding: 12px; margin-bottom: 16px;">
-                <div style="font-size: 0.76rem; font-weight: 700; color: var(--ctp-mauve); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">
-                    Reglas de la ronda
-                </div>
-                <div style="display: flex; justify-content: center; gap: 14px; font-family: var(--font-mono); font-size: 0.88rem; color: var(--ctp-text);">
-                    <span>⏱️ <strong id="esperaTiempoTxt">15s</strong></span>
-                    <span>🎯 Mín: <strong id="esperaMinTxt">10 targets</strong></span>
-                </div>
+            <div style="height: 10px;"></div>
+        </div>
+
+        <!-- ========================================================
+             PANTALLA 2: CARGANDO (LOGO RESPIRA)
+             ======================================================== -->
+        <div id="screen-2" class="screen-view" onclick="avanzarDesdeCargando()">
+            <div style="height: 40px;"></div>
+
+            <div class="logo-breathe-container" title="Toca para continuar">
+                <img src="assets/ui/logo_super.png" class="logo-breathe-img" alt="SUPER Neumoflux">
             </div>
 
-            <p style="color: var(--ctp-subtext0); font-size: 0.9rem; line-height: 1.45; margin-bottom: 18px;">
-                Destruye tantos targets como puedas antes de que se acabe el tiempo.<br>
-                Supera el mínimo para desbloquear tu cuadrante en el mural.
-            </p>
+            <h2 class="loading-text" id="loadingDots">Cargando...</h2>
 
-            <div style="margin-bottom: 16px;">
-                <button class="ctp-btn ctp-btn-green" style="width: 100%; margin-bottom: 8px;" onclick="iniciarRonda(tiempoRonda, minTargets)">
-                    Comenzar ahora (modo individual)
+            <div style="font-size: 0.78rem; color: rgba(255,255,255,0.45); margin-bottom: 20px;">
+                Toca para saltar o espera la carga del modelo AR
+            </div>
+        </div>
+
+        <!-- ========================================================
+             PANTALLA 3: MENÚ HUB (A COMBATIR INACTIVO)
+             ======================================================== -->
+        <div id="screen-3" class="screen-view">
+            <div class="header-logo-wrap">
+                <img src="assets/ui/logo_white.png" class="logo-white-img" alt="NeumoFluX">
+            </div>
+
+            <div class="hub-buttons-wrap">
+                <!-- Botón Realidad Aumentada siempre activo -->
+                <button class="btn-cyber btn-magenta" onclick="goToScreen(4)">
+                    <img src="assets/ui/btn_magenta.png" class="btn-cyber-bg" alt="Botón">
+                    <span class="btn-cyber-content">REALIDAD AUMENTADA</span>
                 </button>
-                <div style="font-size: 0.78rem; color: var(--ctp-overlay1);">
-                    O espera a que el anfitrión inicie la ronda general
-                </div>
-            </div>
 
-            <!-- Warm-up mini pad -->
-            <div style="background: var(--ctp-surface0); border-radius: 12px; padding: 12px; border: 1px dashed var(--ctp-surface2);">
-                <div style="font-size: 0.8rem; color: var(--ctp-subtext1); margin-bottom: 6px;">
-                    Zona de práctica previa:
-                </div>
-                <button class="ctp-btn ctp-btn-outline ctp-btn-sm" onclick="testTap(this)">
-                    Probar toque y sonido
+                <!-- Botón A Combatir BLOQUEADO hasta que administración lo habilite -->
+                <button class="btn-cyber btn-disabled btn-combat-locked" id="btnCombatDisabled" disabled="disabled" onclick="intentarCombateInactivo(event)">
+                    <img src="assets/ui/btn_grey.png" class="btn-cyber-bg" alt="Botón Inactivo">
+                    <span class="btn-cyber-content">
+                        <span class="locked-badge-row">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #cbd5e1;">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                            A COMBATIR
+                        </span>
+                        <span class="locked-subtext">BLOQUEADO POR ADMINISTRACIÓN</span>
+                    </span>
                 </button>
             </div>
 
-            <button class="ctp-btn ctp-btn-outline ctp-btn-sm" style="width: 100%; margin-top: 14px; color: var(--ctp-red); border-color: rgba(243, 139, 168, 0.4);" onclick="salirDelLobby()">
-                Salir o cambiar de nombre
+            <!-- Personaje con datapad -->
+            <div class="hub-character-wrap">
+                <img src="assets/robot_tablet.png" class="hub-character-img" alt="Super Neumoflux">
+            </div>
+        </div>
+
+        <!-- ========================================================
+             PANTALLA 4: INSTRUCCIÓN AR
+             ======================================================== -->
+        <div id="screen-4" class="screen-view">
+            <div class="header-white-bar">
+                <img src="assets/ui/logo_color.png" class="logo-color-img" alt="NeumoFluX">
+            </div>
+
+            <!-- Panel con el sobre -->
+            <div class="cyber-panel hud-brackets">
+                <div class="sobre-ar-wrap">
+                    <img src="assets/ui/sobre_ar.png" class="sobre-ar-img" alt="Sobre Neumoflux 600mg">
+                </div>
+                <p class="sobre-ar-text">
+                    Apunta tu cámara al sobrecito y mira a Super Neumoflux en acción
+                </p>
+            </div>
+
+            <!-- Botón Abrir Cámara -->
+            <button class="btn-cyber btn-magenta" onclick="goToScreen(5)">
+                <img src="assets/ui/btn_magenta.png" class="btn-cyber-bg" alt="Botón">
+                <span class="btn-cyber-content">
+                    <img src="assets/ui/icon_camera.png" style="width: 22px; height: auto;" alt="Cámara">
+                    ABRIR CÁMARA
+                </span>
             </button>
         </div>
-    </div>
 
-    <!-- ==========================================
-         FASE 3: EL JUEGO ACTIVO (ARENA)
-         ========================================== -->
-    <div id="juego">
-        <!-- Los círculos interactivos flotarán libremente en toda el área de pantalla -->
-    </div>
-
-    <!-- ==========================================
-         FASE 4: PANTALLA DE FINALIZACIÓN
-         ========================================== -->
-    <div id="victoria" class="view-container" style="display: none; text-align: center;">
-        <div class="ctp-card">
-            <!-- Banner de Segundo Cuadrante Reasignado -->
-            <div id="bonusCuadranteBanner" style="display: none; background: rgba(249, 226, 175, 0.15); border: 1.5px solid var(--ctp-yellow); border-radius: 12px; padding: 14px; margin-bottom: 16px;">
-                <div style="font-size: 1.05rem; font-weight: 800; color: var(--ctp-yellow); margin-bottom: 4px;">
-                    👑 ¡Segundo Cuadrante Asignado!
-                </div>
-                <div style="font-size: 0.84rem; color: var(--ctp-text);" id="bonusCuadranteTxt">
-                    Al ser el 1° lugar del ranking, se te ha otorgado un cuadrante extra tras una desconexión.
-                </div>
+        <!-- ========================================================
+             PANTALLA 5: REALIDAD AUMENTADA (MINDAR)
+             ======================================================== -->
+        <div id="screen-5" class="screen-view">
+            <div class="ar-top-bar">
+                <button class="btn-salir-hud" onclick="volverDeAR()">
+                    ◀ SALIR
+                </button>
+                <img src="assets/ui/logo_super.png" class="ar-logo-badge" alt="SUPER">
             </div>
 
-            <div id="victoriaIconBox" style="width: 54px; height: 54px; border-radius: 50%; background: rgba(166, 227, 161, 0.15); border: 2px solid var(--ctp-green); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; color: var(--ctp-green);">
-                <svg id="victoriaIconSvg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
+            <div class="ar-viewport-placeholder" id="arContainer" style="padding: 0; overflow: hidden; width: 100%; height: 100%; background: #000;">
+                <iframe id="arFrame" src="" style="width: 100%; height: 100%; border: none; background: #000;" allow="camera; microphone; accelerometer; gyroscope"></iframe>
+            </div>
+        </div>
+
+        <!-- ========================================================
+             PANTALLA 6: MENÚ HUB (A COMBATIR ACTIVO Y ANIMADO)
+             ======================================================== -->
+        <div id="screen-6" class="screen-view">
+            <div class="header-logo-wrap">
+                <img src="assets/ui/logo_white.png" class="logo-white-img" alt="NeumoFluX">
             </div>
 
-            <h1 id="victoriaTitulo" style="font-size: 1.55rem; font-weight: 800; color: var(--ctp-green); margin-bottom: 4px;">
-                Desafío completado
-            </h1>
-            <p id="victoriaSubtitulo" style="color: var(--ctp-subtext0); font-size: 0.9rem; margin-bottom: 16px;">
-                Has completado la ronda con éxito.
-            </p>
+            <div class="hub-buttons-wrap">
+                <!-- Botón Realidad Aumentada siempre activo -->
+                <button class="btn-cyber btn-magenta" onclick="goToScreen(4)">
+                    <img src="assets/ui/btn_magenta.png" class="btn-cyber-bg" alt="Botón">
+                    <span class="btn-cyber-content">REALIDAD AUMENTADA</span>
+                </button>
 
-            <div style="display: flex; gap: 10px; margin-bottom: 16px;">
-                <div class="stat-card">
-                    <div class="stat-val" id="resTargets">0</div>
-                    <div class="stat-lbl">Targets</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-val" id="resMinimo">10</div>
-                    <div class="stat-lbl">Mínimo Req.</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-val" id="resVelocidad">0.0</div>
-                    <div class="stat-lbl">Taps / seg</div>
-                </div>
-            </div>
-
-            <div id="victoriaStatusBox" style="background: rgba(166, 227, 161, 0.1); border: 1px solid rgba(166, 227, 161, 0.25); border-radius: 12px; padding: 14px; margin-bottom: 16px;">
-                <div id="victoriaStatusTitle" style="font-size: 1rem; font-weight: 700; color: var(--ctp-green); margin-bottom: 2px;">
-                    Cuadrante Desbloqueado
-                </div>
-                <div id="victoriaStatusDesc" style="font-size: 0.88rem; color: var(--ctp-subtext1);">
-                    Tu parte del mural ha sido descubierta con tu nombre: <strong id="victoriaNombre" style="color:var(--ctp-text)"></strong>
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 10px; margin-bottom: 14px;">
-                <button class="ctp-btn ctp-btn-mauve" style="flex: 1;" onclick="iniciarRonda(tiempoRonda, minTargets)">
-                    Jugar de nuevo
+                <!-- Botón A Combatir ACTIVO (Azul y animado llamativo) -->
+                <button class="btn-cyber btn-combat-active" onclick="goToScreen(7)">
+                    <img src="assets/ui/btn_blue.png" class="btn-cyber-bg" alt="Botón Activo">
+                    <span class="btn-cyber-content" style="color: #ffffff; text-shadow: 0 0 10px #00ffff;">
+                        ⚡ A COMBATIR ⚡
+                    </span>
                 </button>
             </div>
 
-            <div style="font-size: 0.82rem; color: var(--ctp-overlay1);">
-                Esperando la siguiente ronda general...
+            <!-- Personaje con datapad -->
+            <div class="hub-character-wrap">
+                <img src="assets/robot_tablet.png" class="hub-character-img" alt="Super Neumoflux">
             </div>
         </div>
-    <!-- Modal Advertencia de Inactividad (10s antes de desconectar) -->
-    <div id="inactivityWarningModal" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 32px); max-width: 380px; background: var(--ctp-surface0); border: 2px solid var(--ctp-peach); border-radius: 16px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); z-index: 9999; text-align: center;">
-        <div style="font-size: 1.6rem; margin-bottom: 4px;">⚠️</div>
-        <div style="font-weight: 800; color: var(--ctp-peach); font-size: 1.05rem; margin-bottom: 4px;">
-            ¿Sigues ahí?
-        </div>
-        <div style="font-size: 0.85rem; color: var(--ctp-subtext0); margin-bottom: 12px; line-height: 1.4;">
-            Detectamos inactividad. Serás desconectado en <strong id="inactividadSegTxt" style="color: var(--ctp-peach); font-size: 1rem;">10</strong>s y tu cuadrante se reasignará al 1° lugar del ranking.
-        </div>
-        <button class="ctp-btn ctp-btn-peach" style="width: 100%; font-weight: 800;" onclick="registrarActividadUsuario()">
-            ¡Sigo aquí! Continuar en la partida
-        </button>
-    </div>
 
-    <!-- Modal Celebración Segundo Cuadrante Asignado al 1° Lugar -->
-    <div id="bonusCuadrantePopup" style="display: none; position: fixed; inset: 0; background: rgba(17, 17, 27, 0.85); backdrop-filter: blur(8px); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
-        <div style="background: var(--ctp-surface0); border: 2px solid var(--ctp-yellow); border-radius: 20px; padding: 24px; max-width: 420px; width: 100%; text-align: center; box-shadow: 0 16px 40px rgba(0,0,0,0.6);">
-            <div style="font-size: 3rem; margin-bottom: 8px;">👑</div>
-            <div style="font-size: 1.3rem; font-weight: 800; color: var(--ctp-yellow); margin-bottom: 8px;">
-                ¡2° Cuadrante Desbloqueado!
+        <!-- ========================================================
+             PANTALLA 7: TUTORIAL / LISTO PARA EL COMBATE
+             ======================================================== -->
+        <div id="screen-7" class="screen-view">
+            <div class="header-white-bar">
+                <img src="assets/ui/logo_color.png" class="logo-color-img" alt="NeumoFluX">
             </div>
-            <p id="bonusPopupMsg" style="font-size: 0.92rem; color: var(--ctp-text); line-height: 1.5; margin-bottom: 18px;">
-                Al estar en 1° lugar en el ranking, se te ha otorgado un cuadrante adicional tras la desconexión de otro jugador.<br>
-                <strong style="color:var(--ctp-green);">No necesitas jugar de nuevo</strong>: tu cuadrante ya se ha desbloqueado en la pantalla principal con tu nombre.
-            </p>
-            <button class="ctp-btn ctp-btn-mauve" style="width: 100%; font-weight: 800;" onclick="cerrarModalBonus()">
-                ¡Excelente!
+
+            <div class="cyber-panel">
+                <h2 class="cyber-panel-title">
+                    ¡Elimina todos los objetivos en el tiempo disponible!
+                </h2>
+
+                <div class="tutorial-preview-wrap">
+                    <img src="assets/ui/robot_pointing.png" class="tutorial-robot-img" alt="Robot">
+                    
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <div class="tutorial-target-box">
+                            <img src="assets/ui/target_ring.png" class="tutorial-ring-img" alt="Ring">
+                            <img src="assets/mocos/moco_1.png" class="tutorial-moco-img" alt="Moco">
+                        </div>
+                        <div class="tap-prompt-badge">¡TAP!</div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-cyber btn-magenta" onclick="goToScreen(8)">
+                <img src="assets/ui/btn_magenta.png" class="btn-cyber-bg" alt="Botón">
+                <span class="btn-cyber-content">ENTRAR</span>
             </button>
         </div>
+
+        <!-- ========================================================
+             PANTALLA 8: SALA DE ESPERA (EN ESPERA... CICLANDO PUNTOS)
+             ======================================================== -->
+        <div id="screen-8" class="screen-view">
+            <div class="header-white-bar">
+                <img src="assets/ui/logo_color.png" class="logo-color-img" alt="NeumoFluX">
+            </div>
+
+            <div class="cyber-panel">
+                <h2 class="waiting-dots-title" id="enEsperaTitulo">EN ESPERA...</h2>
+
+                <div class="waiting-logo-wrap">
+                    <img src="assets/ui/logo_super.png" style="width: 100%; height: auto;" alt="SUPER">
+                </div>
+
+                <p style="font-size: 0.85rem; color: #b8d4f0; margin-top: 14px; line-height: 1.4;">
+                    El anfitrión iniciará la partida desde la pantalla comunitaria.
+                </p>
+
+                <button class="btn-cyber btn-magenta" style="height: 44px; margin-top: 16px; font-size: 0.88rem;" onclick="intentarIniciarDesdeEspera()">
+                    <img src="assets/ui/btn_magenta.png" class="btn-cyber-bg" alt="Botón">
+                    <span class="btn-cyber-content">Comenzar ahora (Prueba)</span>
+                </button>
+            </div>
+
+            <div style="height: 10px;"></div>
+        </div>
+
+        <!-- ========================================================
+             PANTALLA 9: EL JUEGO ACTIVO (MOCOS, TIEMPO, PUNTOS)
+             ======================================================== -->
+        <div id="screen-9" class="screen-view">
+            <!-- Barra superior: Salir y Placa de nombre truncado -->
+            <div class="game-hud-top">
+                <button class="btn-salir-hud" onclick="abandonarJuego()">
+                    ◀ SALIR
+                </button>
+                <div class="player-pill-hud" id="hudPlayerName">
+                    MARTA VA...
+                </div>
+            </div>
+
+            <!-- Sub barra: Puntos, Tiempo, Logo -->
+            <div class="game-hud-sub">
+                <div class="hud-score-val" id="hudScore">0pts</div>
+                <div class="hud-timer-val" id="hudTimer">00:59</div>
+                <img src="assets/ui/logo_super.png" class="hud-badge-small" alt="SUPER">
+            </div>
+
+            <!-- Área de juego interactiva -->
+            <div class="game-arena" id="gameArena">
+                <!-- Los mocos se generan dinámicamente aquí -->
+                <img src="assets/ui/robot_waving.png" class="game-cheering-robot" id="gameCheeringRobot" alt="Robot Animando">
+            </div>
+        </div>
+
+        <!-- ========================================================
+             PANTALLA 10: TIEMPO TERMINADO (PUNTAJE FINAL)
+             ======================================================== -->
+        <div id="screen-10" class="screen-view">
+            <!-- Barra superior idéntica a pantalla 9 -->
+            <div class="game-hud-top">
+                <button class="btn-salir-hud" onclick="goToScreen(combateHabilitado ? 6 : 3)">
+                    ◀ SALIR
+                </button>
+                <div class="player-pill-hud" id="hudFinalPlayerName">
+                    MARTA VA...
+                </div>
+            </div>
+
+            <div class="game-hud-sub">
+                <div class="hud-score-val" id="hudFinalScoreTop">100pts</div>
+                <div class="hud-timer-val" style="color: #ff5577;">00:00</div>
+                <img src="assets/ui/logo_super.png" class="hud-badge-small" style="opacity: 0.7;" alt="SUPER">
+            </div>
+
+            <!-- Panel de Tiempo Terminado -->
+            <div class="cyber-panel">
+                <h2 class="cyber-panel-title" style="color: #00f0ff;">
+                    TIEMPO TERMINADO
+                </h2>
+
+                <div class="score-big-box">
+                    <div class="score-big-num" id="finalScoreVal">100 pts</div>
+                    <div class="score-sub-label" id="finalMocosHit">10 mocos eliminados</div>
+                </div>
+
+                <button class="btn-cyber btn-magenta" onclick="finalizarJuego()">
+                    <img src="assets/ui/btn_magenta.png" class="btn-cyber-bg" alt="Botón">
+                    <span class="btn-cyber-content">¡FINALIZAR!</span>
+                </button>
+            </div>
+
+            <!-- Robot celebrando abajo -->
+            <div class="final-celebration-wrap">
+                <img src="assets/ui/robot_waving.png" class="final-celebration-robot" alt="Robot Victorioso">
+            </div>
+        </div>
+
     </div>
 
-    <!-- ==========================================
-         LÓGICA DEL JUEGO Y CLIENTE MQTT
-         ========================================== -->
-    <script>
-        // Configuración de juego
-        let nombreUsuario = '';
-        let colorUsuario = '#cba6f7';
-        let tiempoRonda = 15; // N segundos de duración
-        let minTargets = 10;  // mínimo de targets para desbloquear cuadrante
-        let targetsDestruidos = 0;
-        let tiempoInicio = 0;
-        let timerInterval = null;
-        let juegoActivo = false;
-        let audioActivo = true;
-
-        // Configuración y control de inactividad
-        let timeoutInactividad = 30; // segundos de inactividad tolerados
-        let ultimaActividad = Date.now();
-        let avisoInactividadMostrado = false;
-        let checkInactividadInterval = null;
-        let heartbeatInterval = null;
-
-        function registrarActividadUsuario() {
-            ultimaActividad = Date.now();
-            if (avisoInactividadMostrado) {
-                ocultarAdvertenciaInactividad();
-            }
-        }
-
-        ['pointerdown', 'touchstart', 'mousedown', 'keydown', 'scroll'].forEach(evt => {
-            window.addEventListener(evt, registrarActividadUsuario, { passive: true });
-        });
-
-        function mostrarAdvertenciaInactividad(segRestantes) {
-            avisoInactividadMostrado = true;
-            const modal = document.getElementById('inactivityWarningModal');
-            const txt = document.getElementById('inactividadSegTxt');
-            if (txt) txt.textContent = segRestantes;
-            if (modal) modal.style.display = 'block';
-        }
-
-        function ocultarAdvertenciaInactividad() {
-            avisoInactividadMostrado = false;
-            const modal = document.getElementById('inactivityWarningModal');
-            if (modal) modal.style.display = 'none';
-        }
-
-        function mostrarModalCuadranteBonus(htmlContent) {
-            const popup = document.getElementById('bonusCuadrantePopup');
-            const msg = document.getElementById('bonusPopupMsg');
-            if (msg && htmlContent) msg.innerHTML = htmlContent;
-            if (popup) popup.style.display = 'flex';
-        }
-
-        function cerrarModalBonus() {
-            const popup = document.getElementById('bonusCuadrantePopup');
-            if (popup) popup.style.display = 'none';
-        }
-
-        function desconectarPorInactividad() {
-            ocultarAdvertenciaInactividad();
-            if (nombreUsuario && cliente && cliente.connected) {
-                cliente.publish(topicoSecreto, JSON.stringify({
-                    accion: 'jugador_desconectado',
-                    id: jugadorId,
-                    nombre: nombreUsuario,
-                    motivo: 'inactividad'
-                }));
-            }
-
-            // Limpiar juego
-            juegoActivo = false;
-            if (timerInterval) clearInterval(timerInterval);
-
-            // Regresar a pantalla de registro con aviso
-            document.getElementById('juego').style.display = 'none';
-            document.getElementById('espera').style.display = 'none';
-            document.getElementById('victoria').style.display = 'none';
-            document.getElementById('gameStatsGroup').style.display = 'none';
-            document.getElementById('headerProgress').style.display = 'none';
-            document.querySelectorAll('.circulo').forEach(c => c.remove());
-
-            const aviso = document.getElementById('inactividadAvisoDesconexion');
-            if (aviso) aviso.style.display = 'block';
-
-            document.getElementById('registro').style.display = 'block';
-            nombreUsuario = '';
-            sound.playWarning();
-        }
-
-        // Heartbeat y Watchdog del cliente
-        function iniciarMonitoreoInactividad() {
-            if (heartbeatInterval) clearInterval(heartbeatInterval);
-            heartbeatInterval = setInterval(() => {
-                if (nombreUsuario && cliente && cliente.connected) {
-                    cliente.publish(topicoSecreto, JSON.stringify({
-                        accion: 'heartbeat',
-                        id: jugadorId,
-                        nombre: nombreUsuario,
-                        color: colorUsuario
-                    }));
-                }
-            }, 7000);
-
-            if (checkInactividadInterval) clearInterval(checkInactividadInterval);
-            checkInactividadInterval = setInterval(() => {
-                if (!nombreUsuario || timeoutInactividad <= 0) return;
-
-                const transcurrido = (Date.now() - ultimaActividad) / 1000;
-                const tiempoAviso = Math.max(5, timeoutInactividad - 10);
-
-                if (transcurrido >= timeoutInactividad) {
-                    desconectarPorInactividad();
-                } else if (transcurrido >= tiempoAviso) {
-                    const restantes = Math.max(1, Math.ceil(timeoutInactividad - transcurrido));
-                    mostrarAdvertenciaInactividad(restantes);
-                } else {
-                    if (avisoInactividadMostrado) {
-                        ocultarAdvertenciaInactividad();
-                    }
-                }
-            }, 1000);
-        }
-        iniciarMonitoreoInactividad();
-
-        // Identificador persistente para el dispositivo
-        let jugadorId = localStorage.getItem('game_user_id');
-        if (!jugadorId) {
-            jugadorId = 'p_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
-            localStorage.setItem('game_user_id', jugadorId);
-        }
-
-        // Paleta de colores Catppuccin para los orbes interactivos
-        const catppuccinColors = [
-            { bg: '#cba6f7', shadow: 'rgba(203, 166, 247, 0.5)', text: '#11111b' }, // Mauve
-            { bg: '#fab387', shadow: 'rgba(250, 179, 135, 0.5)', text: '#11111b' }, // Peach
-            { bg: '#a6e3a1', shadow: 'rgba(166, 227, 161, 0.5)', text: '#11111b' }, // Green
-            { bg: '#74c7ec', shadow: 'rgba(116, 199, 236, 0.5)', text: '#11111b' }, // Sapphire
-            { bg: '#f5c2e7', shadow: 'rgba(245, 194, 231, 0.5)', text: '#11111b' }, // Pink
-            { bg: '#94e2d5', shadow: 'rgba(148, 226, 213, 0.5)', text: '#11111b' }  // Teal
-        ];
-
-        // 1. Conexión MQTT
-        const topicoSecreto = 'proyecto_ar_evento_juego_1a2b3c_lpz';
-        const cliente = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
-            keepalive: 60,
-            reconnectPeriod: 2000,
-            clean: true
-        });
-
-        cliente.on('connect', () => {
-            setConnectionStatus('online', 'En línea');
-            cliente.subscribe(topicoSecreto, (err) => {
-                if (!err && nombreUsuario) {
-                    cliente.publish(topicoSecreto, JSON.stringify({
-                        accion: 'jugador_unido',
-                        id: jugadorId,
-                        nombre: nombreUsuario,
-                        color: colorUsuario
-                    }));
-                }
-            });
-        });
-
-        cliente.on('reconnect', () => setConnectionStatus('connecting', 'Reconectando'));
-        cliente.on('offline', () => setConnectionStatus('offline', 'Sin conexión'));
-        cliente.on('error', () => setConnectionStatus('offline', 'Error'));
-
-        function setConnectionStatus(state, label) {
-            const statusDot = document.getElementById('statusDot');
-            const statusText = document.getElementById('statusText');
-            const connStatus = document.getElementById('connStatus');
-
-            statusDot.className = 'status-dot ' + state;
-            statusText.textContent = label;
-
-            connStatus.className = 'ctp-badge ' + (
-                state === 'online' ? 'ctp-badge-green' :
-                state === 'connecting' ? 'ctp-badge-yellow' : 'ctp-badge-red'
-            );
-        }
-
-        // Obtener iniciales limpias de un nombre
-        function obtenerIniciales(texto) {
-            if (!texto) return 'P';
-            const partes = texto.trim().split(/\s+/);
-            if (partes.length === 1) {
-                return partes[0].substring(0, 2).toUpperCase();
-            }
-            return (partes[0][0] + partes[1][0]).toUpperCase();
-        }
-
-        function actualizarIniciales(val) {
-            const iniciales = obtenerIniciales(val);
-            document.getElementById('avatarPreview').textContent = iniciales;
-        }
-
-        function elegirColor(hex, el) {
-            colorUsuario = hex;
-            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
-            el.classList.add('selected');
-            document.getElementById('avatarPreview').style.background = hex;
-            document.getElementById('avatarPreview').style.boxShadow = `0 4px 20px ${hex}66`;
-            sound.playClick();
-        }
-
-        function actualizarTextosReglas() {
-            const tiempoEl = document.getElementById('esperaTiempoTxt');
-            const minEl = document.getElementById('esperaMinTxt');
-            if (tiempoEl) tiempoEl.textContent = `${tiempoRonda}s`;
-            if (minEl) minEl.textContent = `${minTargets} targets`;
-        }
-
-        // Cargar nombre guardado en LocalStorage
-        window.addEventListener('DOMContentLoaded', () => {
-            const saved = localStorage.getItem('game_user_name');
-            const input = document.getElementById('nombre');
-            if (saved) {
-                input.value = saved;
-                actualizarIniciales(saved);
-            }
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') registrarse();
-            });
-            actualizarTextosReglas();
-        });
-
-        // Registrarse al juego
-        function registrarse() {
-            const input = document.getElementById('nombre');
-            nombreUsuario = input.value.trim();
-            if (!nombreUsuario) {
-                input.focus();
-                input.style.borderColor = 'var(--ctp-red)';
-                setTimeout(() => input.style.borderColor = '', 1500);
-                return;
-            }
-
-            localStorage.setItem('game_user_name', nombreUsuario);
-            sound.init();
-            sound.playClick();
-
-            const aviso = document.getElementById('inactividadAvisoDesconexion');
-            if (aviso) aviso.style.display = 'none';
-            ultimaActividad = Date.now();
-
-            document.getElementById('registro').style.display = 'none';
-            document.getElementById('espera').style.display = 'block';
-            document.getElementById('esperaNombre').textContent = nombreUsuario;
-            actualizarTextosReglas();
-            
-            const esperaAvatar = document.getElementById('esperaAvatar');
-            esperaAvatar.textContent = obtenerIniciales(nombreUsuario);
-            esperaAvatar.style.background = colorUsuario;
-
-            // Notificar al broker
-            if (cliente.connected) {
-                cliente.publish(topicoSecreto, JSON.stringify({
-                    accion: 'jugador_unido',
-                    id: jugadorId,
-                    nombre: nombreUsuario,
-                    color: colorUsuario
-                }));
-            }
-        }
-
-        // Salir de la sala voluntariamente
-        function salirDelLobby() {
-            ocultarAdvertenciaInactividad();
-            if (cliente && cliente.connected && nombreUsuario) {
-                cliente.publish(topicoSecreto, JSON.stringify({
-                    accion: 'jugador_desconectado',
-                    id: jugadorId
-                }));
-            }
-            nombreUsuario = '';
-            localStorage.removeItem('game_user_name');
-            document.getElementById('nombre').value = '';
-            document.getElementById('espera').style.display = 'none';
-            document.getElementById('registro').style.display = 'block';
-            sound.playClick();
-        }
-
-        // Notificar al servidor si el participante cierra la ventana
-        const notificarSalida = () => {
-            if (nombreUsuario && cliente && cliente.connected) {
-                cliente.publish(topicoSecreto, JSON.stringify({
-                    accion: 'jugador_desconectado',
-                    id: jugadorId
-                }));
-            }
-        };
-        window.addEventListener('beforeunload', notificarSalida);
-        window.addEventListener('pagehide', notificarSalida);
-
-        // Escuchar comandos del Administrador y la Pantalla
-        cliente.on('message', (topic, mensaje) => {
-            try {
-                const datos = JSON.parse(mensaje.toString());
-
-                if (datos.accion === 'ping_jugadores') {
-                    if (nombreUsuario && cliente.connected) {
-                        cliente.publish(topicoSecreto, JSON.stringify({
-                            accion: 'jugador_unido',
-                            id: jugadorId,
-                            nombre: nombreUsuario,
-                            color: colorUsuario
-                        }));
-                    }
-                } else if (datos.accion === 'iniciar_juego') {
-                    tiempoRonda = datos.tiempoRonda || 15;
-                    minTargets = datos.minTargets || (datos.taps || 10);
-                    if (datos.timeoutInactividad !== undefined) {
-                        timeoutInactividad = Number(datos.timeoutInactividad);
-                    }
-                    ultimaActividad = Date.now();
-                    actualizarTextosReglas();
-
-                    if (nombreUsuario && (document.getElementById('espera').style.display === 'block' || document.getElementById('victoria').style.display === 'block')) {
-                        iniciarRonda(tiempoRonda, minTargets);
-                    }
-                } else if (datos.accion === 'config_actualizada') {
-                    if (datos.timeoutInactividad !== undefined) timeoutInactividad = Number(datos.timeoutInactividad);
-                    if (datos.tiempoRonda !== undefined) tiempoRonda = Number(datos.tiempoRonda);
-                    if (datos.minTargets !== undefined) minTargets = Number(datos.minTargets);
-                    actualizarTextosReglas();
-                } else if (datos.accion === 'cuadrante_reasignado') {
-                    // Notificar si a este jugador se le asignó un 2do cuadrante por desconexión / inactividad
-                    if (datos.idGanador === jugadorId) {
-                        sound.playBonus();
-                        if (navigator.vibrate) navigator.vibrate([100, 50, 150]);
-
-                        const exDueno = datos.nombreExDueno || 'otro participante';
-                        const motivoTxt = datos.motivo === 'inactividad' ? 'por inactividad' : 'de la sala';
-                        const bannerTxt = `¡Felicidades! Al mantener el 1° lugar en el ranking, se te asignó el cuadrante de <strong>${exDueno}</strong> (desconectado ${motivoTxt}).<br><br><span style="color:var(--ctp-green); font-weight:700;">✨ No necesitas jugar de nuevo: tu cuadrante ya fue desbloqueado en la pantalla principal con tu nombre.</span>`;
-
-                        const banner = document.getElementById('bonusCuadranteBanner');
-                        if (banner) {
-                            banner.style.display = 'block';
-                            document.getElementById('bonusCuadranteTxt').innerHTML = bannerTxt;
-                        }
-                        mostrarModalCuadranteBonus(bannerTxt);
-                    }
-                } else if (datos.accion === 'jugador_desconectado') {
-                    if (datos.id === jugadorId && datos.motivo === 'inactividad') {
-                        desconectarPorInactividad();
-                    }
-                } else if (datos.accion === 'reiniciar_juego') {
-                    if (nombreUsuario) {
-                        reiniciarEstadoJugador();
-                    }
-                } else if (datos.accion === 'desconectar_todos') {
-                    juegoActivo = false;
-                    if (timerInterval) clearInterval(timerInterval);
-                    nombreUsuario = '';
-                    localStorage.removeItem('game_user_name');
-                    document.getElementById('nombre').value = '';
-                    document.getElementById('juego').style.display = 'none';
-                    document.getElementById('espera').style.display = 'none';
-                    document.getElementById('victoria').style.display = 'none';
-                    document.getElementById('registro').style.display = 'block';
-                    document.getElementById('gameStatsGroup').style.display = 'none';
-                    document.getElementById('headerProgress').style.display = 'none';
-                    document.querySelectorAll('.circulo').forEach(c => c.remove());
-                    sound.playClick();
-                }
-            } catch (e) {
-                console.error('Error parseando mensaje MQTT:', e);
-            }
-        });
-
-        // Iniciar una ronda de juego con timer de N segundos y mínimo de targets
-        function iniciarRonda(tiempoConfig, minConfig) {
-            tiempoRonda = tiempoConfig || 15;
-            minTargets = minConfig || 10;
-            targetsDestruidos = 0;
-            juegoActivo = true;
-
-            actualizarTextosReglas();
-
-            document.getElementById('registro').style.display = 'none';
-            document.getElementById('espera').style.display = 'none';
-            document.getElementById('victoria').style.display = 'none';
-            document.getElementById('bonusCuadranteBanner').style.display = 'none';
-            const juegoDiv = document.getElementById('juego');
-            juegoDiv.style.display = 'block';
-
-            // Activar HUD en el header unificado (cero superposición)
-            document.getElementById('gameStatsGroup').style.display = 'flex';
-            document.getElementById('headerProgress').style.display = 'block';
-            document.getElementById('contador').textContent = targetsDestruidos;
-            document.getElementById('contador').style.color = 'var(--ctp-mauve)';
-            document.getElementById('contadorMinLabel').innerHTML = `/ mín. ${minTargets}`;
-            document.getElementById('cronometro').textContent = tiempoRonda.toFixed(1) + 's';
-            document.getElementById('cronometro').style.color = 'var(--ctp-mauve)';
-            document.getElementById('progresoJuego').style.width = '100%';
-
-            document.querySelectorAll('.circulo').forEach(c => c.remove());
-
-            tiempoInicio = Date.now();
-            if (timerInterval) clearInterval(timerInterval);
-
-            let tickWarning = false;
-
-            timerInterval = setInterval(() => {
-                const transcurrido = (Date.now() - tiempoInicio) / 1000;
-                const restante = Math.max(0, tiempoRonda - transcurrido);
-
-                document.getElementById('cronometro').textContent = restante.toFixed(1) + 's';
-
-                // Alerta en los últimos 4 segundos
-                if (restante <= 4.0) {
-                    document.getElementById('cronometro').style.color = 'var(--ctp-red)';
-                    if (!tickWarning && restante <= 3.0) {
-                        sound.playWarning();
-                        tickWarning = true;
-                    }
-                } else {
-                    document.getElementById('cronometro').style.color = 'var(--ctp-mauve)';
-                }
-
-                // Progreso visual del tiempo restante (100% a 0%)
-                const pctTiempo = Math.max(0, Math.min(100, (restante / tiempoRonda) * 100));
-                document.getElementById('progresoJuego').style.width = pctTiempo + '%';
-
-                if (restante <= 0) {
-                    finalizarJuego();
-                }
-            }, 50);
-
-            sound.playStart();
-            generarCirculo();
-        }
-
-        // Generar un orbe interactivo en zona segura
-        function generarCirculo() {
-            if (!juegoActivo) return;
-
-            const juegoDiv = document.getElementById('juego');
-            document.querySelectorAll('.circulo').forEach(c => c.remove());
-
-            const circulo = document.createElement('div');
-            circulo.className = 'circulo';
-
-            const color = catppuccinColors[Math.floor(Math.random() * catppuccinColors.length)];
-            circulo.style.backgroundColor = color.bg;
-            circulo.style.color = color.text;
-            circulo.style.boxShadow = `0 10px 30px ${color.shadow}, inset 0 2px 10px rgba(255,255,255,0.6)`;
-
-            // Coordenadas seguras para no acercarse al header ni a los bordes
-            const posX = Math.floor(Math.random() * 68 + 16); // 16% a 84%
-            const posY = Math.floor(Math.random() * 58 + 22); // 22% a 80% (espacio seguro bajo el header)
-            circulo.style.left = posX + '%';
-            circulo.style.top = posY + '%';
-
-            // Mostrar el conteo progresivo de targets en el orbe
-            circulo.textContent = targetsDestruidos + 1;
-
-            let touched = false;
-            const handleTap = (e) => {
-                if (touched || !juegoActivo) return;
-                touched = true;
-                e.preventDefault();
-                e.stopPropagation();
-
-                crearOnda(circulo.offsetLeft, circulo.offsetTop, color.bg);
-
-                targetsDestruidos++;
-                document.getElementById('contador').textContent = targetsDestruidos;
-
-                // Feedback al cruzar el umbral mínimo
-                if (targetsDestruidos === minTargets) {
-                    sound.playBonus();
-                    document.getElementById('contador').style.color = 'var(--ctp-green)';
-                    document.getElementById('contadorMinLabel').innerHTML = `/ mín. ${minTargets} <span style="color:var(--ctp-green); font-weight:800;">✔</span>`;
-                } else {
-                    sound.playTap(targetsDestruidos, minTargets);
-                }
-
-                if (navigator.vibrate) {
-                    navigator.vibrate(35);
-                }
-
-                circulo.remove();
-                generarCirculo();
-            };
-
-            circulo.addEventListener('pointerdown', handleTap);
-            juegoDiv.appendChild(circulo);
-        }
-
-        function crearOnda(x, y, colorHex) {
-            const ripple = document.createElement('div');
-            ripple.className = 'tap-ripple';
-            ripple.style.left = x + 'px';
-            ripple.style.top = y + 'px';
-            ripple.style.border = `3px solid ${colorHex}`;
-            document.getElementById('juego').appendChild(ripple);
-            setTimeout(() => ripple.remove(), 420);
-        }
-
-        function finalizarJuego() {
-            juegoActivo = false;
-            if (timerInterval) clearInterval(timerInterval);
-
-            // Ocultar métricas del header durante la vista de victoria
-            document.getElementById('gameStatsGroup').style.display = 'none';
-            document.getElementById('headerProgress').style.display = 'none';
-            document.querySelectorAll('.circulo').forEach(c => c.remove());
-
-            const tiempoTotal = parseFloat(tiempoRonda).toFixed(1);
-            const velocidad = (targetsDestruidos / tiempoRonda).toFixed(1);
-            const califica = (targetsDestruidos >= minTargets);
-
-            const payload = JSON.stringify({
-                accion: 'juego_terminado',
-                id: jugadorId,
-                nombre: nombreUsuario,
-                color: colorUsuario,
-                targets: targetsDestruidos,
-                califica: califica,
-                tiempo: parseFloat(tiempoTotal)
-            });
-            cliente.publish(topicoSecreto, payload);
-
-            document.getElementById('juego').style.display = 'none';
-            document.getElementById('victoria').style.display = 'block';
-            document.getElementById('victoriaNombre').textContent = nombreUsuario;
-            document.getElementById('resTargets').textContent = targetsDestruidos;
-            document.getElementById('resMinimo').textContent = minTargets;
-            document.getElementById('resVelocidad').textContent = velocidad;
-
-            const iconBox = document.getElementById('victoriaIconBox');
-            const iconSvg = document.getElementById('victoriaIconSvg');
-            const titulo = document.getElementById('victoriaTitulo');
-            const subtitulo = document.getElementById('victoriaSubtitulo');
-            const statusBox = document.getElementById('victoriaStatusBox');
-            const statusTitle = document.getElementById('victoriaStatusTitle');
-            const statusDesc = document.getElementById('victoriaStatusDesc');
-
-            if (califica) {
-                sound.playVictory();
-                lanzarConfetti();
-
-                iconBox.style.background = 'rgba(166, 227, 161, 0.15)';
-                iconBox.style.borderColor = 'var(--ctp-green)';
-                iconBox.style.color = 'var(--ctp-green)';
-                iconSvg.innerHTML = '<polyline points="20 6 9 17 4 12"></polyline>';
-
-                titulo.textContent = '¡Desafío Logrado!';
-                titulo.style.color = 'var(--ctp-green)';
-                subtitulo.textContent = `Destruiste ${targetsDestruidos} targets en ${tiempoRonda}s (Superaste el mínimo de ${minTargets}).`;
-
-                statusBox.style.background = 'rgba(166, 227, 161, 0.1)';
-                statusBox.style.borderColor = 'rgba(166, 227, 161, 0.3)';
-                statusTitle.textContent = '🟩 Cuadrante Desbloqueado';
-                statusTitle.style.color = 'var(--ctp-green)';
-                statusDesc.innerHTML = `Tu parte del mural ha sido descubierta con tu nombre: <strong style="color:var(--ctp-text)">${nombreUsuario}</strong>`;
-            } else {
-                sound.playWarning();
-
-                iconBox.style.background = 'rgba(250, 179, 135, 0.15)';
-                iconBox.style.borderColor = 'var(--ctp-peach)';
-                iconBox.style.color = 'var(--ctp-peach)';
-                iconSvg.innerHTML = '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>';
-
-                titulo.textContent = 'Tiempo Concluido';
-                titulo.style.color = 'var(--ctp-peach)';
-                const faltaron = minTargets - targetsDestruidos;
-                subtitulo.textContent = `Destruiste ${targetsDestruidos} targets en ${tiempoRonda}s (Faltaron ${faltaron} para el mínimo).`;
-
-                statusBox.style.background = 'rgba(250, 179, 135, 0.1)';
-                statusBox.style.borderColor = 'rgba(250, 179, 135, 0.3)';
-                statusTitle.textContent = '⚠️ Mínimo No Alcanzado';
-                statusTitle.style.color = 'var(--ctp-peach)';
-                statusDesc.innerHTML = `No alcanzaste el mínimo requerido de <strong>${minTargets} targets</strong> para desbloquear un cuadrante en esta ronda.`;
-            }
-        }
-
-        function reiniciarEstadoJugador() {
-            juegoActivo = false;
-            if (timerInterval) clearInterval(timerInterval);
-            document.getElementById('gameStatsGroup').style.display = 'none';
-            document.getElementById('headerProgress').style.display = 'none';
-            document.getElementById('juego').style.display = 'none';
-            document.getElementById('victoria').style.display = 'none';
-            document.getElementById('bonusCuadranteBanner').style.display = 'none';
-            document.getElementById('espera').style.display = 'block';
-            document.querySelectorAll('.circulo').forEach(c => c.remove());
-            actualizarTextosReglas();
-        }
-
-        function testTap(btn) {
-            sound.init();
-            sound.playTap(5, minTargets);
-            if (navigator.vibrate) navigator.vibrate(30);
-            btn.textContent = 'Toque registrado';
-            setTimeout(() => {
-                btn.textContent = 'Probar toque y sonido';
-            }, 1000);
-        }
-
-        // Alternar audio con SVG
-        function toggleAudio() {
-            audioActivo = sound.toggle();
-            const icon = document.getElementById('audioIcon');
-            if (audioActivo) {
-                icon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>';
-            } else {
-                icon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line>';
-            }
-        }
-
-        // Confetti Canvas Animation
-        function lanzarConfetti() {
-            const canvas = document.getElementById('confettiCanvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-
-            const particles = [];
-            const colors = ['#cba6f7', '#a6e3a1', '#fab387', '#74c7ec', '#f5c2e7', '#f9e2af'];
-
-            for (let i = 0; i < 90; i++) {
-                particles.push({
-                    x: canvas.width / 2,
-                    y: canvas.height / 2,
-                    vx: (Math.random() - 0.5) * 16,
-                    vy: (Math.random() - 0.8) * 18,
-                    size: Math.random() * 8 + 4,
-                    color: colors[Math.floor(Math.random() * colors.length)],
-                    rot: Math.random() * 360,
-                    rotSpeed: (Math.random() - 0.5) * 10,
-                    alpha: 1
-                });
-            }
-
-            let animationFrame;
-            function render() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                let alive = false;
-
-                particles.forEach(p => {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    p.vy += 0.35;
-                    p.rot += p.rotSpeed;
-                    p.alpha -= 0.012;
-
-                    if (p.alpha > 0) {
-                        alive = true;
-                        ctx.save();
-                        ctx.globalAlpha = p.alpha;
-                        ctx.translate(p.x, p.y);
-                        ctx.rotate((p.rot * Math.PI) / 180);
-                        ctx.fillStyle = p.color;
-                        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-                        ctx.restore();
-                    }
-                });
-
-                if (alive) {
-                    animationFrame = requestAnimationFrame(render);
-                } else {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    cancelAnimationFrame(animationFrame);
-                }
-            }
-
-            render();
-        }
-    </script>
+    <!-- Notificación Flotante Toast -->
+    <div id="cyberToast" class="cyber-toast"></div>
+
+    <!-- ========================================================
+         BARRA FLOTANTE DE DESARROLLADOR / ACCESO RÁPIDO A PANTALLAS
+         ======================================================== -->
+    <div class="dev-nav-bar" id="devNavBar">
+        <span style="font-size: 0.68rem; color: #74c7ec; font-weight: 800; margin-right: 2px;">DEV:</span>
+        <button class="dev-nav-btn active" onclick="goToScreen(0)">P0</button>
+        <button class="dev-nav-btn" onclick="goToScreen(1)">P1</button>
+        <button class="dev-nav-btn" onclick="goToScreen(2)">P2</button>
+        <button class="dev-nav-btn" onclick="goToScreen(3)">P3</button>
+        <button class="dev-nav-btn" onclick="goToScreen(4)">P4</button>
+        <button class="dev-nav-btn" onclick="goToScreen(5)">P5</button>
+        <button class="dev-nav-btn" onclick="goToScreen(6)">P6</button>
+        <button class="dev-nav-btn" onclick="goToScreen(7)">P7</button>
+        <button class="dev-nav-btn" onclick="goToScreen(8)">P8</button>
+        <button class="dev-nav-btn" onclick="goToScreen(9)">P9</button>
+        <button class="dev-nav-btn" onclick="goToScreen(10)">P10</button>
+        <button class="dev-nav-btn dev-nav-toggle" id="btnToggleCombat" onclick="toggleCombateAdmin()">⚡ Combate</button>
+        <button class="dev-nav-btn" style="background: rgba(255,255,255,0.06);" onclick="toggleDevBar()">✕</button>
+    </div>
+
+    <!-- ========================================================
+         LÓGICA DEL JUEGO, ANIMACIONES, MQTT Y ENDPOINTS
+         ======================================================== -->
+    <script src="index.js"></script>
 </body>
 </html>

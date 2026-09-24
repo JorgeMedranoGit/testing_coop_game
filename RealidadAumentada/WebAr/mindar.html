@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindAR</title>
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.2.0/dist/aframe-extras.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+<script>if(location.search.includes('debug')) eruda.init();</script>
+</head>
+<body style="margin: 0; overflow: hidden;">
+<a href="javascript:void(0)" onclick="if(window.parent && window.parent !== window && window.parent.volverDeAR){ window.parent.volverDeAR(); } else { window.location.href='../../index.html'; }" style="position: absolute; top: 15px; left: 15px; background: rgba(0,10,30,0.85); color: #00f0ff; border: 1.5px solid #00f0ff; padding: 8px 18px; border-radius: 20px; text-decoration: none; font-family: sans-serif; font-size: 13px; font-weight: bold; z-index: 99999; box-shadow: 0 0 12px rgba(0,240,255,0.4); cursor: pointer;">◀ VOLVER</a>
+
+<a-scene mindar-image="imageTargetSrc: ./targets.mind;" color-space="sRGB" renderer="colorManagement: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+    <a-assets>
+      <a-asset-item id="cesium" src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMan/glTF-Binary/CesiumMan.glb"></a-asset-item>
+    </a-assets>
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <!-- Target 0: Neumoflux 200 (Sobre de Medicamento Escaneado) -->
+    <a-entity mindar-image-target="targetIndex: 0">
+      <!-- Modelo 3D CesiumMan -->
+      <a-gltf-model src="#cesium" position="0 -0.15 0.1" scale="0.25 0.25 0.25" rotation="90 0 0" animation-mixer></a-gltf-model>
+      
+      <!-- Panel de Información Farmacológica Holográfico -->
+      <a-entity position="0 0.35 0.08" rotation="0 0 0">
+        <a-plane width="0.9" height="0.32" color="#18181b" opacity="0.92" material="shader: flat">
+          <a-text value="Neumoflux (R) 200" align="center" color="#c084fc" width="2.2" position="0 0.08 0.02" font="kelsonsans"></a-text>
+          <a-text value="Acetilcisteina 200 mg - Mucolitico" align="center" color="#ffffff" width="1.6" position="0 0.01 0.02"></a-text>
+          <a-text value="Granulado oral - Laboratorios Bago" align="center" color="#a1a1aa" width="1.4" position="0 -0.06 0.02"></a-text>
+        </a-plane>
+      </a-entity>
+    </a-entity>
+</a-scene>
+</body>
+</html>

@@ -238,6 +238,22 @@
                     Iniciar Dinámica
                 </button>
 
+                <!-- Control directo de A Combatir vía MQTT -->
+                <div style="background: rgba(0, 195, 255, 0.1); border: 1.5px solid #00c3ff; border-radius: 10px; padding: 12px; margin-bottom: 12px;">
+                    <div style="font-size: 0.8rem; font-weight: 800; color: #00f0ff; text-transform: uppercase; margin-bottom: 8px; display: flex; justify-content: space-between;">
+                        <span>⚡ Control "A Combatir" (P3 / P6)</span>
+                        <span id="badgeEstadoCombate" class="ctp-badge ctp-badge-yellow">INACTIVO</span>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="ctp-btn ctp-btn-sapphire" style="flex: 1; font-weight: 800;" onclick="toggleCombate(true)">
+                            ⚡ Habilitar (Azul)
+                        </button>
+                        <button class="ctp-btn ctp-btn-outline" style="flex: 1; color: var(--ctp-subtext1);" onclick="toggleCombate(false)">
+                            🔒 Deshabilitar
+                        </button>
+                    </div>
+                </div>
+
                 <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                     <button class="ctp-btn ctp-btn-peach" style="flex: 1;" onclick="reiniciarJuego()">
                         Reiniciar Mural
@@ -341,10 +357,17 @@
                             Prioridad de reasignación automática al 1° lugar (hasta 2 cuadrantes)
                         </p>
                     </div>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <span class="ctp-badge ctp-badge-mauve" id="adminRankingInfoBadge">
+                        Ronda: 15s | Mín: 10 targets
+                    </span>
+                    <button class="ctp-btn ctp-btn-outline ctp-btn-sm" onclick="exportarParticipantesCSV()" style="color: var(--ctp-green); border-color: rgba(166, 227, 161, 0.4); padding: 4px 10px; font-weight: 700;">
+                        📥 Exportar CSV
+                    </button>
+                    <button class="ctp-btn ctp-btn-outline ctp-btn-sm" onclick="exportarParticipantesJSON()" style="color: var(--ctp-sapphire); border-color: rgba(116, 199, 236, 0.4); padding: 4px 10px; font-weight: 700;">
+                        💾 Exportar JSON
+                    </button>
                 </div>
-                <span class="ctp-badge ctp-badge-mauve" id="adminRankingInfoBadge">
-                    Ronda: 15s | Mín: 10 targets
-                </span>
             </div>
 
             <div style="overflow-x: auto;">
@@ -395,12 +418,41 @@
     <!-- Script de Lógica del Administrador -->
     <script>
         const topicoSecreto = 'proyecto_ar_evento_juego_1a2b3c_lpz';
+        let combateHabilitado = false;
         let configuracionTiempo = 15;
         let configuracionMinTargets = 10;
         let configTimeoutInactividad = 30; // segundos de inactividad
-        let jugadoresMap = new Map(); // id -> { id, nombre, color, targets, califica, tiempo, cuadrantes, conectado, timestamp, ultimaActividad }
+        let jugadoresMap = new Map(); // id -> { id, nombre, carnet, whatsapp, color, targets, califica, tiempo, cuadrantes, conectado, timestamp, ultimaActividad }
         let bloquesRevelados = 0;
         let totalBloquesDinámicos = 1;
+
+        // Restaurar estado guardado localmente (sin servidor Node)
+        try {
+            const estadoGuardado = localStorage.getItem('admin_estado_combate');
+            if (estadoGuardado !== null) {
+                combateHabilitado = estadoGuardado === '1';
+                setTimeout(() => {
+                    const badge = document.getElementById('badgeEstadoCombate');
+                    if (badge) {
+                        badge.className = 'ctp-badge ' + (combateHabilitado ? 'ctp-badge-green' : 'ctp-badge-yellow');
+                        badge.textContent = combateHabilitado ? 'ACTIVO (P6)' : 'INACTIVO (P3)';
+                    }
+                }, 50);
+            }
+
+            const cacheJugadores = localStorage.getItem('admin_participantes_cache');
+            if (cacheJugadores) {
+                const arr = JSON.parse(cacheJugadores);
+                if (Array.isArray(arr)) {
+                    arr.forEach(item => {
+                        if (item && item.id) {
+                            item.conectado = false;
+                            jugadoresMap.set(item.id, item);
+                        }
+                    });
+                }
+            }
+        } catch (e) {}
 
         // Conectar al broker EMQX
         const cliente = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
@@ -411,7 +463,7 @@
 
         cliente.on('connect', () => {
             setConnectionStatus('online', 'En línea');
-            agregarLog('mqtt', 'Conexión establecida con el servidor broker');
+            agregarLog('mqtt', 'Conexión establecida con el servidor broker EMQX');
             cliente.subscribe(topicoSecreto, (err) => {
                 if (err) {
                     agregarLog('mqtt', 'Error en suscripción: ' + err.message);
@@ -420,6 +472,7 @@
                     cliente.publish(topicoSecreto, JSON.stringify({ accion: 'ping_jugadores' }));
                 }
             });
+            cliente.subscribe(topicoSecreto + '/combate');
         });
 
         cliente.on('reconnect', () => setConnectionStatus('connecting', 'Reconectando'));
@@ -451,6 +504,24 @@
             try {
                 const datos = JSON.parse(mensaje.toString());
 
+                // Control / Sincronización de estado de combate
+                if (datos.accion === 'solicitar_estado_combate') {
+                    cliente.publish(topicoSecreto, JSON.stringify({
+                        accion: 'habilitar_combate',
+                        activo: combateHabilitado,
+                        timestamp: Date.now()
+                    }));
+                } else if (topic && topic.endsWith('/combate')) {
+                    if (typeof datos.activo !== 'undefined') {
+                        combateHabilitado = Boolean(datos.activo);
+                        const badge = document.getElementById('badgeEstadoCombate');
+                        if (badge) {
+                            badge.className = 'ctp-badge ' + (combateHabilitado ? 'ctp-badge-green' : 'ctp-badge-yellow');
+                            badge.textContent = combateHabilitado ? 'ACTIVO (P6)' : 'INACTIVO (P3)';
+                        }
+                    }
+                }
+
                 if (datos.accion === 'jugador_unido') {
                     const id = datos.id || datos.nombre;
                     const esNuevo = !jugadoresMap.has(id);
@@ -459,6 +530,8 @@
                         j = {
                             id,
                             nombre: datos.nombre,
+                            carnet: datos.carnet || '',
+                            whatsapp: datos.whatsapp || '',
                             color: datos.color || '#cba6f7',
                             targets: 0,
                             califica: false,
@@ -471,10 +544,17 @@
                         jugadoresMap.set(id, j);
                     } else {
                         j.nombre = datos.nombre;
+                        if (datos.carnet) j.carnet = datos.carnet;
+                        if (datos.whatsapp) j.whatsapp = datos.whatsapp;
                         j.color = datos.color || j.color;
                         j.conectado = true;
                         j.ultimaActividad = Date.now();
                     }
+
+                    // Guardar en cache local para no perder asistentes
+                    try {
+                        localStorage.setItem('admin_participantes_cache', JSON.stringify(Array.from(jugadoresMap.values())));
+                    } catch (e) {}
 
                     const activos = Array.from(jugadoresMap.values()).filter(x => x.conectado).length;
                     document.getElementById('statJugadores').textContent = activos;
@@ -673,6 +753,7 @@
                     <td style="padding: 10px 12px; font-weight: 700;">
                         <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${j.color}; margin-right:6px;"></span>
                         ${j.nombre}
+                        ${(j.carnet || j.whatsapp) ? `<div style="font-size: 0.72rem; color: var(--ctp-subtext0); font-weight: 400; margin-top: 2px;">CI: ${j.carnet || '-'} | Cel: ${j.whatsapp || '-'}</div>` : ''}
                     </td>
                     <td style="padding: 10px 12px; font-family: var(--font-mono); font-weight: 800; color: var(--ctp-mauve);">
                         ${j.targets} targets
@@ -709,6 +790,75 @@
             document.getElementById('estadoPartida').textContent = 'En curso';
             document.getElementById('estadoPartida').style.color = 'var(--ctp-green)';
             agregarLog('start', `Dinámica iniciada (${cantJugadores} bloques, ${configuracionTiempo}s tiempo, mín. ${configuracionMinTargets} targets, inactividad: ${configTimeoutInactividad}s)`);
+        }
+
+        // 1.1 Control Botón A Combatir (Pantalla 3 <-> Pantalla 6) vía MQTT sin servidor Node
+        function toggleCombate(activo) {
+            sound.init();
+            sound.playClick();
+            combateHabilitado = Boolean(activo);
+            const badge = document.getElementById('badgeEstadoCombate');
+            if (badge) {
+                badge.className = 'ctp-badge ' + (activo ? 'ctp-badge-green' : 'ctp-badge-yellow');
+                badge.textContent = activo ? 'ACTIVO (P6)' : 'INACTIVO (P3)';
+            }
+            try {
+                localStorage.setItem('admin_estado_combate', activo ? '1' : '0');
+            } catch (e) {}
+
+            const payload = JSON.stringify({
+                accion: 'habilitar_combate',
+                activo: Boolean(activo),
+                timestamp: Date.now()
+            });
+
+            cliente.publish(topicoSecreto, payload);
+            cliente.publish(topicoSecreto + '/combate', payload, { retain: true, qos: 1 });
+            agregarLog('start', `Botón "A Combatir" ${activo ? 'HABILITADO (P6 Azul)' : 'DESHABILITADO (P3 Plomo)'} vía MQTT`);
+        }
+
+        // Exportar lista de participantes registrados en formato CSV
+        function exportarParticipantesCSV() {
+            const lista = Array.from(jugadoresMap.values());
+            if (lista.length === 0) {
+                alert('No hay participantes registrados todavía.');
+                return;
+            }
+            let csv = '\uFEFFID,Nombre,Carnet,WhatsApp,Targets,Califica,Cuadrantes,Conectado,UltimaActividad\n';
+            lista.forEach(j => {
+                const fecha = new Date(j.ultimaActividad || j.timestamp || Date.now()).toLocaleString();
+                const nom = (j.nombre || '').replace(/"/g, '""');
+                csv += `"${j.id}","${nom}","${j.carnet || ''}","${j.whatsapp || ''}",${j.targets || 0},${j.califica ? 'SI' : 'NO'},${j.cuadrantes || 0},${j.conectado ? 'SI' : 'NO'},"${fecha}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `participantes_neumoflux_${new Date().toISOString().slice(0, 10)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            agregarLog('finish', `Exportados ${lista.length} participantes a archivo CSV.`);
+        }
+
+        // Exportar lista de participantes registrados en formato JSON
+        function exportarParticipantesJSON() {
+            const lista = Array.from(jugadoresMap.values());
+            if (lista.length === 0) {
+                alert('No hay participantes registrados todavía.');
+                return;
+            }
+            const blob = new Blob([JSON.stringify(lista, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `participantes_neumoflux_${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            agregarLog('finish', `Exportados ${lista.length} participantes a archivo JSON.`);
         }
 
         // 2. Reiniciar Juego

@@ -4,6 +4,7 @@
   "description": "Juego interactivo colaborativo multiusuario con MQTT y WebSockets",
   "main": "simulador.js",
   "scripts": {
+    "start": "node server.js",
     "simular": "node simulador.js 200"
   },
   "dependencies": {

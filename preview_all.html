@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparativa de 10 Pantallas | Super Neumoflux</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #0b0f19;
+            font-family: 'Montserrat', sans-serif;
+            color: #ffffff;
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        .header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+        }
+
+        .title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #00f0ff;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+        }
+
+        .btn-toggle-ref {
+            background: #e10098;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-toggle-ref:hover {
+            filter: brightness(1.2);
+            box-shadow: 0 0 12px #e10098;
+        }
+
+        .row-grid {
+            display: grid;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .row-top {
+            grid-template-columns: repeat(6, 320px);
+        }
+
+        .row-bottom {
+            grid-template-columns: repeat(5, 320px);
+        }
+
+        .screen-card {
+            background: #010817;
+            border: 2px solid rgba(0, 150, 255, 0.35);
+            border-radius: 14px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+        }
+
+        .screen-card-header {
+            background: #081a3d;
+            padding: 6px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 200, 255, 0.2);
+        }
+
+        .screen-num {
+            font-size: 0.95rem;
+            font-weight: 900;
+            color: #00f0ff;
+        }
+
+        .screen-name {
+            font-size: 0.75rem;
+            color: #b8d4f0;
+            font-weight: 600;
+        }
+
+        .screen-iframe {
+            width: 320px;
+            height: 568px;
+            border: none;
+            background: #010817;
+        }
+
+        .reference-box {
+            display: none;
+            margin-bottom: 30px;
+            border: 2px solid #e10098;
+            border-radius: 12px;
+            padding: 14px;
+            background: rgba(225, 0, 152, 0.05);
+        }
+
+        .reference-img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-bar">
+        <div>
+            <h1 class="title">Visualización Simultánea de Pantallas (0 al 10)</h1>
+            <p style="font-size: 0.85rem; color: #a6c000; margin-top: 4px;">
+                Mismas 10 pantallas en vivo basadas en Pantallas.png con animaciones y funcionalidad
+            </p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-toggle-ref" onclick="toggleReference()">
+                🖼️ Comparar con Pantallas.png
+            </button>
+            <a href="index.html" target="_blank" class="btn-toggle-ref" style="background:#0077ff; text-decoration:none;">
+                📱 Abrir Juego en Pantalla Completa
+            </a>
+            <a href="admin.html" target="_blank" class="btn-toggle-ref" style="background:#2ecc71; text-decoration:none;">
+                ⚙️ Panel Admin
+            </a>
+        </div>
+    </div>
+
+    <!-- Comparativa con la imagen original -->
+    <div class="reference-box" id="refBox">
+        <h3 style="font-size: 1rem; color: #e10098; margin-bottom: 8px;">
+            Referencia Original: Pantallas.png
+        </h3>
+        <img src="Pantallas.png" class="reference-img" alt="Referencia Pantallas.png">
+    </div>
+
+    <h2 style="font-size: 1.1rem; color: #74c7ec; margin-bottom: 10px;">Fila Superior (Pantallas 0 al 5)</h2>
+    <div class="row-grid row-top">
+        <div class="screen-card">
+            <div class="screen-card-header">
+                <span class="screen-num">0</span>
+                <span class="screen-name">Bienvenida & Robot Flotando</span>
+            </div>
+            <iframe class="screen-iframe" src="index.html?screen=0"></iframe>
+        </div>
+
+        <div class="screen-card">
+            <div class="screen-card-header">
+                <span class="screen-num">1</span>
+                <span class="screen-name">Formulario Datos & Endpoint</span>
+            </div>
+            <iframe class="screen-iframe" src="index.html?screen=1"></iframe>
+        </div>
+
+        <div class="screen-card">
+            <div class="screen-card-header">
+                <span class="screen-num">2</span>
+                <span class="screen-name">Cargando & Logo Respira</span>
+            </div>
+            <iframe class="screen-iframe" src="index.html?screen=2"></iframe>
+        </div>
+
+        <div class="screen-card">
+            <div class="screen-card-header">
+                <span class="screen-num">3</span>
+                <span class="screen-name">Menú (A Combatir Inactivo)</span>
+            </div>
+            <iframe class="screen-iframe" src="index.html?screen=3&combat=0"></iframe>
+        </div>
+
+        <div class="screen-card">
+            <div class="screen-card-header">
+                <span class="screen-num">4</span>
+                <span class="screen-name">Instrucción Escaneo AR</span>
+            </div>
+            <iframe class="screen-iframe" src="index.html?screen=4"></iframe>
+        </div>
+
+        <div class="screen-card">
+            <div class="screen-card-header">
+                <span class="screen-num">5</span>
+                <span class="screen-name">AR Placeholder HTML</span>
+            </div>
+            <iframe class="screen-iframe" src="index.html?screen=5"></iframe>
+        </div>
+    </div>
+
+    <h2 style="font-size: 1.1rem; color: #74c7ec; margin-bottom: 10px;">Fila Inferior (Pantallas 6 al 10)</h2>
+    <div class="row-grid row-bottom">
+        <div class="screen-card">
+            <div class="screen-card-header">
+                <span class="screen-num">6</span>
+                <span class="screen-name">A Combatir Activo (Azul Animado)</span>
+            </div>
+            <iframe class="screen-iframe" src="index.html?screen=6&combat=1"></iframe>
+        </div>
+
+        <div class="screen-card">
+            <div class="screen-card-header">
+                <span class="screen-num">7</span>
+                <span class="screen-name">Tutorial & Robot Animado</span>
+            </div>
+            <iframe class="screen-iframe" src="index.html?screen=7&combat=1"></iframe>
+        </div>
+
+        <div class="screen-card">
+            <div class="screen-card-header">
+                <span class="screen-num">8</span>
+                <span class="screen-name">En Espera... (Puntos Ciclando)</span>
+            </div>
+            <iframe class="screen-iframe" src="index.html?screen=8&combat=1"></iframe>
+        </div>
+
+        <div class="screen-card">
+            <div class="screen-card-header">
+                <span class="screen-num">9</span>
+                <span class="screen-name">Juego: Mocos, Puntos, Timer</span>
+            </div>
+            <iframe class="screen-iframe" src="index.html?screen=9&combat=1"></iframe>
+        </div>
+
+        <div class="screen-card">
+            <div class="screen-card-header">
+                <span class="screen-num">10</span>
+                <span class="screen-name">Tiempo Terminado & Puntaje</span>
+            </div>
+            <iframe class="screen-iframe" src="index.html?screen=10&combat=1"></iframe>
+        </div>
+    </div>
+
+    <script>
+        function toggleReference() {
+            const b = document.getElementById('refBox');
+            b.style.display = b.style.display === 'block' ? 'none' : 'block';
+        }
+    </script>
+</body>
+</html>
