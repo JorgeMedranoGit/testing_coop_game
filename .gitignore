@@ -17,6 +17,5 @@ Sprites/
 *.backup
 
 # Backend / Scratch files
-server.js
 participantes.json
 *.zip

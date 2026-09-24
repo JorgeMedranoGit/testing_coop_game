@@ -187,6 +187,9 @@
                     <span class="status-dot connecting" id="statusDot"></span>
                     <span id="statusText">Conectando</span>
                 </div>
+                <div id="dbStatusBadge" class="ctp-badge ctp-badge-mauve" style="display: none; gap: 5px;">
+                    <span>💾 BD:</span> <span id="dbStatusText">Detectando</span>
+                </div>
                 <a href="index.html" target="_blank" class="ctp-btn ctp-btn-outline ctp-btn-sm">
                     Abrir Participante
                 </a>
@@ -789,8 +792,36 @@
             agregarLog('start', `Botón "A Combatir" ${activo ? 'HABILITADO (P6 Azul)' : 'DESHABILITADO (P3 Plomo)'} vía MQTT`);
         }
 
+        // Verificar estado de la base de datos en VPS
+        async function verificarEstadoBD() {
+            try {
+                const res = await fetch('/api/salud');
+                if (res.ok) {
+                    const data = await res.json();
+                    const badge = document.getElementById('dbStatusBadge');
+                    const txt = document.getElementById('dbStatusText');
+                    if (badge && txt) {
+                        badge.style.display = 'inline-flex';
+                        txt.textContent = data.motorBD || 'Activa';
+                        badge.className = data.motorBD === 'PostgreSQL' ? 'ctp-badge ctp-badge-green' : 'ctp-badge ctp-badge-yellow';
+                    }
+                }
+            } catch (e) {}
+        }
+        verificarEstadoBD();
+        setInterval(verificarEstadoBD, 15000);
+
         // Exportar lista de participantes registrados en formato CSV
-        function exportarParticipantesCSV() {
+        async function exportarParticipantesCSV() {
+            try {
+                const check = await fetch('/api/salud');
+                if (check.ok) {
+                    window.location.href = '/api/participantes/export/csv';
+                    agregarLog('finish', 'Descargando exportación CSV directa desde la Base de Datos...');
+                    return;
+                }
+            } catch (e) {}
+
             const lista = Array.from(jugadoresMap.values());
             if (lista.length === 0) {
                 alert('No hay participantes registrados todavía.');
@@ -815,7 +846,16 @@
         }
 
         // Exportar lista de participantes registrados en formato JSON
-        function exportarParticipantesJSON() {
+        async function exportarParticipantesJSON() {
+            try {
+                const check = await fetch('/api/salud');
+                if (check.ok) {
+                    window.location.href = '/api/participantes/export/json';
+                    agregarLog('finish', 'Descargando exportación JSON directa desde la Base de Datos...');
+                    return;
+                }
+            } catch (e) {}
+
             const lista = Array.from(jugadoresMap.values());
             if (lista.length === 0) {
                 alert('No hay participantes registrados todavía.');

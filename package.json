@@ -8,6 +8,7 @@
     "simular": "node simulador.js 200"
   },
   "dependencies": {
-    "mqtt": "^5.10.1"
+    "mqtt": "^5.10.1",
+    "pg": "^8.23.0"
   }
 }

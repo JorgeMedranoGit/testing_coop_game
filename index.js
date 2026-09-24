@@ -220,6 +220,21 @@ async function guardarRegistro(event) {
         }));
     }
 
+    // Persistir directamente en API REST / Base de Datos PostgreSQL
+    try {
+        fetch('/api/registro', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: participante.id,
+                nombre: participante.nombre,
+                carnet: participante.carnet,
+                whatsapp: participante.whatsapp,
+                color: '#00f0ff'
+            })
+        }).catch(() => {});
+    } catch (e) {}
+
     feedback.style.color = '#a6e3a1';
     feedback.textContent = '¡Datos registrados con éxito!';
 

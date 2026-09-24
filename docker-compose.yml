@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # -------------------------------------------------------------
+  # 1. BASE DE DATOS POSTGRESQL (Persistente para el evento)
+  # -------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: neumoflux_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-neumo_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-neumo_secure_pass_2024}
+      POSTGRES_DB: ${POSTGRES_DB:-neumoflux_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-neumo_user} -d ${POSTGRES_DB:-neumoflux_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - neumo_network
+
+  # -------------------------------------------------------------
+  # 2. APLICACIÓN WEB & API (Node.js Super Neumoflux)
+  # -------------------------------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: neumoflux_app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER:-neumo_user}:${POSTGRES_PASSWORD:-neumo_secure_pass_2024}@db:5432/${POSTGRES_DB:-neumoflux_db}
+      MQTT_BROKER_URL: ${MQTT_BROKER_URL:-wss://broker.emqx.io:8084/mqtt}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - neumo_network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  neumo_network:
+    driver: bridge
