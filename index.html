@@ -10,6 +10,15 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;0,900;1,800&display=swap" rel="stylesheet">
     
+    <!-- Pre-conexión y Precarga para Realidad Aumentada Instantánea -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://aframe.io" crossorigin>
+    <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
+    <link rel="preload" href="https://aframe.io/releases/1.5.0/aframe.min.js" as="script">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js" as="script">
+    <link rel="preload" href="RealidadAumentada/WebAr/targets.mind" as="fetch" crossorigin>
+    <link rel="preload" href="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMan/glTF-Binary/CesiumMan.glb" as="fetch" crossorigin>
+
     <!-- MQTT Broker Client -->
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <!-- Procedural Sound Effects -->
@@ -1269,7 +1278,7 @@
             </div>
 
             <div class="ar-viewport-placeholder" id="arContainer" style="padding: 0; overflow: hidden; width: 100%; height: 100%; background: #000;">
-                <iframe id="arFrame" src="" style="width: 100%; height: 100%; border: none; background: #000;" allow="camera; microphone; accelerometer; gyroscope"></iframe>
+                <iframe id="arFrame" src="RealidadAumentada/WebAr/mindar.html" style="width: 100%; height: 100%; border: none; background: #000;" allow="camera; microphone; accelerometer; gyroscope"></iframe>
             </div>
         </div>
 

@@ -3,24 +3,102 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MindAR</title>
+<title>MindAR - Super Neumoflux</title>
+<!-- Google Fonts: Montserrat -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.2.0/dist/aframe-extras.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
 <script>if(location.search.includes('debug')) eruda.init();</script>
-</head>
-<body style="margin: 0; overflow: hidden;">
-<a href="javascript:void(0)" onclick="if(window.parent && window.parent !== window && window.parent.volverDeAR){ window.parent.volverDeAR(); } else { window.location.href='../../index.html'; }" style="position: absolute; top: 15px; left: 15px; background: rgba(0,10,30,0.85); color: #00f0ff; border: 1.5px solid #00f0ff; padding: 8px 18px; border-radius: 20px; text-decoration: none; font-family: sans-serif; font-size: 13px; font-weight: bold; z-index: 99999; box-shadow: 0 0 12px rgba(0,240,255,0.4); cursor: pointer;">◀ VOLVER</a>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { margin: 0; overflow: hidden; background: #000; font-family: 'Montserrat', sans-serif; }
+    
+    .btn-volver-hud {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        background: rgba(0, 15, 45, 0.85);
+        color: #00f0ff;
+        border: 1.5px solid #00f0ff;
+        padding: 9px 20px;
+        border-radius: 20px;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        z-index: 99999;
+        box-shadow: 0 0 14px rgba(0, 240, 255, 0.45);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: transform 0.15s ease, background 0.2s ease;
+    }
+    .btn-volver-hud:active {
+        transform: scale(0.94);
+        background: rgba(0, 50, 120, 0.9);
+    }
 
-<a-scene mindar-image="imageTargetSrc: ./targets.mind;" color-space="sRGB" renderer="colorManagement: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+    .scanning-hud-badge {
+        position: absolute;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(3, 18, 48, 0.88);
+        border: 1.5px solid #00f0ff;
+        color: #ffffff;
+        padding: 9px 22px;
+        border-radius: 25px;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        box-shadow: 0 0 16px rgba(0, 240, 255, 0.4);
+        text-align: center;
+        pointer-events: none;
+        z-index: 99999;
+        white-space: nowrap;
+        transition: all 0.3s ease;
+    }
+</style>
+</head>
+<body>
+
+<a href="javascript:void(0)" class="btn-volver-hud" onclick="if(window.parent && window.parent !== window && window.parent.volverDeAR){ window.parent.volverDeAR(); } else { window.location.href='../../index.html'; }">
+    ◀ VOLVER
+</a>
+
+<div id="scanningBadge" class="scanning-hud-badge">
+    🔍 Apunta tu cámara al sobrecito
+</div>
+
+<!-- 
+    Configuración de Estabilidad y Anti-Vibración (1-Euro Filter):
+    - filterMinCF: 0.0001 (Reduce drásticamente el temblor y ruido en reposo)
+    - filterBeta: 0.005 (Elimina vibración violenta/jitter durante movimiento)
+    - missTolerance: 8 (Mantiene la proyección estable sin parpadeos si se cubre un punto)
+    - warmupTolerance: 2 (Fijación rápida al enfocar el sobre)
+    - autoStart: false (Permite pre-calentar el motor y arrancar la cámara al instante bajo demanda)
+-->
+<a-scene 
+    mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; filterMinCF: 0.0001; filterBeta: 0.005; missTolerance: 8; warmupTolerance: 2;" 
+    color-space="sRGB" 
+    renderer="colorManagement: true; precision: medium;" 
+    vr-mode-ui="enabled: false" 
+    device-orientation-permission-ui="enabled: false">
+    
     <a-assets>
       <a-asset-item id="cesium" src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMan/glTF-Binary/CesiumMan.glb"></a-asset-item>
     </a-assets>
+    
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
     <!-- Target 0: Neumoflux 200 (Sobre de Medicamento Escaneado) -->
-    <a-entity mindar-image-target="targetIndex: 0">
+    <a-entity mindar-image-target="targetIndex: 0" id="sobreTarget">
       <!-- Modelo 3D CesiumMan -->
       <a-gltf-model src="#cesium" position="0 -0.15 0.1" scale="0.25 0.25 0.25" rotation="90 0 0" animation-mixer></a-gltf-model>
       
@@ -34,5 +112,73 @@
       </a-entity>
     </a-entity>
 </a-scene>
+
+<script>
+    let arIniciado = false;
+
+    // Control de ciclo de vida para carga instantánea
+    window.iniciarAR = function() {
+        const sceneEl = document.querySelector('a-scene');
+        if (!sceneEl) return;
+
+        const activarSistema = () => {
+            const arSystem = sceneEl.systems['mindar-image-system'];
+            if (arSystem) {
+                if (!arIniciado) {
+                    arSystem.start();
+                    arIniciado = true;
+                } else if (arSystem.unpause) {
+                    arSystem.unpause();
+                }
+            }
+        };
+
+        if (sceneEl.hasLoaded) {
+            activarSistema();
+        } else {
+            sceneEl.addEventListener('loaded', activarSistema, { once: true });
+        }
+    };
+
+    window.detenerAR = function() {
+        const sceneEl = document.querySelector('a-scene');
+        if (!sceneEl) return;
+        const arSystem = sceneEl.systems['mindar-image-system'];
+        if (arSystem) {
+            if (arSystem.stop) {
+                arSystem.stop();
+                arIniciado = false;
+            } else if (arSystem.pause) {
+                arSystem.pause();
+            }
+        }
+    };
+
+    // Feedback visual al detectar el sobre
+    window.addEventListener('DOMContentLoaded', () => {
+        const targetEl = document.getElementById('sobreTarget');
+        const badge = document.getElementById('scanningBadge');
+        if (targetEl && badge) {
+            targetEl.addEventListener('targetFound', () => {
+                badge.textContent = '✨ ¡Sobre Neumoflux 200 Detectado!';
+                badge.style.borderColor = '#00ff88';
+                badge.style.color = '#00ff88';
+                badge.style.boxShadow = '0 0 20px rgba(0,255,136,0.6)';
+            });
+            targetEl.addEventListener('targetLost', () => {
+                badge.textContent = '🔍 Apunta tu cámara al sobrecito';
+                badge.style.borderColor = '#00f0ff';
+                badge.style.color = '#ffffff';
+                badge.style.boxShadow = '0 0 16px rgba(0,240,255,0.4)';
+            });
+        }
+
+        // Si se ejecuta en modo standalone (fuera de iframe)
+        if (window.parent === window) {
+            window.iniciarAR();
+        }
+    });
+</script>
+
 </body>
 </html>

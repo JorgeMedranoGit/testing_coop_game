@@ -98,18 +98,36 @@ function goToScreen(index) {
         detenerJuego();
     }
 
-    // Gestionar Visor MindAR (Screen 5)
+    // Gestionar Visor MindAR (Screen 5) con pre-calentamiento y carga instantánea
     const arFrame = document.getElementById('arFrame');
     if (arFrame) {
+        if (!arFrame.src || !arFrame.src.includes('mindar.html')) {
+            arFrame.src = 'RealidadAumentada/WebAr/mindar.html';
+        }
+
         if (index === 5) {
-            if (!arFrame.src || !arFrame.src.includes('mindar.html')) {
-                arFrame.src = 'RealidadAumentada/WebAr/mindar.html';
+            const activarCamara = () => {
+                try {
+                    if (arFrame.contentWindow && typeof arFrame.contentWindow.iniciarAR === 'function') {
+                        arFrame.contentWindow.iniciarAR();
+                    }
+                } catch (e) {
+                    console.warn('[AR] Esperando inicialización del visor:', e);
+                }
+            };
+
+            if (arFrame.contentDocument && arFrame.contentDocument.readyState === 'complete') {
+                activarCamara();
+            } else {
+                arFrame.onload = activarCamara;
             }
         } else {
-            // Liberar cámara y recursos al salir de la pantalla AR
-            if (arFrame.src && arFrame.src !== 'about:blank') {
-                arFrame.src = '';
-            }
+            // Detener cámara al salir sin destruir la escena WebGL/WASM precargada
+            try {
+                if (arFrame.contentWindow && typeof arFrame.contentWindow.detenerAR === 'function') {
+                    arFrame.contentWindow.detenerAR();
+                }
+            } catch (e) {}
         }
     }
 
@@ -365,6 +383,12 @@ function intentarCombateInactivo(e) {
 function volverDeAR() {
     sound.init();
     sound.playClick();
+    const arFrame = document.getElementById('arFrame');
+    if (arFrame && arFrame.contentWindow && typeof arFrame.contentWindow.detenerAR === 'function') {
+        try {
+            arFrame.contentWindow.detenerAR();
+        } catch (e) {}
+    }
     goToScreen(combateHabilitado ? 6 : 3);
 }
 
