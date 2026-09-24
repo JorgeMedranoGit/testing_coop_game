@@ -7,6 +7,7 @@ class SoundFX {
     constructor() {
         this.ctx = null;
         this.enabled = true;
+        this.lastRevealTime = 0;
     }
 
     init() {
@@ -81,9 +82,13 @@ class SoundFX {
         });
     }
 
-    // Block reveal chime on projector screen
+    // Block reveal chime on projector screen (Throttled for 200+ concurrent players)
     playReveal() {
         if (!this.enabled) return;
+        const nowMs = Date.now();
+        if (nowMs - this.lastRevealTime < 70) return;
+        this.lastRevealTime = nowMs;
+
         this.init();
         if (!this.ctx) return;
 

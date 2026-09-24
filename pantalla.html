@@ -192,23 +192,16 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 8px;
+            padding: 6px;
             color: var(--ctp-subtext0);
             font-family: var(--font-main);
             position: relative;
             cursor: default;
             user-select: none;
             overflow: hidden;
-            transition: background-color 0.6s ease, border-color 0.4s ease, opacity 0.8s ease, transform 0.4s ease;
-        }
-
-        .bloque::before {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at center, rgba(49, 50, 68, 0.25) 0%, transparent 70%);
-            pointer-events: none;
+            contain: layout style paint;
+            transform: translateZ(0);
+            transition: background-color 0.4s ease, border-color 0.3s ease, opacity 0.4s ease;
         }
 
         .bloque .bloque-num {
@@ -223,13 +216,11 @@
             border: 1px solid rgba(69, 71, 90, 0.25);
         }
 
-        /* Estado Revelado: se vuelve traslúcido para revelar el fondo secreto */
+        /* Estado Revelado: translúcido de ultra alto rendimiento (sin blur GPU fill-rate penalty) */
         .bloque.revelado {
-            background-color: rgba(17, 17, 27, 0.28);
-            backdrop-filter: blur(0.5px);
-            -webkit-backdrop-filter: blur(0.5px);
+            background-color: rgba(17, 17, 27, 0.22);
             border: 1px solid rgba(203, 166, 247, 0.35);
-            animation: revealPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            animation: revealPop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
         .bloque.revelado:hover {
@@ -238,24 +229,24 @@
         }
 
         .bloque-avatar-badge {
-            width: clamp(38px, 4.5vw, 60px);
-            height: clamp(38px, 4.5vw, 60px);
+            width: clamp(34px, 4vw, 54px);
+            height: clamp(34px, 4vw, 54px);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: clamp(0.95rem, 1.6vw, 1.4rem);
+            font-size: clamp(0.85rem, 1.4vw, 1.25rem);
             font-weight: 800;
             color: #11111b;
-            margin-bottom: 6px;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.65);
+            margin-bottom: 5px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.55);
             flex-shrink: 0;
             border: 2px solid rgba(255, 255, 255, 0.25);
         }
 
         .bloque.revelado .bloque-nombre {
             color: #ffffff;
-            font-size: clamp(0.85rem, 1.4vw, 1.25rem);
+            font-size: clamp(0.75rem, 1.2vw, 1.1rem);
             font-weight: 800;
             text-align: center;
             max-width: 95%;
@@ -268,21 +259,108 @@
 
         @keyframes revealPop {
             0% {
-                transform: scale(0.6) rotate(-2deg);
-                box-shadow: 0 0 35px var(--ctp-mauve);
+                transform: scale(0.85);
+                box-shadow: 0 0 16px var(--ctp-mauve);
                 border-color: var(--ctp-mauve);
                 z-index: 20;
             }
             60% {
-                transform: scale(1.04) rotate(1deg);
-                box-shadow: 0 0 20px var(--ctp-sapphire);
+                transform: scale(1.05);
+                box-shadow: 0 0 10px var(--ctp-sapphire);
                 z-index: 20;
             }
             100% {
-                transform: scale(1) rotate(0deg);
+                transform: scale(1);
                 box-shadow: none;
                 z-index: 1;
             }
+        }
+
+        /* -------------------------------------------------------------
+           MODOS ADAPTATIVOS DE DENSIDAD SEGÚN VOLUMEN DE PARTICIPANTES
+           ------------------------------------------------------------- */
+        /* Modo Compacto: 20 a 50 cuadrantes */
+        .grid-compact .bloque {
+            padding: 4px;
+        }
+        .grid-compact .bloque-avatar-badge {
+            width: clamp(26px, 3vw, 36px);
+            height: clamp(26px, 3vw, 36px);
+            font-size: clamp(0.75rem, 1vw, 0.95rem);
+            margin-bottom: 3px;
+        }
+        .grid-compact .bloque.revelado .bloque-nombre {
+            font-size: clamp(0.7rem, 0.9vw, 0.85rem);
+        }
+        .grid-compact .bloque-score-badge {
+            font-size: clamp(0.58rem, 0.75vw, 0.7rem);
+            padding: 1px 5px;
+        }
+
+        /* Modo Denso: 50 a 100 cuadrantes */
+        .grid-dense .bloque {
+            padding: 3px 4px;
+        }
+        .grid-dense .bloque-avatar-badge {
+            width: 26px;
+            height: 26px;
+            min-width: 26px;
+            min-height: 26px;
+            font-size: 0.7rem;
+            margin-bottom: 2px;
+            border-width: 1.5px;
+        }
+        .grid-dense .bloque.revelado .bloque-nombre {
+            font-size: 0.68rem;
+            line-height: 1.1;
+        }
+        .grid-dense .bloque-score-badge {
+            font-size: 0.6rem;
+            padding: 1px 4px;
+            margin-top: 2px;
+        }
+        .grid-dense .bloque .bloque-num {
+            font-size: 0.68rem;
+            padding: 1px 5px;
+        }
+
+        /* Modo Ultra-Rendimiento: 100 a 250+ cuadrantes (Simultáneos 200 cuadrantes) */
+        .grid-ultra .bloque {
+            padding: 2px 3px;
+            border-color: rgba(69, 71, 90, 0.28);
+        }
+        .grid-ultra .bloque-avatar-badge {
+            width: 22px;
+            height: 22px;
+            min-width: 22px;
+            min-height: 22px;
+            font-size: 0.62rem;
+            margin-bottom: 1px;
+            border-width: 1px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+        .grid-ultra .bloque.revelado .bloque-nombre {
+            font-size: 0.62rem;
+            line-height: 1.1;
+            letter-spacing: 0;
+            max-width: 96%;
+        }
+        .grid-ultra .bloque-score-badge {
+            font-size: 0.56rem;
+            padding: 0 3px;
+            margin-top: 1px;
+            border-radius: 4px;
+            gap: 2px;
+        }
+        .grid-ultra .bloque .bloque-num {
+            font-size: 0.64rem;
+            padding: 1px 4px;
+            border-radius: 4px;
+        }
+        .grid-ultra .bloque-bonus-ribbon {
+            font-size: 0.48rem;
+            padding: 1px 4px;
+            top: 1px;
         }
 
         /* Recent Player Toast */
@@ -687,7 +765,15 @@
             return { total, rows, filas };
         }
 
-        // 2. Reconstruir la cuadrícula dinámica en el DOM
+        // 2. Reconstruir la cuadrícula dinámica en el DOM con optimización de DocumentFragment
+        let debounceReconstruirTimer = null;
+        function debouncedReconstruirCuadricula(cant) {
+            if (debounceReconstruirTimer) clearTimeout(debounceReconstruirTimer);
+            debounceReconstruirTimer = setTimeout(() => {
+                reconstruirCuadricula(cant);
+            }, 60);
+        }
+
         function reconstruirCuadricula(cantidad) {
             totalBloques = Math.max(cantidad, 1);
             bloques = [];
@@ -695,8 +781,21 @@
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
 
+            // Asignar clase de densidad adaptativa según volumen de cuadrantes
+            grid.classList.remove('grid-compact', 'grid-dense', 'grid-ultra');
+            if (totalBloques > 100) {
+                grid.classList.add('grid-ultra');
+            } else if (totalBloques > 50) {
+                grid.classList.add('grid-dense');
+            } else if (totalBloques > 20) {
+                grid.classList.add('grid-compact');
+            }
+
             const dist = calcularDistribucion(totalBloques);
             let idx = 1;
+
+            // Inserción en lote mediante DocumentFragment para eliminar reflows intermedios
+            const fragment = document.createDocumentFragment();
 
             for (let r = 0; r < dist.rows; r++) {
                 const filaDiv = document.createElement('div');
@@ -717,9 +816,10 @@
                     bloques.push(div);
                     idx++;
                 }
-                grid.appendChild(filaDiv);
+                fragment.appendChild(filaDiv);
             }
 
+            grid.appendChild(fragment);
             actualizarHUD();
         }
 
@@ -840,7 +940,7 @@
                     if (esNuevo) {
                         mostrarToast(datos.color || '#cba6f7', obtenerIniciales(datos.nombre), `${datos.nombre} se ha unido a la sala`);
                         if (!juegoEnCurso) {
-                            reconstruirCuadricula(Math.max(jugadoresConectados.size, 1));
+                            debouncedReconstruirCuadricula(Math.max(jugadoresConectados.size, 1));
                         }
                     }
                     actualizarRankingModal();
@@ -1158,7 +1258,7 @@
             if (modal.style.display === 'flex') {
                 modal.style.display = 'none';
             } else {
-                actualizarRankingModal();
+                renderizarContenidoRanking();
                 modal.style.display = 'flex';
             }
         }
@@ -1170,6 +1270,12 @@
         }
 
         function actualizarRankingModal() {
+            const modal = document.getElementById('rankingModal');
+            if (!modal || modal.style.display !== 'flex') return;
+            renderizarContenidoRanking();
+        }
+
+        function renderizarContenidoRanking() {
             const listEl = document.getElementById('rankingList');
             if (!listEl) return;
 
@@ -1345,9 +1451,16 @@
             document.getElementById('finaleBanner').style.display = 'none';
         }
 
-        // 15. Toast notification
+        // 15. Toast notification con límite activo en el DOM
         function mostrarToast(color, iniciales, textoHtml) {
             const toastFeed = document.getElementById('toastFeed');
+            if (!toastFeed) return;
+
+            // Mantener un máximo de 4 notificaciones simultáneas en pantalla
+            while (toastFeed.children.length >= 4) {
+                toastFeed.removeChild(toastFeed.firstElementChild);
+            }
+
             const toast = document.createElement('div');
             toast.className = 'toast-item';
             toast.innerHTML = `
@@ -1357,11 +1470,11 @@
 
             toastFeed.appendChild(toast);
             setTimeout(() => {
-                toast.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
                 toast.style.opacity = '0';
-                toast.style.transform = 'translateY(20px)';
-                setTimeout(() => toast.remove(), 400);
-            }, 4000);
+                toast.style.transform = 'translateY(15px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
         }
 
         // 16. Pantalla completa y audio

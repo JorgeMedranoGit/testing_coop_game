@@ -1,0 +1,13 @@
+# Soporte de tipos MIME para WebAR y Modelos 3D
+<IfModule mod_mime.c>
+    AddType application/octet-stream .mind
+    AddType model/gltf-binary .glb
+    AddType model/gltf+json .gltf
+    AddType application/javascript .js
+    AddType text/css .css
+</IfModule>
+
+# Habilitar CORS para WebAR / recursos externos si es necesario
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+</IfModule>
