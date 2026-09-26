@@ -9,6 +9,7 @@ yarn-error.log*
 Thumbs.db
 *.tmp
 {*}.png
+*.mp4
 
 # Raw Design Source Files & Backups (Heavy PSD, AI and raw images)
 Sprites/

@@ -11,7 +11,8 @@ const db = require('./db');
 
 const PUERTO = process.env.PORT || parseInt(process.argv[2], 10) || 3000;
 const MQTT_BROKER_URL = process.env.MQTT_BROKER_URL || 'wss://broker.emqx.io:8084/mqtt';
-const TOPICO_SECRET = 'super_neumoflux_game_2024_coop_v1';
+const TOPICO_SECRET = process.env.MQTT_TOPIC || 'proyecto_ar_evento_juego_1a2b3c_lpz';
+const TOPICO_LEGACY = 'super_neumoflux_game_2024_coop_v1';
 
 let estadoCombateGlobal = false;
 let rondaActualId = null;
@@ -51,6 +52,7 @@ function iniciarSincronizadorMQTT() {
             console.log('✅ [MQTT] Servidor sincronizador conectado al broker.');
             clienteMQTT.subscribe(TOPICO_SECRET, { qos: 1 });
             clienteMQTT.subscribe(TOPICO_SECRET + '/combate', { qos: 1 });
+            clienteMQTT.subscribe(TOPICO_LEGACY, { qos: 1 });
         });
 
         clienteMQTT.on('message', async (topic, payload) => {

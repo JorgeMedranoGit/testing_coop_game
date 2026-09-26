@@ -689,12 +689,35 @@ function conectarMQTT() {
             clienteMQTT.subscribe(topicoSecreto);
             clienteMQTT.subscribe(topicoSecreto + '/combate');
 
+            // Autojoin inmediato si el participante ya tiene nombre registrado
+            if (participante && participante.nombre) {
+                clienteMQTT.publish(topicoSecreto, JSON.stringify({
+                    accion: 'jugador_unido',
+                    id: participante.id,
+                    nombre: participante.nombre,
+                    carnet: participante.carnet,
+                    whatsapp: participante.whatsapp,
+                    color: '#00f0ff'
+                }));
+            }
+
             // Solicitar al panel admin el estado actual de combate en caso de estar activo
             clienteMQTT.publish(topicoSecreto, JSON.stringify({
                 accion: 'solicitar_estado_combate',
                 id: participante.id
             }));
         });
+
+        // Heartbeat periódico cada 8 segundos para mantener viva la conexión del participante
+        setInterval(() => {
+            if (clienteMQTT && clienteMQTT.connected && participante && participante.nombre) {
+                clienteMQTT.publish(topicoSecreto, JSON.stringify({
+                    accion: 'heartbeat',
+                    id: participante.id,
+                    nombre: participante.nombre
+                }));
+            }
+        }, 8000);
 
         clienteMQTT.on('message', (topic, payload) => {
             try {
@@ -807,8 +830,23 @@ window.addEventListener('DOMContentLoaded', () => {
     actualizarNombreDisplays();
     conectarMQTT();
 
-    // Parámetros URL (ej: index.html?screen=3&combat=1)
+    // Parámetros URL (ej: index.html?screen=3&combat=1&nombre=Carlos)
     const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('nombre')) {
+        participante.nombre = urlParams.get('nombre').trim();
+        participante.carnet = (urlParams.get('carnet') || participante.carnet || '0000').trim();
+        participante.whatsapp = (urlParams.get('whatsapp') || participante.whatsapp || '00000000').trim();
+        participante.nombreTruncado = truncarNombre(participante.nombre);
+        try {
+            localStorage.setItem('participante_neumoflux', JSON.stringify(participante));
+        } catch (e) {}
+        actualizarNombreDisplays();
+        
+        // Si no se especificó pantalla explícita, avanzar al hub
+        if (!urlParams.has('screen')) {
+            goToScreen(combateHabilitado ? 6 : 3);
+        }
+    }
     if (urlParams.has('combat')) {
         setEstadoCombate(urlParams.get('combat') === '1' || urlParams.get('combat') === 'true', true);
     }

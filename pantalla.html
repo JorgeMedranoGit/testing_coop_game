@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mural Colectivo | Proyección</title>
+    <title>Mural Colectivo | Super Neumoflux</title>
     <!-- Catppuccin Design System -->
     <link rel="stylesheet" href="catppuccin.css">
     <!-- MQTT Broker Client -->
@@ -18,42 +18,138 @@
         }
 
         body {
-            background-color: var(--ctp-crust);
-            /* Imagen secreta de fondo */
-            background-image: url('fondo_secreto.jpg');
-            background-repeat: no-repeat;
-            background-position: center center;
-            background-size: cover;
+            background-color: #0b0f19;
             height: 100vh;
             width: 100vw;
             overflow: hidden;
-            font-family: var(--font-main);
-            color: var(--ctp-text);
+            font-family: var(--font-main, 'Montserrat', 'Segoe UI', sans-serif);
+            color: #ffffff;
             position: relative;
+            user-select: none;
         }
 
-        /* Top HUD Bar */
+        /* -------------------------------------------------------------
+           ESCENARIO DE FONDO (Detrás del Mural de Infección)
+           ------------------------------------------------------------- */
+        #stageBackground {
+            position: absolute;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('assets/futuristic_wall_panel.jpg');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Resplandor ambiental de fondo */
+        .stage-glow {
+            position: absolute;
+            width: 70vw;
+            height: 70vh;
+            background: radial-gradient(circle, rgba(0, 180, 255, 0.22) 0%, rgba(13, 27, 62, 0.4) 60%, transparent 80%);
+            pointer-events: none;
+            z-index: 2;
+            animation: pulseGlow 4s infinite ease-in-out alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: scale(0.95); opacity: 0.6; }
+            100% { transform: scale(1.05); opacity: 0.95; }
+        }
+
+        /* Contenedor central de Pulmones (Infectado / Sano) */
+        #lungsContainer {
+            position: absolute;
+            z-index: 3;
+            width: min(52vw, 750px);
+            height: min(65vh, 620px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .lung-layer {
+            position: absolute;
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), filter 0.6s ease;
+        }
+
+        #healthyLungs {
+            z-index: 4;
+            opacity: 0.2;
+            filter: drop-shadow(0 0 35px rgba(0, 240, 255, 0.45)) brightness(0.9);
+            border-radius: 20px;
+        }
+
+        #infectedLungs {
+            z-index: 5;
+            opacity: 1;
+            filter: drop-shadow(0 0 30px rgba(255, 60, 40, 0.65)) drop-shadow(0 0 50px rgba(80, 255, 50, 0.4));
+            animation: lungHeartbeat 3.2s infinite ease-in-out;
+        }
+
+        @keyframes lungHeartbeat {
+            0% { transform: scale(1); }
+            14% { transform: scale(1.025); }
+            28% { transform: scale(1); }
+            42% { transform: scale(1.018); }
+            70% { transform: scale(1); }
+        }
+
+        /* Personaje Super Neumoflux en el escenario */
+        #characterSuper {
+            position: absolute;
+            left: 2.5vw;
+            bottom: 3vh;
+            z-index: 6;
+            height: clamp(240px, 46vh, 520px);
+            max-width: 28vw;
+            pointer-events: none;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        #characterSuper img {
+            height: 100%;
+            width: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.7)) drop-shadow(0 0 25px rgba(0, 220, 255, 0.4));
+            animation: characterFloat 3.8s ease-in-out infinite;
+        }
+
+        @keyframes characterFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-14px); }
+        }
+
+        /* -------------------------------------------------------------
+           TOP HUD BAR (Encabezado superior con métricas)
+           ------------------------------------------------------------- */
         .hud-header {
             position: fixed;
-            top: 16px;
-            left: 20px;
-            right: 20px;
+            top: 14px;
+            left: 18px;
+            right: 18px;
             z-index: 100;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(20, 20, 31, 0.88);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(203, 166, 247, 0.22);
+            background: rgba(13, 17, 28, 0.88);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(0, 240, 255, 0.28);
             border-radius: 14px;
-            padding: 10px 22px;
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.65);
-            transition: opacity 0.3s ease;
-        }
-
-        .hud-header:hover {
-            border-color: rgba(203, 166, 247, 0.45);
+            padding: 9px 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
         }
 
         .hud-title {
@@ -63,68 +159,67 @@
         }
 
         .hud-indicator {
-            width: 9px;
-            height: 9px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            background: var(--ctp-mauve);
-            box-shadow: 0 0 10px var(--ctp-mauve);
-            animation: pulseSlow 2s infinite ease-in-out;
+            background: #00f0ff;
+            box-shadow: 0 0 12px #00f0ff;
+            animation: pulseDot 1.8s infinite ease-in-out;
         }
 
-        @keyframes pulseSlow {
-            0% { transform: scale(0.9); opacity: 0.7; }
-            50% { transform: scale(1.2); opacity: 1; }
-            100% { transform: scale(0.9); opacity: 0.7; }
+        @keyframes pulseDot {
+            0%, 100% { transform: scale(0.85); opacity: 0.6; }
+            50% { transform: scale(1.25); opacity: 1; }
         }
 
         .hud-title-text h1 {
-            font-size: 1.15rem;
+            font-size: 1.12rem;
             font-weight: 800;
-            background: linear-gradient(90deg, var(--ctp-mauve), var(--ctp-pink));
+            background: linear-gradient(90deg, #00f0ff, #cba6f7);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.05em;
             text-transform: uppercase;
         }
 
         .hud-title-text p {
-            font-size: 0.76rem;
-            color: var(--ctp-subtext0);
+            font-size: 0.74rem;
+            color: #94a3b8;
             letter-spacing: 0.02em;
         }
 
-        /* Progress Bar in HUD */
+        /* Barra de progreso de purificación */
         .hud-progress-section {
             display: flex;
             align-items: center;
             gap: 14px;
-            flex: 0 1 440px;
+            flex: 0 1 480px;
         }
 
         .hud-progress-bar {
             flex: 1;
-            height: 8px;
-            background: var(--ctp-surface0);
+            height: 10px;
+            background: rgba(15, 23, 42, 0.85);
             border-radius: 999px;
             overflow: hidden;
-            border: 1px solid var(--ctp-surface1);
+            border: 1px solid rgba(0, 240, 255, 0.25);
             position: relative;
         }
 
         .hud-progress-fill {
             height: 100%;
             width: 0%;
-            background: linear-gradient(90deg, var(--ctp-mauve), var(--ctp-sapphire), var(--ctp-green));
-            box-shadow: 0 0 12px var(--ctp-green);
-            transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(90deg, #cba6f7, #00c3ff, #00ffaa);
+            box-shadow: 0 0 14px #00ffaa;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .hud-counter {
-            font-family: var(--font-mono);
+            font-family: var(--font-mono, 'Courier New', monospace);
             font-weight: 700;
-            font-size: 0.9rem;
-            color: var(--ctp-text);
-            min-width: 145px;
+            font-size: 0.88rem;
+            color: #ffffff;
+            min-width: 170px;
             text-align: right;
         }
 
@@ -135,12 +230,12 @@
         }
 
         .hud-btn {
-            background: var(--ctp-surface0);
-            border: 1px solid var(--ctp-surface2);
-            color: var(--ctp-text);
-            border-radius: 10px;
-            padding: 8px 12px;
-            font-size: 0.82rem;
+            background: rgba(30, 41, 59, 0.85);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            color: #ffffff;
+            border-radius: 9px;
+            padding: 7px 12px;
+            font-size: 0.8rem;
             font-weight: 700;
             cursor: pointer;
             display: flex;
@@ -149,237 +244,284 @@
             transition: all 0.2s ease;
         }
 
-        .hud-btn svg {
-            width: 15px;
-            height: 15px;
-        }
-
         .hud-btn:hover {
-            background: var(--ctp-surface1);
-            border-color: var(--ctp-mauve);
-            color: var(--ctp-mauve);
+            background: rgba(51, 65, 85, 0.95);
+            border-color: #00f0ff;
+            color: #00f0ff;
         }
 
-        /* Dynamic Grid Layout (Full Viewport Flex) */
-        #grid {
+        /* -------------------------------------------------------------
+           MURAL DE 15 CUADRANTES (3 FILAS x 5 COLUMNAS)
+           Matriz exacta solicitada:
+           1   2   3   4   5
+           6   7   8   9  10
+           11 12  13  14  15
+           ------------------------------------------------------------- */
+        #muralGrid {
+            position: absolute;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 10;
+            display: grid;
+            grid-template-rows: repeat(3, 1fr);
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+        }
+
+        .tile-cell {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            contain: layout style paint;
+        }
+
+        /* El bloque visual del rompecabezas */
+        .tile-block {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-position: center center;
+            border: 1px solid rgba(0, 255, 170, 0.25);
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.6);
             display: flex;
             flex-direction: column;
-            height: 100vh;
-            width: 100vw;
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 10;
-            overflow: hidden;
-            transition: all 0.8s ease;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 10px;
+            transition: transform 0.48s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.48s ease, filter 0.48s ease;
+            transform-origin: center center;
+            z-index: 12;
         }
 
-        .grid-fila {
-            display: flex;
-            flex: 1;
-            width: 100%;
-            min-height: 0;
+        /* Animación de encogimiento / disolución al curar el bloque */
+        .tile-block.curando {
+            transform: scale(0.08) rotate(16deg);
+            opacity: 0;
+            filter: brightness(2.2) contrast(1.6) drop-shadow(0 0 25px #00ffaa);
         }
 
-        .bloque {
-            flex: 1;
-            min-width: 0;
-            height: 100%;
-            /* Estado no revelado: superficie oscura elegante */
-            background-color: #12121c;
-            border: 1px solid rgba(69, 71, 90, 0.38);
+        /* Bloque totalmente curado y transparente */
+        .tile-block.tile-curado {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            transform: scale(0.05);
+            visibility: hidden;
+        }
+
+        /* Animación pop al rellenar con la siguiente capa */
+        .tile-block.pop-in {
+            animation: tilePopIn 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes tilePopIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            70% { transform: scale(1.04); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Número identificador del cuadrante (01 - 15) */
+        .tile-num-badge {
+            align-self: flex-start;
+            font-family: var(--font-mono, monospace);
+            font-size: clamp(0.7rem, 1vw, 0.85rem);
+            font-weight: 800;
+            color: #d1fae5;
+            background: rgba(6, 78, 59, 0.75);
+            border: 1px solid rgba(52, 211, 153, 0.45);
+            padding: 2px 7px;
+            border-radius: 6px;
+            letter-spacing: 0.05em;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Información del jugador asignado en este bloque */
+        .tile-player-info {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 6px;
-            color: var(--ctp-subtext0);
-            font-family: var(--font-main);
-            position: relative;
-            cursor: default;
-            user-select: none;
-            overflow: hidden;
-            contain: layout style paint;
-            transform: translateZ(0);
-            transition: background-color 0.4s ease, border-color 0.3s ease, opacity 0.4s ease;
+            text-align: center;
+            max-width: 96%;
+            z-index: 15;
+            background: rgba(10, 15, 26, 0.75);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-radius: 12px;
+            padding: 6px 12px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.75);
+            transition: all 0.3s ease;
         }
 
-        .bloque .bloque-num {
-            font-family: var(--font-mono);
-            font-size: clamp(0.72rem, 1.2vw, 1rem);
-            color: rgba(147, 153, 178, 0.45);
-            font-weight: 600;
-            letter-spacing: 0.06em;
-            background: rgba(30, 30, 46, 0.4);
-            padding: 2px 8px;
-            border-radius: 6px;
-            border: 1px solid rgba(69, 71, 90, 0.25);
-        }
-
-        /* Estado Revelado: translúcido de ultra alto rendimiento (sin blur GPU fill-rate penalty) */
-        .bloque.revelado {
-            background-color: rgba(17, 17, 27, 0.22);
-            border: 1px solid rgba(203, 166, 247, 0.35);
-            animation: revealPop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-
-        .bloque.revelado:hover {
-            background-color: rgba(17, 17, 27, 0.08);
-            border-color: var(--ctp-mauve);
-        }
-
-        .bloque-avatar-badge {
-            width: clamp(34px, 4vw, 54px);
-            height: clamp(34px, 4vw, 54px);
+        .tile-avatar {
+            width: clamp(28px, 3.2vw, 44px);
+            height: clamp(28px, 3.2vw, 44px);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: clamp(0.85rem, 1.4vw, 1.25rem);
+            font-size: clamp(0.75rem, 1.1vw, 1.05rem);
             font-weight: 800;
-            color: #11111b;
-            margin-bottom: 5px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.55);
-            flex-shrink: 0;
-            border: 2px solid rgba(255, 255, 255, 0.25);
+            color: #0b0f19;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            margin-bottom: 3px;
         }
 
-        .bloque.revelado .bloque-nombre {
-            color: #ffffff;
-            font-size: clamp(0.75rem, 1.2vw, 1.1rem);
+        .tile-name {
+            font-size: clamp(0.72rem, 1.1vw, 0.95rem);
             font-weight: 800;
-            text-align: center;
-            max-width: 95%;
+            color: #ffffff;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95), 0 0 16px rgba(0, 0, 0, 0.9);
-            letter-spacing: 0.02em;
+            max-width: 100%;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+            line-height: 1.2;
         }
 
-        @keyframes revealPop {
-            0% {
-                transform: scale(0.85);
-                box-shadow: 0 0 16px var(--ctp-mauve);
-                border-color: var(--ctp-mauve);
-                z-index: 20;
-            }
-            60% {
-                transform: scale(1.05);
-                box-shadow: 0 0 10px var(--ctp-sapphire);
-                z-index: 20;
-            }
-            100% {
-                transform: scale(1);
-                box-shadow: none;
-                z-index: 1;
-            }
+        .tile-targets-badge {
+            font-family: var(--font-mono, monospace);
+            font-size: clamp(0.6rem, 0.8vw, 0.72rem);
+            color: #00ffaa;
+            margin-top: 2px;
+            font-weight: 700;
+        }
+
+        /* Contador de capas pendientes en el cuadrante (Multi-capa / Stacking) */
+        .tile-layers-badge {
+            align-self: flex-end;
+            font-size: clamp(0.58rem, 0.75vw, 0.7rem);
+            font-weight: 700;
+            color: #fbbf24;
+            background: rgba(20, 24, 39, 0.8);
+            border: 1px solid rgba(251, 191, 36, 0.4);
+            padding: 2px 7px;
+            border-radius: 999px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
         }
 
         /* -------------------------------------------------------------
-           MODOS ADAPTATIVOS DE DENSIDAD SEGÚN VOLUMEN DE PARTICIPANTES
+           MODAL GRAND FINALE (Mural Completado Colectivo)
+           * Eliminado podio de primer lugar por solicitud expresa *
            ------------------------------------------------------------- */
-        /* Modo Compacto: 20 a 50 cuadrantes */
-        .grid-compact .bloque {
-            padding: 4px;
-        }
-        .grid-compact .bloque-avatar-badge {
-            width: clamp(26px, 3vw, 36px);
-            height: clamp(26px, 3vw, 36px);
-            font-size: clamp(0.75rem, 1vw, 0.95rem);
-            margin-bottom: 3px;
-        }
-        .grid-compact .bloque.revelado .bloque-nombre {
-            font-size: clamp(0.7rem, 0.9vw, 0.85rem);
-        }
-        .grid-compact .bloque-score-badge {
-            font-size: clamp(0.58rem, 0.75vw, 0.7rem);
-            padding: 1px 5px;
-        }
-
-        /* Modo Denso: 50 a 100 cuadrantes */
-        .grid-dense .bloque {
-            padding: 3px 4px;
-        }
-        .grid-dense .bloque-avatar-badge {
-            width: 26px;
-            height: 26px;
-            min-width: 26px;
-            min-height: 26px;
-            font-size: 0.7rem;
-            margin-bottom: 2px;
-            border-width: 1.5px;
-        }
-        .grid-dense .bloque.revelado .bloque-nombre {
-            font-size: 0.68rem;
-            line-height: 1.1;
-        }
-        .grid-dense .bloque-score-badge {
-            font-size: 0.6rem;
-            padding: 1px 4px;
-            margin-top: 2px;
-        }
-        .grid-dense .bloque .bloque-num {
-            font-size: 0.68rem;
-            padding: 1px 5px;
-        }
-
-        /* Modo Ultra-Rendimiento: 100 a 250+ cuadrantes (Simultáneos 200 cuadrantes) */
-        .grid-ultra .bloque {
-            padding: 2px 3px;
-            border-color: rgba(69, 71, 90, 0.28);
-        }
-        .grid-ultra .bloque-avatar-badge {
-            width: 22px;
-            height: 22px;
-            min-width: 22px;
-            min-height: 22px;
-            font-size: 0.62rem;
-            margin-bottom: 1px;
-            border-width: 1px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-        }
-        .grid-ultra .bloque.revelado .bloque-nombre {
-            font-size: 0.62rem;
-            line-height: 1.1;
-            letter-spacing: 0;
-            max-width: 96%;
-        }
-        .grid-ultra .bloque-score-badge {
-            font-size: 0.56rem;
-            padding: 0 3px;
-            margin-top: 1px;
-            border-radius: 4px;
-            gap: 2px;
-        }
-        .grid-ultra .bloque .bloque-num {
-            font-size: 0.64rem;
-            padding: 1px 4px;
-            border-radius: 4px;
-        }
-        .grid-ultra .bloque-bonus-ribbon {
-            font-size: 0.48rem;
-            padding: 1px 4px;
-            top: 1px;
-        }
-
-        /* Pantalla Limpia: Sin toas/logs flotantes en la proyeccion */
-
-        /* Grand Finale Modal */
         #finaleBanner {
             position: fixed;
-            top: 0;
-            left: 0;
+            inset: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(17, 17, 27, 0.7);
-            backdrop-filter: blur(4px);
+            background: rgba(11, 15, 25, 0.75);
+            backdrop-filter: blur(8px);
             z-index: 200;
             display: none;
             align-items: center;
             justify-content: center;
             flex-direction: column;
-            animation: popScale 0.6s ease;
+            animation: popInModal 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popInModal {
+            0% { transform: scale(0.85); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .finale-card {
+            background: linear-gradient(135deg, rgba(20, 27, 45, 0.96), rgba(15, 23, 42, 0.96));
+            border: 2px solid #00ffaa;
+            box-shadow: 0 0 60px rgba(0, 255, 170, 0.35), 0 25px 60px rgba(0, 0, 0, 0.9);
+            border-radius: 24px;
+            padding: 38px 46px;
+            text-align: center;
+            max-width: 620px;
+            position: relative;
+        }
+
+        .finale-icon-wrap {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(0, 255, 170, 0.15);
+            border: 2px solid #00ffaa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 18px auto;
+            color: #00ffaa;
+            box-shadow: 0 0 24px rgba(0, 255, 170, 0.4);
+        }
+
+        .finale-card h1 {
+            font-size: 2.1rem;
+            font-weight: 900;
+            background: linear-gradient(90deg, #00ffaa, #00f0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            letter-spacing: 0.03em;
+        }
+
+        .finale-card p {
+            font-size: 1.05rem;
+            color: #cbd5e1;
+            line-height: 1.55;
+            margin-bottom: 24px;
+        }
+
+        .finale-stats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .finale-stat-box {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(0, 240, 255, 0.25);
+            border-radius: 12px;
+            padding: 10px 18px;
+            min-width: 120px;
+        }
+
+        .finale-stat-num {
+            font-family: var(--font-mono, monospace);
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #00f0ff;
+        }
+
+        .finale-stat-label {
+            font-size: 0.72rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .btn-apreciar {
+            background: linear-gradient(90deg, #00f0ff, #00ffaa);
+            color: #0b0f19;
+            font-weight: 800;
+            font-size: 0.95rem;
+            padding: 12px 30px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(0, 255, 170, 0.4);
+            transition: all 0.2s ease;
+        }
+
+        .btn-apreciar:hover {
+            transform: scale(1.04);
+            box-shadow: 0 0 30px rgba(0, 255, 170, 0.7);
         }
 
         #confettiCanvas {
@@ -392,93 +534,34 @@
             z-index: 250;
         }
 
-        /* Grid Completed: todo el mosaico se vuelve transparente para ver la foto 100% limpia */
-        .grid-completed .bloque {
-            border: none;
-            background-color: transparent !important;
-            backdrop-filter: none !important;
-        }
-        .grid-completed .bloque .bloque-num {
-            display: none;
-        }
-
-        /* Bloque con segundo cuadrante reasignado / bonus */
-        .bloque.bloque-bonus {
-            border: 2px solid var(--ctp-yellow) !important;
-            box-shadow: 0 0 25px rgba(249, 226, 175, 0.45), inset 0 0 15px rgba(249, 226, 175, 0.2) !important;
-            animation: bonusPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-
-        @keyframes bonusPop {
-            0% { transform: scale(0.85); box-shadow: 0 0 40px var(--ctp-yellow); }
-            50% { transform: scale(1.06); box-shadow: 0 0 50px var(--ctp-peach); }
-            100% { transform: scale(1); }
-        }
-
-        .bloque-bonus-ribbon {
-            position: absolute;
-            top: 6px;
-            background: linear-gradient(90deg, var(--ctp-yellow), var(--ctp-peach));
-            color: #11111b;
-            font-size: clamp(0.58rem, 0.85vw, 0.75rem);
-            font-weight: 900;
-            padding: 2px 8px;
-            border-radius: 999px;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
-            z-index: 5;
-        }
-
-        .bloque-score-badge {
-            font-family: var(--font-mono);
-            font-size: clamp(0.65rem, 0.9vw, 0.8rem);
-            color: var(--ctp-text);
-            background: rgba(17, 17, 27, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            border-radius: 6px;
-            padding: 2px 7px;
-            margin-top: 4px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            z-index: 2;
-        }
-
-        /* Ranking Modal */
+        /* -------------------------------------------------------------
+           MODAL DE RANKING (A solicitud por botón del HUD)
+           ------------------------------------------------------------- */
         .ranking-modal-backdrop {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(17, 17, 27, 0.75);
+            background: rgba(11, 15, 25, 0.8);
             backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
             z-index: 150;
             display: none;
             align-items: center;
             justify-content: center;
-            animation: fadeIn 0.2s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
         }
 
         .ranking-modal-card {
-            background: var(--ctp-mantle);
-            border: 1px solid rgba(203, 166, 247, 0.3);
+            background: #141b2d;
+            border: 1px solid rgba(0, 240, 255, 0.35);
             border-radius: 18px;
             width: 90%;
             max-width: 660px;
-            max-height: 85vh;
+            max-height: 84vh;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), 0 0 30px rgba(203, 166, 247, 0.3);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
             overflow: hidden;
-            animation: popScale 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         .ranking-header {
@@ -486,8 +569,8 @@
             justify-content: space-between;
             align-items: center;
             padding: 16px 22px;
-            border-bottom: 1px solid var(--ctp-surface1);
-            background: rgba(30, 30, 46, 0.9);
+            border-bottom: 1px solid rgba(51, 65, 85, 0.6);
+            background: rgba(20, 27, 45, 0.95);
         }
 
         .ranking-body {
@@ -495,76 +578,17 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 9px;
+            gap: 8px;
         }
 
         .ranking-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: var(--ctp-surface0);
-            border: 1px solid var(--ctp-surface1);
-            border-radius: 12px;
-            padding: 10px 14px;
-            transition: all 0.2s ease;
-            gap: 12px;
-        }
-
-        .ranking-row:hover {
-            border-color: var(--ctp-mauve);
-            background: var(--ctp-surface1);
-        }
-
-        .ranking-row.pos-1 {
-            border-color: rgba(249, 226, 175, 0.65);
-            background: linear-gradient(90deg, rgba(249, 226, 175, 0.15), var(--ctp-surface0));
-            box-shadow: 0 4px 16px rgba(249, 226, 175, 0.15);
-        }
-
-        .ranking-pos {
-            font-family: var(--font-mono);
-            font-size: 1.05rem;
-            font-weight: 800;
-            min-width: 32px;
-            text-align: center;
-        }
-
-        .ranking-player-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex: 1;
-            min-width: 0;
-        }
-
-        .ranking-avatar {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.82rem;
-            font-weight: 800;
-            color: #11111b;
-            flex-shrink: 0;
-        }
-
-        .ranking-name {
-            font-weight: 700;
-            font-size: 0.92rem;
-            color: var(--ctp-text);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .ranking-stats {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: flex-end;
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(71, 85, 105, 0.4);
+            border-radius: 10px;
+            padding: 9px 14px;
         }
     </style>
 </head>
@@ -573,13 +597,29 @@
     <!-- Confetti Canvas -->
     <canvas id="confettiCanvas"></canvas>
 
-    <!-- Top HUD Navigation Bar -->
+    <!-- Escenario de Fondo (Visible al curar los bloques) -->
+    <div id="stageBackground">
+        <div class="stage-glow"></div>
+        
+        <!-- Pulmón Sano y Pulmón Infectado en transición -->
+        <div id="lungsContainer">
+            <img src="assets/clean_healthy_lungs.jpg" id="healthyLungs" class="lung-layer" alt="Pulmones Sanos">
+            <img src="assets/lungs_lava_transparent.png" id="infectedLungs" class="lung-layer" alt="Infección Pulmonar">
+        </div>
+
+        <!-- Super Neumoflux de pie en el escenario -->
+        <div id="characterSuper">
+            <img src="assets/super_neumoflux_hero.png" alt="Super Neumoflux">
+        </div>
+    </div>
+
+    <!-- Barra de navegación HUD Superior -->
     <div class="hud-header" id="hudHeader">
         <div class="hud-title">
             <div class="hud-indicator"></div>
             <div class="hud-title-text">
-                <h1>Mural Colectivo</h1>
-                <p id="modoCuadriculaTxt">Proyección colaborativa en vivo</p>
+                <h1>Super NeumoFlux</h1>
+                <p>Mural Colectivo de Purificación</p>
             </div>
         </div>
 
@@ -588,7 +628,7 @@
                 <div class="hud-progress-fill" id="progressFill"></div>
             </div>
             <div class="hud-counter">
-                <span id="revealedCount" style="color: var(--ctp-mauve);">0</span> / <span id="totalCount">1</span> (<span id="percentage">0%</span>)
+                <span id="revealedCount" style="color: #00ffaa;">0</span> / <span id="totalCount">0</span> Capas (<span id="percentage">0%</span>)
             </div>
         </div>
 
@@ -605,18 +645,15 @@
                 <span class="status-dot connecting" id="statusDot"></span>
                 <span id="statusText">Conectando</span>
             </div>
-            <button class="hud-btn" id="btnRanking" onclick="toggleRankingModal()" title="Ver ranking de posiciones">
-                <span style="font-size: 1rem;">🏆</span>
+            <button class="hud-btn" id="btnRanking" onclick="toggleRankingModal()" title="Ver ranking de participantes">
+                <span style="font-size: 0.95rem;">🏆</span>
                 <span>Ranking</span>
             </button>
-            <button class="hud-btn" onclick="toggleFullscreen()" title="Pantalla completa">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
-                </svg>
+            <button class="hud-btn" onclick="toggleFullscreen()" title="Pantalla completa (F11)">
                 <span>F11</span>
             </button>
             <button class="hud-btn" id="audioBtn" onclick="toggleAudio()" title="Alternar sonido">
-                <svg id="audioIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg id="audioIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                     <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
                 </svg>
@@ -624,198 +661,366 @@
         </div>
     </div>
 
-    <!-- Contenedor dinámico de la cuadrícula -->
-    <div id="grid"></div>
+    <!-- MURAL DE 15 CUADRANTES (Matriz 3 x 5) -->
+    <div id="muralGrid"></div>
 
-    <!-- Modal de Ranking de Posiciones -->
+    <!-- Modal de Ranking de Participantes (Bajo Demanda) -->
     <div class="ranking-modal-backdrop" id="rankingModal" onclick="cerrarRankingFuera(event)">
         <div class="ranking-modal-card">
             <div class="ranking-header">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 1.5rem;">🏆</span>
+                    <span style="font-size: 1.4rem;">🏆</span>
                     <div>
-                        <h2 style="font-size: 1.15rem; font-weight: 800; color: var(--ctp-text);">Ranking de Posiciones</h2>
-                        <p style="font-size: 0.78rem; color: var(--ctp-subtext0);" id="rankingSubtitulo">
-                            Ordenado por targets destruidos en el tiempo límite
+                        <h2 style="font-size: 1.1rem; font-weight: 800; color: #ffffff;">Participantes de la Ronda</h2>
+                        <p style="font-size: 0.76rem; color: #94a3b8;" id="rankingSubtitulo">
+                            Progreso de purificación colectiva
                         </p>
                     </div>
                 </div>
-                <button class="hud-btn" onclick="toggleRankingModal()" style="padding: 6px 12px;">✕ Cerrar</button>
+                <button class="hud-btn" onclick="toggleRankingModal()">✕ Cerrar</button>
             </div>
             <div class="ranking-body" id="rankingList">
-                <div style="text-align: center; color: var(--ctp-overlay1); padding: 24px 0;">
-                    Esperando resultados de la ronda...
+                <div style="text-align: center; color: #64748b; padding: 24px 0;">
+                    Esperando inicio de la ronda...
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Grand Finale Banner -->
+    <!-- Grand Finale Banner (Completado Colectivo sin podio individual) -->
     <div id="finaleBanner">
-        <div class="ctp-card" style="text-align: center; max-width: 650px; padding: 36px; border: 1.5px solid var(--ctp-green); box-shadow: 0 0 50px rgba(166, 227, 161, 0.35);">
-            <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(166, 227, 161, 0.15); border: 2px solid var(--ctp-green); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; color: var(--ctp-green);">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <div class="finale-card">
+            <div class="finale-icon-wrap">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
             </div>
-            <h1 style="font-size: 2rem; font-weight: 900; color: var(--ctp-green); margin-bottom: 8px;">
-                Mural Completado
-            </h1>
-            <p style="font-size: 1.05rem; color: var(--ctp-subtext0); margin-bottom: 20px; line-height: 1.5;">
-                Todos los participantes han descubierto su fragmento de la imagen.
+            <h1>¡MURAL COMPLETADO!</h1>
+            <p>
+                ¡Infección erradicada con éxito! Todos los participantes han colaborado para restaurar la salud pulmonar con la fuerza de <strong>Super NeumoFlux</strong>.
             </p>
-
-            <!-- Podio de Mejores Jugadores -->
-            <div id="finalePodium" style="display: flex; gap: 12px; margin-bottom: 24px; justify-content: center; flex-wrap: wrap;"></div>
-
-            <button class="ctp-btn ctp-btn-green" onclick="cerrarBanner()">
-                Apreciar imagen completa
+            <div class="finale-stats">
+                <div class="finale-stat-box">
+                    <div class="finale-stat-num" id="statFinalJugadores">0</div>
+                    <div class="finale-stat-label">Participantes</div>
+                </div>
+                <div class="finale-stat-box">
+                    <div class="finale-stat-num" id="statFinalCapas">0</div>
+                    <div class="finale-stat-label">Capas Curadas</div>
+                </div>
+                <div class="finale-stat-box">
+                    <div class="finale-stat-num" style="color: #00ffaa;">100%</div>
+                    <div class="finale-stat-label">Salud Pulmonar</div>
+                </div>
+            </div>
+            <button class="btn-apreciar" onclick="cerrarBanner()">
+                Apreciar Imagen Completa
             </button>
         </div>
     </div>
 
     <script>
-        // Estado de la pantalla
-        let totalBloques = 1;
-        let bloques = [];
-        let revelados = 0;
+        // -------------------------------------------------------------
+        // ESTADO GLOBAL Y DEFINICIÓN DE LOS 15 CUADRANTES
+        // Matriz 3 filas x 5 columnas (1 al 15)
+        // -------------------------------------------------------------
+        const TOTAL_CUADRANTES = 15;
+        let cuadrantes = []; // Array de 15 slots con sus colas de capas
         let jugadoresConectados = new Map(); // id -> { id, nombre, color }
-        let rankingJugadores = new Map(); // id -> { id, nombre, color, targets, califica, tiempo, timestamp, conectado, cuadrantes, ultimaActividad }
+        let rankingJugadores = new Map(); // id -> { id, nombre, color, targets, califica, tiempo, timestamp, conectado, slotId, curado }
+        
         let juegoEnCurso = false;
         let audioActivo = true;
         let configTiempoRonda = 15;
         let configMinTargets = 10;
-        let configTimeoutInactividad = 30; // segundos para auto-desconectar inactivos (0 = desactivado)
+        let configTimeoutInactividad = 30;
         let watchdogInterval = null;
+
+        let totalCapasGlobal = 0;
+        let capasCuradasGlobal = 0;
 
         function obtenerIniciales(texto) {
             if (!texto) return 'P';
             const partes = texto.trim().split(/\s+/);
-            if (partes.length === 1) {
-                return partes[0].substring(0, 2).toUpperCase();
-            }
+            if (partes.length === 1) return partes[0].substring(0, 2).toUpperCase();
             return (partes[0][0] + partes[1][0]).toUpperCase();
         }
 
-        // 1. Distribución 1:1 exacta para N bloques
-        function calcularDistribucion(N) {
-            const total = Math.max(N, 1);
-            if (total === 1) return { total: 1, rows: 1, filas: [1] };
-            if (total === 2) return { total: 2, rows: 1, filas: [2] };
-            if (total === 3) return { total: 3, rows: 1, filas: [3] };
-
-            let rows = Math.round(Math.sqrt(total / 1.77));
-            if (rows < 1) rows = 1;
-            if (rows > total) rows = total;
-
-            const baseCols = Math.floor(total / rows);
-            const remainder = total % rows;
-            const filas = [];
-            for (let r = 0; r < rows; r++) {
-                filas.push(baseCols + (r < remainder ? 1 : 0));
-            }
-            return { total, rows, filas };
-        }
-
-        // 2. Reconstruir la cuadrícula dinámica en el DOM con optimización de DocumentFragment
-        let debounceReconstruirTimer = null;
-        function debouncedReconstruirCuadricula(cant) {
-            if (debounceReconstruirTimer) clearTimeout(debounceReconstruirTimer);
-            debounceReconstruirTimer = setTimeout(() => {
-                reconstruirCuadricula(cant);
-            }, 60);
-        }
-
-        function reconstruirCuadricula(cantidad) {
-            totalBloques = Math.max(cantidad, 1);
-            bloques = [];
-            revelados = 0;
-            const grid = document.getElementById('grid');
+        // -------------------------------------------------------------
+        // CONSTRUCCIÓN DE LA GRILLA DE 15 CUADRANTES (Mural 3x5)
+        // -------------------------------------------------------------
+        function inicializarMural15() {
+            const grid = document.getElementById('muralGrid');
             grid.innerHTML = '';
+            cuadrantes = [];
 
-            // Asignar clase de densidad adaptativa según volumen de cuadrantes
-            grid.classList.remove('grid-compact', 'grid-dense', 'grid-ultra');
-            if (totalBloques > 100) {
-                grid.classList.add('grid-ultra');
-            } else if (totalBloques > 50) {
-                grid.classList.add('grid-dense');
-            } else if (totalBloques > 20) {
-                grid.classList.add('grid-compact');
+            for (let i = 1; i <= TOTAL_CUADRANTES; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'tile-cell';
+                cell.dataset.slotId = i;
+
+                // Bloque con la imagen del rompecabezas verde
+                const block = document.createElement('div');
+                block.className = 'tile-block';
+                block.dataset.slotId = i;
+                block.style.backgroundImage = `url('assets/mural/${i}.png')`;
+
+                // Badge con el número de cuadrante (01 - 15)
+                const numBadge = document.createElement('div');
+                numBadge.className = 'tile-num-badge';
+                numBadge.textContent = String(i).padStart(2, '0');
+
+                // Contenedor de jugador activo en este cuadrante
+                const playerInfo = document.createElement('div');
+                playerInfo.className = 'tile-player-info';
+                playerInfo.style.display = 'none'; // Se muestra al asignar jugador
+
+                const avatar = document.createElement('div');
+                avatar.className = 'tile-avatar';
+
+                const nameEl = document.createElement('div');
+                nameEl.className = 'tile-name';
+
+                const targetsEl = document.createElement('div');
+                targetsEl.className = 'tile-targets-badge';
+
+                playerInfo.appendChild(avatar);
+                playerInfo.appendChild(nameEl);
+                playerInfo.appendChild(targetsEl);
+
+                // Badge de capas pendientes (para cuando hay >1 jugador en la pila)
+                const layersBadge = document.createElement('div');
+                layersBadge.className = 'tile-layers-badge';
+                layersBadge.style.display = 'none';
+
+                block.appendChild(numBadge);
+                block.appendChild(playerInfo);
+                block.appendChild(layersBadge);
+
+                cell.appendChild(block);
+                grid.appendChild(cell);
+
+                cuadrantes.push({
+                    id: i,
+                    cellElement: cell,
+                    blockElement: block,
+                    playerInfoElement: playerInfo,
+                    avatarElement: avatar,
+                    nameElement: nameEl,
+                    targetsElement: targetsEl,
+                    layersBadgeElement: layersBadge,
+                    cola: [], // Array de jugadores asignados como capas a este cuadrante
+                    jugadorActivo: null,
+                    curadoTotal: false
+                });
             }
 
-            const dist = calcularDistribucion(totalBloques);
-            let idx = 1;
-
-            // Inserción en lote mediante DocumentFragment para eliminar reflows intermedios
-            const fragment = document.createDocumentFragment();
-
-            for (let r = 0; r < dist.rows; r++) {
-                const filaDiv = document.createElement('div');
-                filaDiv.className = 'grid-fila';
-
-                const cols = dist.filas[r];
-                for (let c = 0; c < cols; c++) {
-                    const div = document.createElement('div');
-                    div.className = 'bloque';
-                    div.dataset.index = idx - 1;
-
-                    const numSpan = document.createElement('span');
-                    numSpan.className = 'bloque-num';
-                    numSpan.textContent = String(idx).padStart(2, '0');
-                    div.appendChild(numSpan);
-
-                    filaDiv.appendChild(div);
-                    bloques.push(div);
-                    idx++;
-                }
-                fragment.appendChild(filaDiv);
-            }
-
-            grid.appendChild(fragment);
             actualizarHUD();
         }
 
-        // Inicializar cuadrícula base con 1 bloque
-        reconstruirCuadricula(totalBloques);
+        // -------------------------------------------------------------
+        // ASIGNACIÓN EQUITATIVA DE JUGADORES A CUADRANTES (SISTEMA DE CAPAS)
+        // Soporta autojoin y Late Joiners sin que falte ningún panel
+        // -------------------------------------------------------------
+        function asignarJugadorACuadrante(jugador) {
+            // Si el jugador ya tiene asignado un slot, no duplicar
+            if (jugador.slotId && cuadrantes[jugador.slotId - 1]) {
+                return cuadrantes[jugador.slotId - 1];
+            }
 
-        // Actualizar etiqueta del HUD con tiempo y mínimo de targets
-        function actualizarBadgeRonda() {
-            const roundBadge = document.getElementById('roundInfoBadge');
-            if (roundBadge) {
-                roundBadge.style.display = 'inline-flex';
-                document.getElementById('roundTimerTxt').textContent = `⏱️ ${configTiempoRonda}s`;
-                document.getElementById('roundMinTxt').textContent = `🎯 Mín: ${configMinTargets}`;
+            // Encontrar el cuadrante que tenga MENOR número de capas pendientes
+            let mejorSlot = cuadrantes[0];
+            let menorCarga = Infinity;
+
+            for (const c of cuadrantes) {
+                // Cantidad de capas pendientes en este slot
+                const pendientes = (c.jugadorActivo && !c.jugadorActivo.curado ? 1 : 0) + c.cola.filter(j => !j.curado).length;
+                if (pendientes < menorCarga) {
+                    menorCarga = pendientes;
+                    mejorSlot = c;
+                }
+            }
+
+            jugador.slotId = mejorSlot.id;
+            jugador.curado = false;
+
+            if (!mejorSlot.jugadorActivo) {
+                mejorSlot.jugadorActivo = jugador;
+                mejorSlot.curadoTotal = false;
+                renderizarSlot(mejorSlot);
+            } else {
+                mejorSlot.cola.push(jugador);
+                actualizarBadgeCapasSlot(mejorSlot);
+            }
+
+            recalcularTotalesCapas();
+            return mejorSlot;
+        }
+
+        function renderizarSlot(slot) {
+            const j = slot.jugadorActivo;
+            if (!j) {
+                slot.playerInfoElement.style.display = 'none';
+                actualizarBadgeCapasSlot(slot);
+                return;
+            }
+
+            slot.playerInfoElement.style.display = 'flex';
+            slot.avatarElement.style.background = j.color || '#00f0ff';
+            slot.avatarElement.textContent = obtenerIniciales(j.nombre);
+            slot.nameElement.textContent = j.nombre;
+            slot.targetsElement.textContent = `🎯 ${j.targets || 0} targets`;
+
+            // Asegurar que el bloque esté visible
+            slot.blockElement.classList.remove('tile-curado', 'curando');
+            slot.blockElement.style.opacity = '1';
+            slot.blockElement.style.transform = 'scale(1)';
+
+            actualizarBadgeCapasSlot(slot);
+        }
+
+        function actualizarBadgeCapasSlot(slot) {
+            const enCola = slot.cola.filter(j => !j.curado).length;
+            if (enCola > 0) {
+                slot.layersBadgeElement.style.display = 'block';
+                slot.layersBadgeElement.textContent = `+${enCola} capa${enCola > 1 ? 's' : ''}`;
+            } else {
+                slot.layersBadgeElement.style.display = 'none';
             }
         }
 
-        // Watchdog de inactividad: desconecta a jugadores sin respuesta y reasigna su cuadrante
-        function iniciarWatchdogInactividad() {
-            if (watchdogInterval) clearInterval(watchdogInterval);
-            watchdogInterval = setInterval(() => {
-                if (!configTimeoutInactividad || configTimeoutInactividad <= 0) return;
-                const ahora = Date.now();
-                const timeoutMs = configTimeoutInactividad * 1000;
+        function recalcularTotalesCapas() {
+            let total = 0;
+            let curadas = 0;
 
-                rankingJugadores.forEach(jugador => {
-                    if (jugador.conectado) {
-                        const sinActividad = ahora - (jugador.ultimaActividad || ahora);
-                        if (sinActividad > timeoutMs) {
-                            console.log(`[Watchdog Pantalla] ${jugador.nombre} (${jugador.id}) inactivo por ${Math.round(sinActividad/1000)}s -> Desconectando y reasignando.`);
-                            manejarDesconexion(jugador.id, 'inactividad');
-                            cliente.publish(topicoSecreto, JSON.stringify({
-                                accion: 'jugador_desconectado',
-                                id: jugador.id,
-                                nombre: jugador.nombre,
-                                motivo: 'inactividad'
-                            }));
-                        }
-                    }
+            cuadrantes.forEach(slot => {
+                if (slot.jugadorActivo) {
+                    total++;
+                    if (slot.jugadorActivo.curado) curadas++;
+                }
+                slot.cola.forEach(j => {
+                    total++;
+                    if (j.curado) curadas++;
                 });
-            }, 2500);
-        }
-        iniciarWatchdogInactividad();
+            });
 
-        // 3. Conectar al broker MQTT
+            totalCapasGlobal = Math.max(total, jugadoresConectados.size, 1);
+            capasCuradasGlobal = curadas;
+            actualizarHUD();
+        }
+
+        // -------------------------------------------------------------
+        // ANIMACIÓN DE CURACIÓN Y DESAPARICIÓN DE CAPA / BLOQUE
+        // Tal como se demostró en el video
+        // -------------------------------------------------------------
+        function procesarCuracionCapa(jugador) {
+            if (jugador.curado) return;
+            jugador.curado = true;
+            jugador.califica = true;
+
+            const slot = cuadrantes.find(c => c.id === jugador.slotId);
+            if (!slot) return;
+
+            // Reproducir sonido de revelación / purificación
+            sound.playReveal();
+
+            // Si el jugador curado es el activo en la vista del cuadrante
+            if (slot.jugadorActivo && slot.jugadorActivo.id === jugador.id) {
+                // Activar animación de encogimiento / disolución
+                slot.blockElement.classList.add('curando');
+
+                setTimeout(() => {
+                    // Verificar si quedan más capas pendientes en la cola de este cuadrante
+                    const siguiente = slot.cola.shift();
+
+                    if (siguiente) {
+                        // Pasar al siguiente jugador de la pila
+                        slot.jugadorActivo = siguiente;
+                        slot.blockElement.classList.remove('curando');
+                        slot.blockElement.classList.add('pop-in');
+                        renderizarSlot(slot);
+                        setTimeout(() => slot.blockElement.classList.remove('pop-in'), 460);
+                    } else {
+                        // ¡Cuadrante 100% liberado! Revela el fondo escénico limpio
+                        slot.jugadorActivo = null;
+                        slot.curadoTotal = true;
+                        slot.blockElement.classList.remove('curando');
+                        slot.blockElement.classList.add('tile-curado');
+                    }
+
+                    recalcularTotalesCapas();
+                    verificarVictoriaGlobal();
+                }, 480);
+            } else {
+                // Estaba en la cola interna: se marca curado y se actualiza el badge
+                actualizarBadgeCapasSlot(slot);
+                recalcularTotalesCapas();
+                verificarVictoriaGlobal();
+            }
+        }
+
+        // -------------------------------------------------------------
+        // ACTUALIZACIÓN DE HUD Y PROGRESIÓN DE PULMONES
+        // -------------------------------------------------------------
+        function actualizarHUD() {
+            const pct = totalCapasGlobal > 0 ? Math.min(100, Math.round((capasCuradasGlobal / totalCapasGlobal) * 100)) : 0;
+            
+            const revEl = document.getElementById('revealedCount');
+            const totEl = document.getElementById('totalCount');
+            const pctEl = document.getElementById('percentage');
+            const fillEl = document.getElementById('progressFill');
+
+            if (revEl) revEl.textContent = capasCuradasGlobal;
+            if (totEl) totEl.textContent = totalCapasGlobal;
+            if (pctEl) pctEl.textContent = pct + '%';
+            if (fillEl) fillEl.style.width = pct + '%';
+
+            // Transición del pulmón infectado al pulmón sano
+            const infectedLungs = document.getElementById('infectedLungs');
+            const healthyLungs = document.getElementById('healthyLungs');
+
+            if (infectedLungs && healthyLungs) {
+                const ratio = pct / 100;
+                // La opacidad de la infección disminuye de 1.0 a 0.0
+                infectedLungs.style.opacity = String(Math.max(0, 1 - ratio * 1.1));
+                // La opacidad y brillo del pulmón sano aumentan de 0.2 a 1.0
+                healthyLungs.style.opacity = String(Math.min(1, 0.2 + ratio * 0.8));
+                healthyLungs.style.filter = `drop-shadow(0 0 ${20 + ratio * 35}px rgba(0, 240, 255, 0.7)) brightness(${0.9 + ratio * 0.3})`;
+            }
+        }
+
+        function verificarVictoriaGlobal() {
+            if (capasCuradasGlobal >= totalCapasGlobal && totalCapasGlobal > 0) {
+                dispararGranFinal();
+            }
+        }
+
+        // -------------------------------------------------------------
+        // GRAN FINAL (Mural Completado Colectivo)
+        // * SIN podio de primer lugar *
+        // -------------------------------------------------------------
+        function dispararGranFinal() {
+            sound.playVictory();
+            lanzarConfetti();
+
+            // Poner todos los bloques transparentes por si quedaba alguno
+            cuadrantes.forEach(slot => {
+                slot.blockElement.classList.add('tile-curado');
+            });
+
+            document.getElementById('statFinalJugadores').textContent = jugadoresConectados.size;
+            document.getElementById('statFinalCapas').textContent = capasCuradasGlobal;
+            document.getElementById('finaleBanner').style.display = 'flex';
+        }
+
+        function cerrarBanner() {
+            document.getElementById('finaleBanner').style.display = 'none';
+        }
+
+        // -------------------------------------------------------------
+        // CONEXIÓN AL BROKER MQTT
+        // Tópico sincronizado con admin, pantalla y cliente móvil
+        // -------------------------------------------------------------
         const topicoSecreto = 'proyecto_ar_evento_juego_1a2b3c_lpz';
         const cliente = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
             keepalive: 60,
@@ -841,16 +1046,20 @@
             const statusText = document.getElementById('statusText');
             const connStatus = document.getElementById('connStatus');
 
-            statusDot.className = 'status-dot ' + state;
-            statusText.textContent = label;
-
-            connStatus.className = 'ctp-badge ' + (
-                state === 'online' ? 'ctp-badge-green' :
-                state === 'connecting' ? 'ctp-badge-yellow' : 'ctp-badge-red'
-            );
+            if (statusDot) statusDot.className = 'status-dot ' + state;
+            if (statusText) statusText.textContent = label;
+            if (connStatus) {
+                connStatus.className = 'ctp-badge ' + (
+                    state === 'online' ? 'ctp-badge-green' :
+                    state === 'connecting' ? 'ctp-badge-yellow' : 'ctp-badge-red'
+                );
+            }
         }
 
-        // 4. Reaccionar a mensajes MQTT
+        // -------------------------------------------------------------
+        // PROCESADOR DE MENSAJES MQTT
+        // Soporte robusto de autojoin para jugadores tardíos
+        // -------------------------------------------------------------
         cliente.on('message', (topic, mensaje) => {
             try {
                 const datos = JSON.parse(mensaje.toString());
@@ -858,26 +1067,28 @@
                 if (datos.accion === 'jugador_unido') {
                     const pId = datos.id || datos.nombre;
                     const esNuevo = !jugadoresConectados.has(pId);
-                    jugadoresConectados.set(pId, {
+
+                    const jugadorData = {
                         id: pId,
                         nombre: datos.nombre,
-                        color: datos.color || '#cba6f7'
-                    });
+                        color: datos.color || '#00f0ff'
+                    };
+                    jugadoresConectados.set(pId, jugadorData);
 
-                    // Mantener o registrar en ranking
                     let rJugador = rankingJugadores.get(pId);
                     if (!rJugador) {
                         rJugador = {
                             id: pId,
                             nombre: datos.nombre,
-                            color: datos.color || '#cba6f7',
+                            color: datos.color || '#00f0ff',
                             targets: 0,
                             califica: false,
-                            cuadrantes: 0,
                             conectado: true,
                             tiempo: 0,
                             timestamp: Date.now(),
-                            ultimaActividad: Date.now()
+                            ultimaActividad: Date.now(),
+                            slotId: null,
+                            curado: false
                         };
                         rankingJugadores.set(pId, rJugador);
                     } else {
@@ -889,376 +1100,195 @@
 
                     document.getElementById('playerCount').textContent = jugadoresConectados.size;
 
-                    if (esNuevo) {
-                        mostrarToast(datos.color || '#cba6f7', obtenerIniciales(datos.nombre), `${datos.nombre} se ha unido a la sala`);
-                        if (!juegoEnCurso) {
-                            debouncedReconstruirCuadricula(Math.max(jugadoresConectados.size, 1));
-                        }
-                    }
+                    // Asignar inmediatamente al jugador a un cuadrante (Incluso si entra tarde en juego en curso)
+                    asignarJugadorACuadrante(rJugador);
                     actualizarRankingModal();
+
                 } else if (datos.accion === 'heartbeat') {
                     const pId = datos.id || datos.nombre;
-                    let rJugador = rankingJugadores.get(pId);
+                    const rJugador = rankingJugadores.get(pId);
                     if (rJugador) {
                         rJugador.ultimaActividad = Date.now();
                         rJugador.conectado = true;
                     }
+
                 } else if (datos.accion === 'config_actualizada') {
-                    if (datos.timeoutInactividad !== undefined) {
-                        configTimeoutInactividad = Number(datos.timeoutInactividad);
-                    }
+                    if (datos.timeoutInactividad !== undefined) configTimeoutInactividad = Number(datos.timeoutInactividad);
                     if (datos.tiempoRonda !== undefined) configTiempoRonda = Number(datos.tiempoRonda);
                     if (datos.minTargets !== undefined) configMinTargets = Number(datos.minTargets);
                     actualizarBadgeRonda();
-                } else if (datos.accion === 'jugador_desconectado') {
-                    manejarDesconexion(datos.id, datos.motivo || 'desconexion');
-                } else if (datos.accion === 'desconectar_todos') {
-                    jugadoresConectados.clear();
-                    rankingJugadores.clear();
-                    juegoEnCurso = false;
-                    revelados = 0;
-                    document.getElementById('playerCount').textContent = '0';
-                    document.getElementById('roundInfoBadge').style.display = 'none';
-                    reconstruirCuadricula(1);
-                    document.getElementById('grid').classList.remove('grid-completed');
-                    document.getElementById('finaleBanner').style.display = 'none';
-                    mostrarToast('#fab387', '·', 'Todos los participantes han sido desconectados');
-                    actualizarRankingModal();
+
                 } else if (datos.accion === 'iniciar_juego') {
                     juegoEnCurso = true;
                     configTiempoRonda = datos.tiempoRonda || 15;
                     configMinTargets = datos.minTargets || (datos.taps || 10);
-                    if (datos.timeoutInactividad !== undefined) {
-                        configTimeoutInactividad = Number(datos.timeoutInactividad);
-                    }
+                    if (datos.timeoutInactividad !== undefined) configTimeoutInactividad = Number(datos.timeoutInactividad);
 
-                    // Actualizar badge de ronda
                     actualizarBadgeRonda();
 
-                    // Resetear estadísticas y refrescar actividad de los jugadores
-                    const ahoraRonda = Date.now();
+                    // Resetear estadísticas de los participantes para la nueva ronda
                     rankingJugadores.forEach(j => {
                         j.targets = 0;
                         j.califica = false;
-                        j.cuadrantes = 0;
+                        j.curado = false;
                         j.tiempo = 0;
-                        j.ultimaActividad = ahoraRonda;
+                        j.ultimaActividad = Date.now();
                     });
 
-                    const cantFinal = datos.totalJugadores || Math.max(jugadoresConectados.size, 1);
-                    reconstruirCuadricula(cantFinal);
-                    document.getElementById('grid').classList.remove('grid-completed');
-                    document.getElementById('finaleBanner').style.display = 'none';
+                    // Limpiar cuadrantes y reasignar a todos los jugadores conectados
+                    inicializarMural15();
+                    rankingJugadores.forEach(j => {
+                        if (j.conectado) {
+                            j.slotId = null;
+                            asignarJugadorACuadrante(j);
+                        }
+                    });
 
-                    mostrarToast('#a6e3a1', 'OK', `Ronda iniciada: <strong>${configTiempoRonda}s</strong> (Mínimo: <strong>${configMinTargets} targets</strong>)`);
+                    document.getElementById('finaleBanner').style.display = 'none';
                     sound.playStart();
                     actualizarRankingModal();
+
                 } else if (datos.accion === 'progreso_juego') {
-                    procesarProgresoJugador(datos);
-                } else if (datos.accion === 'juego_terminado') {
-                    procesarFinDeJuegoJugador(datos);
+                    const pId = datos.id || datos.nombre;
+                    const targets = Number(datos.targets || 0);
+
+                    let j = rankingJugadores.get(pId);
+                    if (!j) {
+                        // Jugador tardío que empezó a enviar progreso directamente
+                        j = {
+                            id: pId,
+                            nombre: datos.nombre || 'Participante',
+                            color: datos.color || '#00f0ff',
+                            targets: targets,
+                            califica: false,
+                            conectado: true,
+                            tiempo: 0,
+                            timestamp: Date.now(),
+                            ultimaActividad: Date.now(),
+                            slotId: null,
+                            curado: false
+                        };
+                        rankingJugadores.set(pId, j);
+                        jugadoresConectados.set(pId, j);
+                        asignarJugadorACuadrante(j);
+                        document.getElementById('playerCount').textContent = jugadoresConectados.size;
+                    }
+
+                    j.targets = Math.max(j.targets || 0, targets);
+                    j.ultimaActividad = Date.now();
+                    j.conectado = true;
+
+                    // Si está activo en el cuadrante, actualizar el badge de targets en tiempo real
+                    if (j.slotId && cuadrantes[j.slotId - 1]) {
+                        const slot = cuadrantes[j.slotId - 1];
+                        if (slot.jugadorActivo && slot.jugadorActivo.id === j.id) {
+                            slot.targetsElement.textContent = `🎯 ${j.targets} targets`;
+                        }
+                    }
+
+                    // Si supera el mínimo requerido y no ha curado aún su capa
+                    if (j.targets >= configMinTargets && !j.curado) {
+                        procesarCuracionCapa(j);
+                    }
+
+                    actualizarRankingModal();
+
+                } else if (datos.accion === 'juego_terminado' || datos.accion === 'fin_juego') {
+                    const pId = datos.id || datos.nombre;
+                    const targets = Number(datos.targets !== undefined ? datos.targets : (datos.taps || 0));
+                    const califica = (datos.califica !== undefined) ? Boolean(datos.califica) : (targets >= configMinTargets);
+
+                    let j = rankingJugadores.get(pId);
+                    if (j) {
+                        j.targets = Math.max(j.targets || 0, targets);
+                        j.califica = califica;
+                        j.tiempo = datos.tiempo || configTiempoRonda;
+                        j.ultimaActividad = Date.now();
+
+                        if (califica && !j.curado) {
+                            procesarCuracionCapa(j);
+                        }
+                    }
+
+                    actualizarRankingModal();
+
                 } else if (datos.accion === 'reiniciar_juego') {
-                    reiniciarPantalla();
+                    juegoEnCurso = false;
+                    document.getElementById('finaleBanner').style.display = 'none';
+                    document.getElementById('roundInfoBadge').style.display = 'none';
+                    jugadoresConectados.clear();
+                    rankingJugadores.clear();
+                    document.getElementById('playerCount').textContent = '0';
+                    inicializarMural15();
+                    cliente.publish(topicoSecreto, JSON.stringify({ accion: 'ping_jugadores' }));
+                    actualizarRankingModal();
+
                 } else if (datos.accion === 'revelar_todo') {
-                    revelarTodosLosBloques();
+                    // Revelar en cascada todos los cuadrantes
+                    cuadrantes.forEach((slot, idx) => {
+                        setTimeout(() => {
+                            slot.blockElement.classList.add('curando');
+                            setTimeout(() => {
+                                slot.blockElement.classList.remove('curando');
+                                slot.blockElement.classList.add('tile-curado');
+                            }, 450);
+                        }, idx * 60);
+                    });
+                    capasCuradasGlobal = totalCapasGlobal;
+                    actualizarHUD();
+                    setTimeout(dispararGranFinal, 15 * 60 + 500);
+
+                } else if (datos.accion === 'desconectar_todos') {
+                    jugadoresConectados.clear();
+                    rankingJugadores.clear();
+                    juegoEnCurso = false;
+                    document.getElementById('playerCount').textContent = '0';
+                    document.getElementById('roundInfoBadge').style.display = 'none';
+                    document.getElementById('finaleBanner').style.display = 'none';
+                    inicializarMural15();
+                    actualizarRankingModal();
                 }
             } catch (e) {
-                console.error('Error procesando mensaje:', e);
+                console.error('Error procesando MQTT:', e);
             }
         });
 
-        // 4.1 Procesar progreso en tiempo real (Desbloqueo INMEDIATO al alcanzar el mínimo de targets)
-        function procesarProgresoJugador(datos) {
-            const pId = datos.id || datos.nombre;
-            const targets = Number(datos.targets || 0);
+        // -------------------------------------------------------------
+        // WATCHDOG DE INACTIVIDAD
+        // -------------------------------------------------------------
+        function iniciarWatchdogInactividad() {
+            if (watchdogInterval) clearInterval(watchdogInterval);
+            watchdogInterval = setInterval(() => {
+                if (!configTimeoutInactividad || configTimeoutInactividad <= 0) return;
+                const ahora = Date.now();
+                const timeoutMs = configTimeoutInactividad * 1000;
 
-            let j = rankingJugadores.get(pId);
-            if (!j) {
-                j = {
-                    id: pId,
-                    nombre: datos.nombre,
-                    color: datos.color || '#cba6f7',
-                    targets: 0,
-                    califica: false,
-                    cuadrantes: 0,
-                    conectado: true,
-                    timestamp: Date.now(),
-                    ultimaActividad: Date.now()
-                };
-                rankingJugadores.set(pId, j);
-            }
-
-            j.nombre = datos.nombre || j.nombre;
-            j.targets = Math.max(j.targets || 0, targets);
-            j.ultimaActividad = Date.now();
-            j.conectado = true;
-
-            // REGLA: El panel se desbloquea en cuanto el jugador alcanza el mínimo de targets (no cuando se acaba el tiempo)
-            if (j.targets >= configMinTargets && (j.cuadrantes || 0) === 0) {
-                j.califica = true;
-                j.cuadrantes = 1;
-                const tiempoTranscurrido = Math.round((Date.now() - (j.timestamp || Date.now())) / 1000);
-                revelarBloque(j.nombre, j.color, j.targets, tiempoTranscurrido, j.id);
-            } else if (j.cuadrantes > 0) {
-                // Actualizar contador en vivo sobre el bloque ya revelado
-                actualizarScoreEnBloque(j.id, j.targets);
-            }
-
-            actualizarRankingModal();
-        }
-
-        // Actualizar el número de targets visibles en el bloque ya revelado
-        function actualizarScoreEnBloque(jugadorId, targets) {
-            const bloque = bloques.find(b => b.classList.contains('revelado') && b.dataset.jugadorId === jugadorId && !b.dataset.esBonus);
-            if (bloque) {
-                const scoreBadge = bloque.querySelector('.bloque-score-badge');
-                if (scoreBadge) {
-                    scoreBadge.innerHTML = `🎯 <strong>${targets}</strong> targets`;
-                }
-                bloque.dataset.targets = targets;
-            }
-        }
-
-        // 5. Procesar fin de juego de un jugador (Targets + Calificación final)
-        function procesarFinDeJuegoJugador(datos) {
-            const pId = datos.id || datos.nombre;
-            const targets = Number(datos.targets !== undefined ? datos.targets : (datos.taps || 0));
-            const califica = (datos.califica !== undefined) ? Boolean(datos.califica) : (targets >= configMinTargets);
-
-            let j = rankingJugadores.get(pId);
-            if (!j) {
-                j = {
-                    id: pId,
-                    nombre: datos.nombre,
-                    color: datos.color || '#cba6f7',
-                    targets: 0,
-                    califica: false,
-                    cuadrantes: 0,
-                    conectado: true,
-                    timestamp: Date.now(),
-                    ultimaActividad: Date.now()
-                };
-                rankingJugadores.set(pId, j);
-            }
-
-            j.nombre = datos.nombre || j.nombre;
-            j.color = datos.color || j.color;
-            j.targets = Math.max(j.targets || 0, targets);
-            j.califica = califica;
-            j.tiempo = datos.tiempo || configTiempoRonda;
-            j.timestamp = Date.now();
-            j.conectado = true;
-            j.ultimaActividad = Date.now();
-
-            // Solo desbloquear si aún no lo había hecho en vivo durante la partida
-            if (califica && (j.cuadrantes || 0) === 0) {
-                revelarBloque(j.nombre, j.color, j.targets, j.tiempo, j.id);
-                j.cuadrantes = 1;
-            } else if (j.cuadrantes > 0) {
-                actualizarScoreEnBloque(j.id, j.targets);
-            }
-
-            actualizarRankingModal();
-        }
-
-        // 6. Lógica de revelación de un bloque
-        function revelarBloque(nombre, color = '#cba6f7', targets = 0, tiempo = null, jugadorId = null) {
-            const disponibles = bloques.filter(b => !b.classList.contains('revelado'));
-            if (disponibles.length === 0) return;
-
-            const bloque = disponibles[Math.floor(Math.random() * disponibles.length)];
-            bloque.innerHTML = '';
-            bloque.dataset.jugadorId = jugadorId || '';
-            bloque.dataset.jugadorNombre = nombre;
-            bloque.dataset.jugadorColor = color;
-            bloque.dataset.targets = targets;
-
-            const badge = document.createElement('div');
-            badge.className = 'bloque-avatar-badge';
-            badge.style.background = color || '#cba6f7';
-            badge.textContent = obtenerIniciales(nombre);
-
-            const nombreSpan = document.createElement('div');
-            nombreSpan.className = 'bloque-nombre';
-            nombreSpan.textContent = nombre;
-
-            const scoreBadge = document.createElement('div');
-            scoreBadge.className = 'bloque-score-badge';
-            scoreBadge.innerHTML = `🎯 <strong>${targets}</strong> targets`;
-
-            bloque.appendChild(badge);
-            bloque.appendChild(nombreSpan);
-            bloque.appendChild(scoreBadge);
-            bloque.classList.add('revelado');
-
-            revelados++;
-            actualizarHUD();
-
-            sound.playReveal();
-
-            const txtTiempo = tiempo ? ` en ${tiempo}s` : '';
-            mostrarToast(color || '#cba6f7', obtenerIniciales(nombre), `<strong>${nombre}</strong> desbloqueó su cuadrante con <strong>${targets} targets</strong>${txtTiempo}`);
-
-            if (revelados >= totalBloques) {
-                dispararGranFinal();
-            }
-        }
-
-        // 7. Manejo de Desconexión y Regla de Prioridad de Asignación:
-        // "si un jugador se desconecta la prioridad sera: Asignarle el cuadrante al primer lugar a menos que ya se le haya asignado un segundo cuadrante"
-        // (Un cuadrado reasignado no significa que la persona deba volver a hacer el minijuego solo que el cuadrante se desbloquea con su nombre)
-        function manejarDesconexion(idJugador, motivo = 'desconexion') {
-            let desconectado = rankingJugadores.get(idJugador) || jugadoresConectados.get(idJugador);
-            const nombreDesc = desconectado ? desconectado.nombre : 'Un participante';
-
-            if (jugadoresConectados.has(idJugador)) {
-                jugadoresConectados.delete(idJugador);
-                document.getElementById('playerCount').textContent = jugadoresConectados.size;
-            }
-
-            if (rankingJugadores.has(idJugador)) {
-                rankingJugadores.get(idJugador).conectado = false;
-            }
-
-            const esInactivo = (motivo === 'inactividad');
-            if (esInactivo) {
-                mostrarToast(desconectado?.color || '#fab387', '⏱️', `<strong>${nombreDesc}</strong> fue desconectado por inactividad`);
-            } else {
-                mostrarToast(desconectado?.color || '#fab387', obtenerIniciales(nombreDesc), `${nombreDesc} se ha retirado`);
-            }
-
-            if (juegoEnCurso) {
-                // Bloques revelados que pertenecían al jugador desconectado
-                const bloquesDelDesconectado = bloques.filter(b => b.classList.contains('revelado') && b.dataset.jugadorId === idJugador);
-
-                if (bloquesDelDesconectado.length > 0) {
-                    bloquesDelDesconectado.forEach(bloque => {
-                        // Ordenar ranking de participantes conectados que calificaron (mayor cantidad de targets primero)
-                        const candidatos = Array.from(rankingJugadores.values())
-                            .filter(j => j.conectado && j.califica)
-                            .sort((a, b) => (b.targets || 0) - (a.targets || 0) || (a.timestamp || 0) - (b.timestamp || 0));
-
-                        // Regla de prioridad: 1er lugar a menos que ya se le haya asignado un segundo cuadrante
-                        // Si el 1° lugar ya tiene 2 cuadrantes, pasa al siguiente en el ranking que tenga menos de 2
-                        const beneficiario = candidatos.find(j => (j.cuadrantes || 0) < 2);
-
-                        if (beneficiario) {
-                            beneficiario.cuadrantes = (beneficiario.cuadrantes || 1) + 1;
-                            reasignarBloque(bloque, beneficiario, nombreDesc, esInactivo);
-                        } else {
-                            // Si no hay jugadores calificados conectados o todos ya tienen 2 cuadrantes
-                            desrevelarBloque(bloque);
-                        }
-                    });
-                } else {
-                    // El participante desconectado/inactivo NO había desbloqueado aún su bloque
-                    // Reasignar un bloque disponible (cubierto) al 1° lugar para que se desbloquee automáticamente con su nombre
-                    // (sin que éste deba volver a hacer el minijuego)
-                    const disponibles = bloques.filter(b => !b.classList.contains('revelado'));
-                    if (disponibles.length > 0) {
-                        const candidatos = Array.from(rankingJugadores.values())
-                            .filter(j => j.conectado && j.califica)
-                            .sort((a, b) => (b.targets || 0) - (a.targets || 0) || (a.timestamp || 0) - (b.timestamp || 0));
-
-                        const beneficiario = candidatos.find(j => (j.cuadrantes || 0) < 2);
-
-                        if (beneficiario) {
-                            beneficiario.cuadrantes = (beneficiario.cuadrantes || 1) + 1;
-                            const bloqueADesbloquear = disponibles[Math.floor(Math.random() * disponibles.length)];
-                            reasignarBloque(bloqueADesbloquear, beneficiario, nombreDesc, esInactivo);
+                rankingJugadores.forEach(j => {
+                    if (j.conectado) {
+                        const inactivo = ahora - (j.ultimaActividad || ahora);
+                        if (inactivo > timeoutMs) {
+                            j.conectado = false;
+                            jugadoresConectados.delete(j.id);
+                            document.getElementById('playerCount').textContent = jugadoresConectados.size;
                         }
                     }
-                }
-            } else {
-                reconstruirCuadricula(Math.max(jugadoresConectados.size, 1));
-            }
-
-            actualizarRankingModal();
+                });
+            }, 3000);
         }
+        iniciarWatchdogInactividad();
 
-        // 8. Reasignar bloque a un jugador con prioridad (1er lugar o siguiente en ranking)
-        function reasignarBloque(bloque, ganador, nombreExDueno, esInactivo = false) {
-            const eraRevelado = bloque.classList.contains('revelado');
-
-            bloque.dataset.jugadorId = ganador.id;
-            bloque.dataset.jugadorNombre = ganador.nombre;
-            bloque.dataset.jugadorColor = ganador.color;
-            bloque.dataset.esBonus = 'true';
-
-            bloque.innerHTML = '';
-
-            const ribbon = document.createElement('div');
-            ribbon.className = 'bloque-bonus-ribbon';
-            ribbon.textContent = ganador.cuadrantes === 2 ? '👑 2° Cuadrante (1° Lugar)' : '★ Cuadrante Extra';
-
-            const badge = document.createElement('div');
-            badge.className = 'bloque-avatar-badge';
-            badge.style.background = ganador.color || '#cba6f7';
-            badge.style.boxShadow = '0 0 20px var(--ctp-yellow)';
-            badge.textContent = obtenerIniciales(ganador.nombre);
-
-            const nombreSpan = document.createElement('div');
-            nombreSpan.className = 'bloque-nombre';
-            nombreSpan.textContent = ganador.nombre;
-
-            const scoreBadge = document.createElement('div');
-            scoreBadge.className = 'bloque-score-badge';
-            scoreBadge.innerHTML = `<span>🎯 ${ganador.targets} targets</span> <span style="color:var(--ctp-yellow); font-weight:800;">★ x2 Cuadrantes</span>`;
-
-            bloque.appendChild(ribbon);
-            bloque.appendChild(badge);
-            bloque.appendChild(nombreSpan);
-            bloque.appendChild(scoreBadge);
-
-            bloque.classList.add('revelado', 'bloque-bonus');
-
-            if (!eraRevelado) {
-                revelados++;
-                actualizarHUD();
-            }
-
-            sound.playBonus();
-
-            const razonTxt = esInactivo ? 'por inactividad' : 'de la sala';
-            mostrarToast(
-                '#f9e2af',
-                '👑',
-                `<strong>${nombreExDueno}</strong> fue desconectado ${razonTxt}.<br>Prioridad de ranking: ¡Cuadrante desbloqueado automáticamente para <strong>${ganador.nombre}</strong> (1° lugar con ${ganador.targets} targets)!`
-            );
-
-            // Emitir evento MQTT para sincronizar con Admin y Participante
-            cliente.publish(topicoSecreto, JSON.stringify({
-                accion: 'cuadrante_reasignado',
-                idGanador: ganador.id,
-                nombreGanador: ganador.nombre,
-                colorGanador: ganador.color,
-                cuadrantesTotal: ganador.cuadrantes,
-                nombreExDueno: nombreExDueno,
-                motivo: esInactivo ? 'inactividad' : 'desconexion'
-            }));
-
-            if (revelados >= totalBloques) {
-                dispararGranFinal();
+        // -------------------------------------------------------------
+        // UTILIDADES Y MODAL DE RANKING
+        // -------------------------------------------------------------
+        function actualizarBadgeRonda() {
+            const roundBadge = document.getElementById('roundInfoBadge');
+            if (roundBadge) {
+                roundBadge.style.display = 'inline-flex';
+                document.getElementById('roundTimerTxt').textContent = `⏱️ ${configTiempoRonda}s`;
+                document.getElementById('roundMinTxt').textContent = `🎯 Mín: ${configMinTargets}`;
             }
         }
 
-        // 9. Des-revelar un bloque si no hay candidatos
-        function desrevelarBloque(bloque) {
-            bloque.className = 'bloque';
-            bloque.innerHTML = '';
-            delete bloque.dataset.jugadorId;
-            delete bloque.dataset.esBonus;
-
-            const numSpan = document.createElement('span');
-            numSpan.className = 'bloque-num';
-            numSpan.textContent = String(parseInt(bloque.dataset.index) + 1).padStart(2, '0');
-            bloque.appendChild(numSpan);
-
-            revelados = Math.max(0, revelados - 1);
-            actualizarHUD();
-        }
-
-        // 10. Actualizar Modal de Ranking de Posiciones
         function toggleRankingModal() {
             const modal = document.getElementById('rankingModal');
             if (modal.style.display === 'flex') {
@@ -1277,8 +1307,9 @@
 
         function actualizarRankingModal() {
             const modal = document.getElementById('rankingModal');
-            if (!modal || modal.style.display !== 'flex') return;
-            renderizarContenidoRanking();
+            if (modal && modal.style.display === 'flex') {
+                renderizarContenidoRanking();
+            }
         }
 
         function renderizarContenidoRanking() {
@@ -1286,12 +1317,12 @@
             if (!listEl) return;
 
             const lista = Array.from(rankingJugadores.values())
-                .sort((a, b) => (b.targets || 0) - (a.targets || 0) || (a.timestamp || 0) - (b.timestamp || 0));
+                .sort((a, b) => (b.targets || 0) - (a.targets || 0));
 
             if (lista.length === 0) {
                 listEl.innerHTML = `
-                    <div style="text-align: center; color: var(--ctp-overlay1); padding: 24px 0;">
-                        No hay participantes registrados todavía.<br>Inicia una ronda para generar la tabla de posiciones.
+                    <div style="text-align: center; color: #64748b; padding: 24px 0;">
+                        No hay participantes registrados todavía.
                     </div>
                 `;
                 return;
@@ -1301,173 +1332,32 @@
             lista.forEach((j, index) => {
                 const pos = index + 1;
                 const row = document.createElement('div');
-                row.className = `ranking-row ${pos === 1 ? 'pos-1' : ''}`;
+                row.className = 'ranking-row';
 
-                let medalla = `#${pos}`;
-                if (pos === 1) medalla = '🥇';
-                else if (pos === 2) medalla = '🥈';
-                else if (pos === 3) medalla = '🥉';
-
-                let badgeCuadrante = '';
-                if (j.cuadrantes >= 2) {
-                    badgeCuadrante = `<span class="ctp-badge ctp-badge-yellow" style="padding: 2px 8px; font-size:0.75rem;">👑 2 Cuadrantes (1° Lugar)</span>`;
-                } else if (j.cuadrantes === 1) {
-                    badgeCuadrante = `<span class="ctp-badge ctp-badge-green" style="padding: 2px 8px; font-size:0.75rem;">🟩 1 Cuadrante</span>`;
-                } else {
-                    badgeCuadrante = `<span style="font-size:0.75rem; color:var(--ctp-overlay0);">Sin cuadrante</span>`;
-                }
-
-                let badgeCalifica = '';
-                if (j.targets >= configMinTargets) {
-                    badgeCalifica = `<span class="ctp-badge ctp-badge-green" style="padding: 2px 8px; font-size:0.74rem;">Mín. Superado</span>`;
-                } else if (j.targets > 0) {
-                    badgeCalifica = `<span class="ctp-badge ctp-badge-red" style="padding: 2px 8px; font-size:0.74rem;">Bajo Mínimo</span>`;
-                } else {
-                    badgeCalifica = `<span class="ctp-badge ctp-badge-mauve" style="padding: 2px 8px; font-size:0.74rem;">En espera</span>`;
-                }
-
-                let estadoConexion = j.conectado ? '' : '<span style="color:var(--ctp-red); font-size:0.75rem; font-weight:700;">(Desconectado)</span>';
+                const estadoCurado = j.curado 
+                    ? `<span style="color:#00ffaa; font-weight:700; font-size:0.75rem;">✓ Cuadrante Curado</span>`
+                    : `<span style="color:#fbbf24; font-size:0.75rem;">⏳ En proceso</span>`;
 
                 row.innerHTML = `
-                    <div class="ranking-pos">${medalla}</div>
-                    <div class="ranking-player-info">
-                        <div class="ranking-avatar" style="background: ${j.color};">${obtenerIniciales(j.nombre)}</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-family: var(--font-mono, monospace); font-weight:800; min-width: 26px; color:#94a3b8;">#${pos}</span>
+                        <div style="width: 32px; height: 32px; border-radius: 50%; background:${j.color || '#00f0ff'}; color:#0b0f19; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.8rem;">
+                            ${obtenerIniciales(j.nombre)}
+                        </div>
                         <div>
-                            <div class="ranking-name">${j.nombre} ${estadoConexion}</div>
-                            <div style="font-size: 0.76rem; color: var(--ctp-subtext0); font-family: var(--font-mono);">
-                                🎯 <strong>${j.targets}</strong> targets en ${j.tiempo ? j.tiempo + 's' : configTiempoRonda + 's'}
-                            </div>
+                            <div style="font-weight:700; font-size:0.9rem; color:#ffffff;">${j.nombre}</div>
+                            <div style="font-size:0.75rem; color:#94a3b8; font-family:var(--font-mono, monospace);">🎯 ${j.targets} targets (Slot ${j.slotId || '-'})</div>
                         </div>
                     </div>
-                    <div class="ranking-stats">
-                        ${badgeCalifica}
-                        ${badgeCuadrante}
-                    </div>
+                    <div>${estadoCurado}</div>
                 `;
                 listEl.appendChild(row);
             });
-
-            document.getElementById('rankingSubtitulo').textContent = 
-                `Ronda de ${configTiempoRonda}s • Mínimo requerido: ${configMinTargets} targets`;
         }
 
-        // 11. Actualizar barra de progreso y contador
-        function actualizarHUD() {
-            const pct = Math.min(100, Math.round((revelados / totalBloques) * 100));
-            document.getElementById('revealedCount').textContent = revelados;
-            document.getElementById('totalCount').textContent = totalBloques;
-            document.getElementById('percentage').textContent = pct + '%';
-            document.getElementById('progressFill').style.width = pct + '%';
-        }
-
-        // 12. Revelar todos los bloques en cascada
-        function revelarTodosLosBloques() {
-            const disponibles = bloques.filter(b => !b.classList.contains('revelado'));
-            if (disponibles.length === 0) return;
-
-            let delay = 0;
-            const colores = ['#cba6f7', '#74c7ec', '#a6e3a1', '#fab387', '#f5c2e7', '#b4befe'];
-            const nombres = ['Comunidad', 'Equipo', 'Diseño', 'Sistemas', 'Participante', 'Colaborador'];
-
-            disponibles.forEach((bloque) => {
-                setTimeout(() => {
-                    if (!bloque.classList.contains('revelado')) {
-                        const rColor = colores[Math.floor(Math.random() * colores.length)];
-                        const rNombre = nombres[Math.floor(Math.random() * nombres.length)];
-
-                        bloque.innerHTML = `
-                            <div class="bloque-avatar-badge" style="background: ${rColor}">${obtenerIniciales(rNombre)}</div>
-                            <div class="bloque-nombre">${rNombre}</div>
-                        `;
-                        bloque.classList.add('revelado');
-                        revelados++;
-                        actualizarHUD();
-                        sound.playReveal();
-
-                        if (revelados >= totalBloques) {
-                            dispararGranFinal();
-                        }
-                    }
-                }, delay);
-                delay += 30;
-            });
-        }
-
-        // 13. Reiniciar estado de la pantalla
-        function reiniciarPantalla() {
-            juegoEnCurso = false;
-            revelados = 0;
-            document.getElementById('grid').classList.remove('grid-completed');
-            document.getElementById('finaleBanner').style.display = 'none';
-            document.getElementById('roundInfoBadge').style.display = 'none';
-
-            jugadoresConectados.clear();
-            rankingJugadores.clear();
-            document.getElementById('playerCount').textContent = '0';
-
-            cliente.publish(topicoSecreto, JSON.stringify({ accion: 'ping_jugadores' }));
-
-            setTimeout(() => {
-                const cant = Math.max(jugadoresConectados.size, 1);
-                reconstruirCuadricula(cant);
-            }, 400);
-
-            actualizarRankingModal();
-            mostrarToast('#74c7ec', '·', 'Mural reiniciado. Re-verificando participantes...');
-        }
-
-        // 14. Gran final
-        function dispararGranFinal() {
-            sound.playVictory();
-            lanzarConfetti();
-            document.getElementById('grid').classList.add('grid-completed');
-
-            // Armar Podio de Ganadores
-            const podiumEl = document.getElementById('finalePodium');
-            if (podiumEl) {
-                const top3 = Array.from(rankingJugadores.values())
-                    .filter(j => j.califica)
-                    .sort((a, b) => (b.targets || 0) - (a.targets || 0))
-                    .slice(0, 3);
-
-                if (top3.length > 0) {
-                    podiumEl.innerHTML = top3.map((j, idx) => {
-                        const medallas = ['🥇', '🥈', '🥉'];
-                        const titulos = ['1° Lugar', '2° Lugar', '3° Lugar'];
-                        const extraInfo = j.cuadrantes >= 2 ? '<div style="color:var(--ctp-yellow); font-size:0.75rem; font-weight:800; margin-top:2px;">👑 2 Cuadrantes</div>' : '';
-                        return `
-                            <div style="background: var(--ctp-surface0); border: 1.5px solid ${idx === 0 ? 'var(--ctp-yellow)' : 'var(--ctp-surface2)'}; border-radius: 14px; padding: 14px 18px; min-width: 140px; text-align: center; box-shadow: ${idx === 0 ? '0 0 24px rgba(249, 226, 175, 0.3)' : 'none'};">
-                                <div style="font-size: 1.7rem; margin-bottom: 4px;">${medallas[idx]}</div>
-                                <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ctp-subtext0); font-weight: 700;">${titulos[idx]}</div>
-                                <div style="font-size: 1rem; font-weight: 800; color: var(--ctp-text); margin: 4px 0;">${j.nombre}</div>
-                                <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--ctp-mauve); font-weight: 700;">🎯 ${j.targets} targets</div>
-                                ${extraInfo}
-                            </div>
-                        `;
-                    }).join('');
-                } else {
-                    podiumEl.innerHTML = '';
-                }
-            }
-
-            document.getElementById('finaleBanner').style.display = 'flex';
-        }
-
-        function cerrarBanner() {
-            document.getElementById('finaleBanner').style.display = 'none';
-        }
-
-        // 15. Toast notification (Desactivado: pantalla de proyección limpia sin logs flotantes)
-        function mostrarToast(color, iniciales, textoHtml) {
-            // Pantalla limpia para proyección sin mensajes emergentes
-        }
-
-        // 16. Pantalla completa y audio
         function toggleFullscreen() {
             if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => {
-                    console.log('Error solicitando pantalla completa:', err);
-                });
+                document.documentElement.requestFullscreen().catch(() => {});
             } else {
                 document.exitFullscreen();
             }
@@ -1483,7 +1373,9 @@
             }
         }
 
-        // 12. Confetti Canvas
+        // -------------------------------------------------------------
+        // CONFETTI EFECTO FINAL
+        // -------------------------------------------------------------
         function lanzarConfetti() {
             const canvas = document.getElementById('confettiCanvas');
             const ctx = canvas.getContext('2d');
@@ -1491,15 +1383,15 @@
             canvas.height = window.innerHeight;
 
             const particles = [];
-            const colors = ['#cba6f7', '#a6e3a1', '#fab387', '#74c7ec', '#f5c2e7', '#f9e2af', '#89b4fa'];
+            const colors = ['#00ffaa', '#00f0ff', '#cba6f7', '#fbbf24', '#f43f5e', '#38bdf8'];
 
-            for (let i = 0; i < 180; i++) {
+            for (let i = 0; i < 160; i++) {
                 particles.push({
                     x: Math.random() * canvas.width,
                     y: -20 - Math.random() * 50,
-                    vx: (Math.random() - 0.5) * 6,
+                    vx: (Math.random() - 0.5) * 5,
                     vy: Math.random() * 4 + 3,
-                    size: Math.random() * 10 + 5,
+                    size: Math.random() * 9 + 4,
                     color: colors[Math.floor(Math.random() * colors.length)],
                     rot: Math.random() * 360,
                     rotSpeed: (Math.random() - 0.5) * 8,
@@ -1507,7 +1399,6 @@
                 });
             }
 
-            let animId;
             let frames = 0;
             function render() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1517,8 +1408,7 @@
                     p.x += p.vx;
                     p.y += p.vy;
                     p.rot += p.rotSpeed;
-
-                    if (frames > 200) p.alpha -= 0.008;
+                    if (frames > 180) p.alpha -= 0.009;
 
                     ctx.save();
                     ctx.globalAlpha = Math.max(0, p.alpha);
@@ -1529,16 +1419,17 @@
                     ctx.restore();
                 });
 
-                if (frames < 360) {
-                    animId = requestAnimationFrame(render);
+                if (frames < 320) {
+                    requestAnimationFrame(render);
                 } else {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    cancelAnimationFrame(animId);
                 }
             }
-
             render();
         }
+
+        // Inicializar grilla de 15 cuadrantes al cargar
+        inicializarMural15();
     </script>
 </body>
 </html>
